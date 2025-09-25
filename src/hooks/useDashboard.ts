@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@contexts/AuthContext';
 import dashboardService from '@services/dashboardService';
-import { DashboardFilters } from '@types/dashboard';
-import { USER_ROLES } from '@constants/app';
+import { DashboardFilters } from '../types/dashboard';
+import { USER_ROLES } from '../types/auth';
 
 // Query keys
 const QUERY_KEYS = {
@@ -181,7 +181,6 @@ export const useAccountManagerDashboard = (filters?: DashboardFilters) => {
  */
 export const useRefreshDashboard = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   const refreshAll = () => {
     // Invalidate all dashboard queries to force refresh

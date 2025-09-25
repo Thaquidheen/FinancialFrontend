@@ -27,11 +27,10 @@ import {
   Assignment,
   CheckCircle,
   Warning,
-  Info,
 } from '@mui/icons-material';
-import { useRoles } from '@hooks/useUser';
-import { User, UpdateUserRolesRequest } from '@types/user';
-import { USER_ROLES } from '@constants/app';
+import { useRoles } from '../../hooks/useUser';
+import { User, UpdateUserRolesRequest, Role } from '../../types/user';
+import { USER_ROLES } from '../../types/auth';
 
 interface RoleAssignmentPanelProps {
   user: User;
@@ -229,7 +228,7 @@ const RoleAssignmentPanel: React.FC<RoleAssignmentPanelProps> = ({
                 Available Roles
               </Typography>
               <FormGroup>
-                {availableRoles.map(role => (
+                {availableRoles.map((role: Role) => (
                   <Box key={role.id} sx={{ mb: 2 }}>
                     <FormControlLabel
                       control={

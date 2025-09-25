@@ -31,7 +31,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@contexts/AuthContext';
-import { NAVIGATION_ITEMS, THEME_CONFIG, USER_ROLES } from '@constants/app';
+import { NAVIGATION_ITEMS, THEME_CONFIG } from '@constants/app';
 
 interface SidebarProps {
   open: boolean;

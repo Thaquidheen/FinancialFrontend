@@ -20,7 +20,6 @@ import {
   Avatar,
   Tooltip,
   alpha,
-  useTheme,
   Skeleton,
   Alert,
 } from '@mui/material';
@@ -36,9 +35,9 @@ import {
   Assignment,
 } from '@mui/icons-material';
 import { visuallyHidden } from '@mui/utils';
-import { User, UserSearchParams } from '@types/user';
-import { formatDate, formatRelativeDate } from '@utils/helpers';
-import { USER_ROLES } from '@constants/app';
+import { User, UserSearchParams } from '../../types/user';
+import { formatDate, formatRelativeDate } from '../../utils/helpers';
+import { USER_ROLES } from '../../types/auth';
 
 interface UserTableColumn {
   id: keyof User | 'actions';
@@ -59,7 +58,6 @@ const columns: UserTableColumn[] = [
   { id: 'actions', label: 'Actions', minWidth: 120, align: 'center' },
 ];
 
-type Order = 'asc' | 'desc';
 
 interface UserTableProps {
   users: User[];
@@ -92,7 +90,6 @@ const UserTable: React.FC<UserTableProps> = ({
   onRoleAssign,
   onBulkAction,
 }) => {
-  const theme = useTheme();
   const [selected, setSelected] = useState<string[]>([]);
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ element: HTMLElement; userId: string } | null>(null);
 
@@ -134,7 +131,7 @@ const UserTable: React.FC<UserTableProps> = ({
     setSelected(newSelected);
   };
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_event: unknown, newPage: number) => {
     onSearchParamsChange({
       ...searchParams,
       page: newPage,
@@ -176,7 +173,7 @@ const UserTable: React.FC<UserTableProps> = ({
           [USER_ROLES.EMPLOYEE]: { color: 'default' as const, label: 'Employee' },
         };
 
-        const config = roleConfig[role as keyof typeof roleConfig] || { color: 'default' as const, label: role };
+        const config = roleConfig[role as keyof typeof roleConfig] || { color: 'default' as const, label: role as string };
 
         return (
           <Chip

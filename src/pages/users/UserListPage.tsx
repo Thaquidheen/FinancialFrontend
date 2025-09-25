@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Paper,
   Typography,
   Button,
   TextField,
@@ -21,17 +20,13 @@ import {
   Snackbar,
   IconButton,
   Tooltip,
-  Menu,
-  SelectChangeEvent,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Search as SearchIcon,
-  FilterList as FilterIcon,
   GetApp as ExportIcon,
   Upload as ImportIcon,
   Refresh as RefreshIcon,
-  MoreVert,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -45,14 +40,13 @@ import {
   useBulkUserOperation,
   useExportUsers,
   useRefreshUsers,
-} from '@hooks/useUser';
+} from '../../hooks/useUser';
 import { useAuth } from '@contexts/AuthContext';
 import UserTable from '@components/users/UserTable';
 import { MetricsCard } from '@components/dashboard/MetricsCard';
 import { User, UserSearchParams, UserFilters } from '../../types/user';
 import { ROUTES } from '@constants/app';
 import { USER_ROLES } from '../../types/auth';
-import { formatNumber } from '@utils/helpers';
 
 const UserListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -226,13 +220,7 @@ const UserListPage: React.FC = () => {
 
   const handleExport = async () => {
     try {
-      const blob = await exportUsersMutation.mutateAsync({
-        format: 'excel',
-        fields: ['fullName', 'username', 'email', 'roles', 'department', 'isActive'],
-        filters: searchParams,
-        includeInactive: true,
-        includeBankDetails: false,
-      });
+      const blob = await exportUsersMutation.mutateAsync(searchParams);
       
       // Create download link
       const url = window.URL.createObjectURL(blob);
@@ -341,7 +329,7 @@ const UserListPage: React.FC = () => {
           <Box sx={{ flex: '1 1 250px', minWidth: '250px' }}>
             <MetricsCard
               title="Recently Added"
-              value={{ current: userStats.recentlyCreated, format: 'number' }}
+              value={{ current: userStats.recentlyUpdated, format: 'number' }}
               icon={AddIcon}
               color="info"
             />

@@ -1,151 +1,73 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@contexts/AuthContext';
-import userService from '@services/userService';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { userService } from '@services/userService';
 import {
   User,
+  UserListResponse,
   UserSearchParams,
   CreateUserRequest,
   UpdateUserRequest,
   UpdateUserRolesRequest,
   UpdateBankDetailsRequest,
   ChangePasswordRequest,
-  BulkUserOperation,
-  UserExportOptions,
-} from '@types/user';
-import { USER_ROLES } from '@constants/app';
+  ResetPasswordRequest,
+  UserStatistics,
+  UserActivityResponse,
+  ActivitySearchParams,
+} from '../types/user';
 
-// Query keys
-const QUERY_KEYS = {
-  users: ['users'],
-  usersList: (params?: UserSearchParams) => ['users', 'list', params],
-  user: (userId: string) => ['users', userId],
-  userStats: ['users', 'stats'],
-  roles: ['users', 'roles'],
-  departments: ['users', 'departments'],
-  managers: ['users', 'managers'],
-  usersByRole: (role: string) => ['users', 'by-role', role],
-  userActivity: (userId: string) => ['users', userId, 'activity'],
-  subordinates: (userId: string) => ['users', userId, 'subordinates'],
-} as const;
+// Query Keys
+export const USER_QUERY_KEYS = {
+  all: ['users'] as const,
+  lists: () => [...USER_QUERY_KEYS.all, 'list'] as const,
+  list: (params: UserSearchParams) => [...USER_QUERY_KEYS.lists(), params] as const,
+  details: () => [...USER_QUERY_KEYS.all, 'detail'] as const,
+  detail: (id: string) => [...USER_QUERY_KEYS.details(), id] as const,
+  statistics: () => [...USER_QUERY_KEYS.all, 'statistics'] as const,
+  activities: (userId: string) => [...USER_QUERY_KEYS.all, 'activities', userId] as const,
+  activity: (userId: string, params: ActivitySearchParams) => 
+    [...USER_QUERY_KEYS.activities(userId), params] as const,
+};
 
-/**
- * Hook to get paginated users list with search and filtering
- */
-export const useUsers = (params?: UserSearchParams, enabled = true) => {
-  const { user } = useAuth();
-  
-  const hasAccess = user?.roles?.includes(USER_ROLES.SUPER_ADMIN);
-
+// Fetch Users List
+export const useUsers = (params: UserSearchParams = {}) => {
   return useQuery({
-    queryKey: QUERY_KEYS.usersList(params),
+    queryKey: USER_QUERY_KEYS.list(params),
     queryFn: () => userService.getUsers(params),
-    enabled: enabled && hasAccess,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    keepPreviousData: true, // Keep previous page data while loading new page
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    keepPreviousData: true,
   });
 };
 
-/**
- * Hook to get single user by ID
- */
-export const useUser = (userId: string, enabled = true) => {
+// Fetch Single User
+export const useUser = (id: string) => {
   return useQuery({
-    queryKey: QUERY_KEYS.user(userId),
-    queryFn: () => userService.getUserById(userId),
-    enabled: enabled && !!userId,
+    queryKey: USER_QUERY_KEYS.detail(id),
+    queryFn: () => userService.getUser(id),
+    enabled: !!id,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
-/**
- * Hook to get user statistics
- */
-export const useUserStats = () => {
-  const { user } = useAuth();
-  
-  const hasAccess = user?.roles?.includes(USER_ROLES.SUPER_ADMIN);
-
+// Fetch User Statistics
+export const useUserStatistics = () => {
   return useQuery({
-    queryKey: QUERY_KEYS.userStats,
-    queryFn: () => userService.getUserStats(),
-    enabled: hasAccess,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-  });
-};
-
-/**
- * Hook to get available roles
- */
-export const useRoles = () => {
-  return useQuery({
-    queryKey: QUERY_KEYS.roles,
-    queryFn: () => userService.getRoles(),
-    staleTime: 30 * 60 * 1000, // 30 minutes (roles don't change often)
-  });
-};
-
-/**
- * Hook to get departments
- */
-export const useDepartments = () => {
-  return useQuery({
-    queryKey: QUERY_KEYS.departments,
-    queryFn: () => userService.getDepartments(),
+    queryKey: USER_QUERY_KEYS.statistics(),
+    queryFn: () => userService.getUserStatistics(),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
-/**
- * Hook to get managers list
- */
-export const useManagers = () => {
+// Fetch User Activities
+export const useUserActivities = (userId: string, params: Omit<ActivitySearchParams, 'userId'> = {}) => {
   return useQuery({
-    queryKey: QUERY_KEYS.managers,
-    queryFn: () => userService.getManagers(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-/**
- * Hook to get users by role
- */
-export const useUsersByRole = (role: string, enabled = true) => {
-  return useQuery({
-    queryKey: QUERY_KEYS.usersByRole(role),
-    queryFn: () => userService.getUsersByRole(role),
-    enabled: enabled && !!role,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-/**
- * Hook to get user activity history
- */
-export const useUserActivity = (userId: string, params?: any, enabled = true) => {
-  return useQuery({
-    queryKey: [...QUERY_KEYS.userActivity(userId), params],
-    queryFn: () => userService.getUserActivity(userId, params),
-    enabled: enabled && !!userId,
+    queryKey: USER_QUERY_KEYS.activity(userId, { userId, ...params }),
+    queryFn: () => userService.getUserActivities({ userId, ...params }),
+    enabled: !!userId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
-/**
- * Hook to get user's subordinates
- */
-export const useUserSubordinates = (userId: string, enabled = true) => {
-  return useQuery({
-    queryKey: QUERY_KEYS.subordinates(userId),
-    queryFn: () => userService.getUserSubordinates(userId),
-    enabled: enabled && !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-/**
- * Hook to create new user
- */
+// Create User Mutation
 export const useCreateUser = () => {
   const queryClient = useQueryClient();
 
@@ -153,18 +75,19 @@ export const useCreateUser = () => {
     mutationFn: (userData: CreateUserRequest) => userService.createUser(userData),
     onSuccess: (newUser) => {
       // Invalidate and refetch users list
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
-      // Update user stats
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats });
-      // Add the new user to the cache
-      queryClient.setQueryData(QUERY_KEYS.user(newUser.id), newUser);
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.statistics() });
+      
+      // Add to cache
+      queryClient.setQueryData(USER_QUERY_KEYS.detail(newUser.id), newUser);
+    },
+    onError: (error) => {
+      console.error('Failed to create user:', error);
     },
   });
 };
 
-/**
- * Hook to update user
- */
+// Update User Mutation
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
@@ -173,54 +96,94 @@ export const useUpdateUser = () => {
       userService.updateUser(userId, userData),
     onSuccess: (updatedUser, { userId }) => {
       // Update specific user in cache
-      queryClient.setQueryData(QUERY_KEYS.user(userId), updatedUser);
-      // Invalidate users list to refresh
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
+      queryClient.setQueryData(USER_QUERY_KEYS.detail(userId), updatedUser);
+      
+      // Invalidate lists to ensure consistency
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.statistics() });
+    },
+    onError: (error) => {
+      console.error('Failed to update user:', error);
     },
   });
 };
 
-/**
- * Hook to update user roles
- */
+// Update User Roles Mutation
 export const useUpdateUserRoles = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, roles }: { userId: string; roles: UpdateUserRolesRequest }) =>
-      userService.updateUserRoles(userId, roles),
+    mutationFn: ({ userId, rolesData }: { userId: string; rolesData: UpdateUserRolesRequest }) =>
+      userService.updateUserRoles(userId, rolesData),
     onSuccess: (updatedUser, { userId }) => {
       // Update specific user in cache
-      queryClient.setQueryData(QUERY_KEYS.user(userId), updatedUser);
-      // Invalidate users list to refresh
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
-      // Invalidate user stats
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats });
+      queryClient.setQueryData(USER_QUERY_KEYS.detail(userId), updatedUser);
+      
+      // Invalidate lists and statistics
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.statistics() });
+    },
+    onError: (error) => {
+      console.error('Failed to update user roles:', error);
     },
   });
 };
 
-/**
- * Hook to update bank details
- */
+// Update Bank Details Mutation
 export const useUpdateBankDetails = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, bankDetails }: { userId: string; bankDetails: UpdateBankDetailsRequest }) =>
-      userService.updateBankDetails(userId, bankDetails),
+    mutationFn: ({ userId, bankData }: { userId: string; bankData: UpdateBankDetailsRequest }) =>
+      userService.updateBankDetails(userId, bankData),
     onSuccess: (updatedUser, { userId }) => {
       // Update specific user in cache
-      queryClient.setQueryData(QUERY_KEYS.user(userId), updatedUser);
-      // Invalidate users list to refresh
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
+      queryClient.setQueryData(USER_QUERY_KEYS.detail(userId), updatedUser);
+      
+      // Invalidate lists to show updated bank status
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.statistics() });
+    },
+    onError: (error) => {
+      console.error('Failed to update bank details:', error);
     },
   });
 };
 
-/**
- * Hook to activate user
- */
+// Change Password Mutation
+export const useChangePassword = () => {
+  return useMutation({
+    mutationFn: (passwordData: ChangePasswordRequest) =>
+      userService.changePassword(passwordData),
+    onError: (error) => {
+      console.error('Failed to change password:', error);
+    },
+  });
+};
+
+// Reset Password Mutation (Admin only)
+export const useResetPassword = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (resetData: ResetPasswordRequest) =>
+      userService.resetPassword(resetData),
+    onSuccess: (response, { userId }) => {
+      if (userId) {
+        // Invalidate user details to refresh password status
+        queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.detail(userId) });
+        
+        // Log activity
+        queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.activities(userId) });
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to reset password:', error);
+    },
+  });
+};
+
+// Activate User Mutation
 export const useActivateUser = () => {
   const queryClient = useQueryClient();
 
@@ -228,18 +191,22 @@ export const useActivateUser = () => {
     mutationFn: (userId: string) => userService.activateUser(userId),
     onSuccess: (updatedUser, userId) => {
       // Update specific user in cache
-      queryClient.setQueryData(QUERY_KEYS.user(userId), updatedUser);
-      // Invalidate users list to refresh
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
-      // Update user stats
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats });
+      queryClient.setQueryData(USER_QUERY_KEYS.detail(userId), updatedUser);
+      
+      // Invalidate lists and statistics
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.statistics() });
+      
+      // Log activity
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.activities(userId) });
+    },
+    onError: (error) => {
+      console.error('Failed to activate user:', error);
     },
   });
 };
 
-/**
- * Hook to deactivate user
- */
+// Deactivate User Mutation
 export const useDeactivateUser = () => {
   const queryClient = useQueryClient();
 
@@ -247,121 +214,176 @@ export const useDeactivateUser = () => {
     mutationFn: (userId: string) => userService.deactivateUser(userId),
     onSuccess: (updatedUser, userId) => {
       // Update specific user in cache
-      queryClient.setQueryData(QUERY_KEYS.user(userId), updatedUser);
-      // Invalidate users list to refresh
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
-      // Update user stats
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats });
+      queryClient.setQueryData(USER_QUERY_KEYS.detail(userId), updatedUser);
+      
+      // Invalidate lists and statistics
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.statistics() });
+      
+      // Log activity
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.activities(userId) });
+    },
+    onError: (error) => {
+      console.error('Failed to deactivate user:', error);
     },
   });
 };
 
-/**
- * Hook to delete user
- */
+// Delete User Mutation
 export const useDeleteUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (userId: string) => userService.deleteUser(userId),
-    onSuccess: (_, userId) => {
+    onSuccess: (response, userId) => {
       // Remove user from cache
-      queryClient.removeQueries({ queryKey: QUERY_KEYS.user(userId) });
-      // Invalidate users list to refresh
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
-      // Update user stats
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats });
+      queryClient.removeQueries({ queryKey: USER_QUERY_KEYS.detail(userId) });
+      queryClient.removeQueries({ queryKey: USER_QUERY_KEYS.activities(userId) });
+      
+      // Invalidate lists and statistics
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.lists() });
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.statistics() });
+    },
+    onError: (error) => {
+      console.error('Failed to delete user:', error);
     },
   });
 };
 
-/**
- * Hook to change password
- */
-export const useChangePassword = () => {
-  return useMutation({
-    mutationFn: ({ userId, passwordData }: { userId: string; passwordData: ChangePasswordRequest }) =>
-      userService.changePassword(userId, passwordData),
-  });
-};
-
-/**
- * Hook to reset password (admin only)
- */
-export const useResetPassword = () => {
-  return useMutation({
-    mutationFn: (userId: string) => userService.resetPassword(userId),
-  });
-};
-
-/**
- * Hook for bulk operations
- */
-export const useBulkUserOperation = () => {
+// Bulk Operations
+export const useBulkUpdateUsers = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (operation: BulkUserOperation) => userService.performBulkOperation(operation),
+    mutationFn: ({ userIds, operation }: { userIds: string[]; operation: 'activate' | 'deactivate' }) =>
+      userService.bulkUpdateUsers(userIds, operation),
     onSuccess: () => {
       // Invalidate all user-related queries
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats });
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.all });
+    },
+    onError: (error) => {
+      console.error('Failed to perform bulk operation:', error);
     },
   });
 };
 
-/**
- * Hook to export users
- */
-export const useExportUsers = () => {
-  return useMutation({
-    mutationFn: (options: UserExportOptions) => userService.exportUsers(options),
+// Custom hooks for specific use cases
+export const useActiveUsers = (params: Omit<UserSearchParams, 'active'> = {}) => {
+  return useUsers({ ...params, active: true });
+};
+
+export const useInactiveUsers = (params: Omit<UserSearchParams, 'active'> = {}) => {
+  return useUsers({ ...params, active: false });
+};
+
+export const useProjectManagers = (params: Omit<UserSearchParams, 'role'> = {}) => {
+  return useUsers({ ...params, role: 'PROJECT_MANAGER' });
+};
+
+export const useAccountManagers = (params: Omit<UserSearchParams, 'role'> = {}) => {
+  return useUsers({ ...params, role: 'ACCOUNT_MANAGER' });
+};
+
+export const useUsersWithoutBankDetails = () => {
+  return useQuery({
+    queryKey: [...USER_QUERY_KEYS.all, 'without-bank-details'],
+    queryFn: () => userService.getUsersWithoutBankDetails(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
-/**
- * Hook to import users
- */
-export const useImportUsers = () => {
+// Prefetch utilities
+export const usePrefetchUser = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (file: File) => userService.importUsers(file),
-    onSuccess: () => {
-      // Invalidate all user-related queries
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats });
-    },
-  });
+  return (userId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: USER_QUERY_KEYS.detail(userId),
+      queryFn: () => userService.getUser(userId),
+      staleTime: 5 * 60 * 1000,
+    });
+  };
 };
 
-/**
- * Hook to upload profile image
- */
-export const useUploadProfileImage = () => {
+export const usePrefetchUserActivities = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({ userId, file }: { userId: string; file: File }) =>
-      userService.uploadProfileImage(userId, file),
-    onSuccess: (result, { userId }) => {
-      // Update user data with new image URL
-      queryClient.setQueryData(QUERY_KEYS.user(userId), (oldData: User | undefined) => {
-        if (oldData) {
-          return { ...oldData, profileImage: result.imageUrl };
-        }
-        return oldData;
+  return (userId: string, params: Omit<ActivitySearchParams, 'userId'> = {}) => {
+    queryClient.prefetchQuery({
+      queryKey: USER_QUERY_KEYS.activity(userId, { userId, ...params }),
+      queryFn: () => userService.getUserActivities({ userId, ...params }),
+      staleTime: 2 * 60 * 1000,
+    });
+  };
+};
+
+// Optimistic Updates
+export const useOptimisticUserUpdate = () => {
+  const queryClient = useQueryClient();
+
+  return {
+    updateUserOptimistically: (userId: string, updates: Partial<User>) => {
+      queryClient.setQueryData(USER_QUERY_KEYS.detail(userId), (oldUser: User | undefined) => {
+        if (!oldUser) return oldUser;
+        return { ...oldUser, ...updates };
       });
     },
+    
+    rollbackOptimisticUpdate: (userId: string, previousUser: User) => {
+      queryClient.setQueryData(USER_QUERY_KEYS.detail(userId), previousUser);
+    },
+  };
+};
+
+// Error Recovery
+export const useRetryUserOperation = () => {
+  const queryClient = useQueryClient();
+
+  return {
+    retryGetUser: (userId: string) => {
+      return queryClient.refetchQueries({ queryKey: USER_QUERY_KEYS.detail(userId) });
+    },
+    
+    retryGetUsers: (params: UserSearchParams = {}) => {
+      return queryClient.refetchQueries({ queryKey: USER_QUERY_KEYS.list(params) });
+    },
+    
+    retryUserActivities: (userId: string, params: Omit<ActivitySearchParams, 'userId'> = {}) => {
+      return queryClient.refetchQueries({ 
+        queryKey: USER_QUERY_KEYS.activity(userId, { userId, ...params }) 
+      });
+    },
+  };
+};
+
+// Additional hooks for RoleAssignmentPanel and UserForm
+export const useRoles = () => {
+  return useQuery({
+    queryKey: [...USER_QUERY_KEYS.all, 'roles'],
+    queryFn: () => userService.getRoles(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
-/**
- * Hook for username availability check with debouncing
- */
+export const useDepartments = () => {
+  return useQuery({
+    queryKey: [...USER_QUERY_KEYS.all, 'departments'],
+    queryFn: () => userService.getDepartments(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useManagers = () => {
+  return useQuery({
+    queryKey: [...USER_QUERY_KEYS.all, 'managers'],
+    queryFn: () => userService.getManagers(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
 export const useCheckUsernameAvailability = (username: string, excludeUserId?: string) => {
   return useQuery({
-    queryKey: ['username-availability', username, excludeUserId],
+    queryKey: [...USER_QUERY_KEYS.all, 'username-check', username, excludeUserId],
     queryFn: () => userService.checkUsernameAvailability(username, excludeUserId),
     enabled: !!username && username.length >= 3,
     staleTime: 30 * 1000, // 30 seconds
@@ -369,49 +391,12 @@ export const useCheckUsernameAvailability = (username: string, excludeUserId?: s
   });
 };
 
-/**
- * Hook for email availability check with debouncing
- */
 export const useCheckEmailAvailability = (email: string, excludeUserId?: string) => {
   return useQuery({
-    queryKey: ['email-availability', email, excludeUserId],
+    queryKey: [...USER_QUERY_KEYS.all, 'email-check', email, excludeUserId],
     queryFn: () => userService.checkEmailAvailability(email, excludeUserId),
     enabled: !!email && email.includes('@'),
     staleTime: 30 * 1000, // 30 seconds
     retry: false,
   });
-};
-
-/**
- * Hook to refresh all user-related data
- */
-export const useRefreshUsers = () => {
-  const queryClient = useQueryClient();
-
-  const refreshAll = () => {
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats });
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.roles });
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.departments });
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.managers });
-  };
-
-  const refreshUsersList = () => {
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
-  };
-
-  const refreshUser = (userId: string) => {
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user(userId) });
-  };
-
-  const refreshUserStats = () => {
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userStats });
-  };
-
-  return {
-    refreshAll,
-    refreshUsersList,
-    refreshUser,
-    refreshUserStats,
-  };
 };

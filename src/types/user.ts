@@ -90,10 +90,15 @@ export interface User {
     search?: string;
     roles?: string[];
     departments?: string[];
+    department?: string; // Legacy support
+    role?: string; // Legacy support
     isActive?: boolean;
+    active?: boolean; // Legacy support
+    accountLocked?: boolean;
     managerId?: string;
     page?: number;
     size?: number;
+    pageSize?: number;
     sortBy?: string;
     sortDirection?: 'asc' | 'desc';
   }
@@ -276,4 +281,73 @@ export interface User {
       errors: string[];
       data: UserImportData;
     }>;
+  }
+
+  export interface UserResponse {
+    id: string;
+    username: string;
+    email: string;
+    fullName: string;
+    phoneNumber?: string;
+    nationalId?: string;
+    iqamaId?: string;
+    passportNumber?: string;
+    department?: string;
+    position?: string;
+    hireDate?: string;
+    isActive: boolean;
+    roles: string[];
+    permissions: string[];
+    manager?: UserSummary;
+    bankDetails?: UserBankDetails;
+    createdAt: string;
+    updatedAt: string;
+    lastLoginAt?: string;
+    profileImage?: string;
+  }
+
+  export interface UserListResponse {
+    users: User[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }
+
+  export interface ResetPasswordRequest {
+    email: string;
+    userId?: string;
+    sendEmail?: boolean;
+  }
+
+  export interface UserStatistics {
+    totalUsers: number;
+    activeUsers: number;
+    inactiveUsers: number;
+    usersByRole: Record<string, number>;
+    usersByDepartment: Record<string, number>;
+    recentRegistrations: number;
+    recentlyUpdated: number;
+  }
+
+  export interface UserActivityResponse {
+    activities: UserActivity[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }
+
+  export interface ActivitySearchParams {
+    userId?: string;
+    activityType?: string;
+    action?: string;
+    status?: string;
+    deviceType?: string;
+    startDate?: string;
+    endDate?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    page?: number;
+    pageSize?: number;
   }

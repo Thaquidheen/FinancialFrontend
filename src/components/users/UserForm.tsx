@@ -34,13 +34,16 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import {
   User,
+  UserSummary,
   CreateUserRequest,
   UpdateUserRequest,
   SaudiBanks,
   VALIDATION_PATTERNS,
   VALIDATION_MESSAGES,
+  Role,
+  Department,
 } from '../../types/user';
-import { useRoles, useDepartments, useManagers, useCheckUsernameAvailability, useCheckEmailAvailability } from '@hooks/useUser';
+import { useRoles, useDepartments, useManagers, useCheckUsernameAvailability, useCheckEmailAvailability } from '../../hooks/useUser';
 
 interface UserFormProps {
   user?: User;
@@ -252,7 +255,7 @@ const UserForm: React.FC<UserFormProps> = ({
   };
 
   const saudiBankOptions = Object.values(SaudiBanks);
-  const departmentOptions = departments.map(dept => dept.name);
+  const departmentOptions = departments.map((dept: Department) => dept.name);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -606,7 +609,7 @@ const UserForm: React.FC<UserFormProps> = ({
                     <MenuItem value="">
                       <em>No Manager</em>
                     </MenuItem>
-                    {managers.map((manager) => (
+                    {managers.map((manager: UserSummary) => (
                       <MenuItem key={manager.id} value={manager.id}>
                         {manager.fullName} ({manager.username})
                       </MenuItem>
@@ -635,7 +638,7 @@ const UserForm: React.FC<UserFormProps> = ({
                     Select User Roles *
                   </Typography>
                   <FormGroup row>
-                    {roles.map((role) => (
+                    {roles.map((role: Role) => (
                       <FormControlLabel
                         key={role.id}
                         control={

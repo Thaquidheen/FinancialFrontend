@@ -1,399 +1,346 @@
-import apiClient from './api';
+import axios, { AxiosResponse } from 'axios';
 import {
-  User,
+  UserResponse,
   UserSummary,
+  UserListResponse,
+  UserSearchParams,
   CreateUserRequest,
   UpdateUserRequest,
   UpdateUserRolesRequest,
   UpdateBankDetailsRequest,
   ChangePasswordRequest,
-  UserSearchParams,
-  UserStats,
+  ResetPasswordRequest,
+  UserStatistics,
+  UserActivityResponse,
+  ActivitySearchParams,
   Role,
   Department,
-  BulkUserOperation,
-  BulkOperationResult,
-  UserActivity,
-  UserExportOptions,
-  UserImportResult,
-} from '@types/user';
-import { ApiResponse, PaginatedResponse } from '@types/api';
+} from '../types/user';
 
-export class UserService {
-  /**
-   * Get paginated list of users with search and filtering
-   */
-  async getUsers(params?: UserSearchParams): Promise<PaginatedResponse<User>> {
-    const queryParams = new URLSearchParams();
-    
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.roles?.length) params.roles.forEach(role => queryParams.append('roles', role));
-    if (params?.departments?.length) params.departments.forEach(dept => queryParams.append('departments', dept));
-    if (params?.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
-    if (params?.managerId) queryParams.append('managerId', params.managerId);
-    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
-    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
-    if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-    if (params?.sortDirection) queryParams.append('sortDirection', params.sortDirection);
+// API Base URL - should come from environment variables
+const API_BASE_URL = '/api';
 
-    const response = await apiClient.get<PaginatedResponse<User>>(
-      `/api/users?${queryParams.toString()}`
-    );
+class UserService {
+  private api = axios.create({
+    baseURL: API_BASE_URL,
+  });
 
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to fetch users');
-  }
-
-  /**
-   * Get user by ID
-   */
-  async getUserById(userId: string): Promise<User> {
-    const response = await apiClient.get<User>(`/api/users/${userId}`);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to fetch user');
-  }
-
-  /**
-   * Create new user
-   */
-  async createUser(userData: CreateUserRequest): Promise<User> {
-    const response = await apiClient.post<User>('/api/users', userData);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to create user');
-  }
-
-  /**
-   * Update user information
-   */
-  async updateUser(userId: string, userData: UpdateUserRequest): Promise<User> {
-    const response = await apiClient.put<User>(`/api/users/${userId}`, userData);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to update user');
-  }
-
-  /**
-   * Update user roles
-   */
-  async updateUserRoles(userId: string, rolesData: UpdateUserRolesRequest): Promise<User> {
-    const response = await apiClient.put<User>(`/api/users/${userId}/roles`, rolesData);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to update user roles');
-  }
-
-  /**
-   * Update user bank details
-   */
-  async updateBankDetails(userId: string, bankDetails: UpdateBankDetailsRequest): Promise<User> {
-    const response = await apiClient.put<User>(`/api/users/${userId}/bank-details`, bankDetails);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to update bank details');
-  }
-
-  /**
-   * Activate user account
-   */
-  async activateUser(userId: string): Promise<User> {
-    const response = await apiClient.put<User>(`/api/users/${userId}/activate`);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to activate user');
-  }
-
-  /**
-   * Deactivate user account
-   */
-  async deactivateUser(userId: string): Promise<User> {
-    const response = await apiClient.put<User>(`/api/users/${userId}/deactivate`);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to deactivate user');
-  }
-
-  /**
-   * Delete user (soft delete)
-   */
-  async deleteUser(userId: string): Promise<void> {
-    const response = await apiClient.delete(`/api/users/${userId}`);
-
-    if (!response.success) {
-      throw new Error(response.message || 'Failed to delete user');
-    }
-  }
-
-  /**
-   * Change user password
-   */
-  async changePassword(userId: string, passwordData: ChangePasswordRequest): Promise<void> {
-    const response = await apiClient.post(`/api/users/${userId}/change-password`, passwordData);
-
-    if (!response.success) {
-      throw new Error(response.message || 'Failed to change password');
-    }
-  }
-
-  /**
-   * Reset user password (admin only)
-   */
-  async resetPassword(userId: string): Promise<{ temporaryPassword: string }> {
-    const response = await apiClient.post<{ temporaryPassword: string }>(`/api/users/${userId}/reset-password`);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to reset password');
-  }
-
-  /**
-   * Get user statistics for dashboard
-   */
-  async getUserStats(): Promise<UserStats> {
-    const response = await apiClient.get<UserStats>('/api/users/statistics');
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to fetch user statistics');
-  }
-
-  /**
-   * Get all available roles
-   */
-  async getRoles(): Promise<Role[]> {
-    const response = await apiClient.get<Role[]>('/api/auth/roles');
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to fetch roles');
-  }
-
-  /**
-   * Get all departments
-   */
-  async getDepartments(): Promise<Department[]> {
-    const response = await apiClient.get<Department[]>('/api/users/departments');
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to fetch departments');
-  }
-
-  /**
-   * Get users by role (for dropdowns)
-   */
-  async getUsersByRole(role: string): Promise<UserSummary[]> {
-    const response = await apiClient.get<UserSummary[]>(`/api/users/by-role/${role}`);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to fetch users by role');
-  }
-
-  /**
-   * Get managers list for user assignment
-   */
-  async getManagers(): Promise<UserSummary[]> {
-    const response = await apiClient.get<UserSummary[]>('/api/users/managers');
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to fetch managers');
-  }
-
-  /**
-   * Bulk operations on users
-   */
-  async performBulkOperation(operation: BulkUserOperation): Promise<BulkOperationResult> {
-    const response = await apiClient.post<BulkOperationResult>('/api/users/bulk-operation', operation);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to perform bulk operation');
-  }
-
-  /**
-   * Get user activity history
-   */
-  async getUserActivity(userId: string, params?: {
-    page?: number;
-    size?: number;
-    startDate?: string;
-    endDate?: string;
-  }): Promise<PaginatedResponse<UserActivity>> {
-    const queryParams = new URLSearchParams();
-    
-    if (params?.page !== undefined) queryParams.append('page', params.page.toString());
-    if (params?.size !== undefined) queryParams.append('size', params.size.toString());
-    if (params?.startDate) queryParams.append('startDate', params.startDate);
-    if (params?.endDate) queryParams.append('endDate', params.endDate);
-
-    const response = await apiClient.get<PaginatedResponse<UserActivity>>(
-      `/api/users/${userId}/activity?${queryParams.toString()}`
-    );
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to fetch user activity');
-  }
-
-  /**
-   * Export users to file
-   */
-  async exportUsers(options: UserExportOptions): Promise<Blob> {
-    const queryParams = new URLSearchParams();
-    
-    queryParams.append('format', options.format);
-    options.fields.forEach(field => queryParams.append('fields', field as string));
-    if (options.includeInactive) queryParams.append('includeInactive', 'true');
-    if (options.includeBankDetails) queryParams.append('includeBankDetails', 'true');
-
-    // Add filter params
-    if (options.filters) {
-      Object.entries(options.filters).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach(v => queryParams.append(key, v.toString()));
-        } else if (value !== undefined) {
-          queryParams.append(key, value.toString());
+  constructor() {
+    // Add request interceptor for authentication
+    this.api.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
         }
-      });
-    }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
 
-    const response = await apiClient.getRawClient().get(`/api/users/export?${queryParams.toString()}`, {
-      responseType: 'blob',
+    // Add response interceptor for error handling
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          // Handle unauthorized access
+          localStorage.removeItem('authToken');
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  // Get Users List with Search and Pagination
+  async getUsers(params: UserSearchParams = {}): Promise<UserListResponse> {
+    const response: AxiosResponse<UserListResponse> = await this.api.get('/users', {
+      params: {
+        search: params.search,
+        department: params.department,
+        role: params.role,
+        active: params.active,
+        accountLocked: params.accountLocked,
+        managerId: params.managerId,
+        page: params.page || 1,
+        pageSize: params.pageSize || 10,
+        sortBy: params.sortBy || 'fullName',
+        sortDirection: params.sortDirection || 'asc',
+      },
     });
-
+    
     return response.data;
   }
 
-  /**
-   * Import users from file
-   */
-  async importUsers(file: File): Promise<UserImportResult> {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const response = await apiClient.upload<UserImportResult>('/api/users/import', formData);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to import users');
+  // Get Single User by ID
+  async getUser(id: string): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.get(`/users/${id}`);
+    return response.data;
   }
 
-  /**
-   * Check if username is available
-   */
+  // Create New User
+  async createUser(userData: CreateUserRequest): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.post('/users', userData);
+    return response.data;
+  }
+
+  // Update User Information
+  async updateUser(id: string, userData: UpdateUserRequest): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}`, userData);
+    return response.data;
+  }
+
+  // Update User Roles
+  async updateUserRoles(id: string, rolesData: UpdateUserRolesRequest): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/roles`, rolesData);
+    return response.data;
+  }
+
+  // Update User Bank Details
+  async updateBankDetails(id: string, bankData: UpdateBankDetailsRequest): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/bank-details`, bankData);
+    return response.data;
+  }
+
+  // Change Password
+  async changePassword(passwordData: ChangePasswordRequest): Promise<{ message: string }> {
+    const response: AxiosResponse<{ message: string }> = await this.api.post('/auth/change-password', passwordData);
+    return response.data;
+  }
+
+  // Reset Password (Admin only)
+  async resetPassword(resetData: ResetPasswordRequest): Promise<{ message: string; temporaryPassword?: string }> {
+    const response: AxiosResponse<{ message: string; temporaryPassword?: string }> = 
+      await this.api.post(`/users/${resetData.userId}/reset-password`, {
+        sendEmail: resetData.sendEmail ?? true,
+      });
+    return response.data;
+  }
+
+  // Activate User
+  async activateUser(id: string): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/activate`);
+    return response.data;
+  }
+
+  // Deactivate User
+  async deactivateUser(id: string): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/deactivate`);
+    return response.data;
+  }
+
+  // Delete User
+  async deleteUser(id: string): Promise<{ message: string }> {
+    const response: AxiosResponse<{ message: string }> = await this.api.delete(`/users/${id}`);
+    return response.data;
+  }
+
+  // Get User Statistics
+  async getUserStatistics(): Promise<UserStatistics> {
+    const response: AxiosResponse<UserStatistics> = await this.api.get('/users/statistics');
+    return response.data;
+  }
+
+  // Get User Activities
+  async getUserActivities(params: ActivitySearchParams): Promise<UserActivityResponse> {
+    const response: AxiosResponse<UserActivityResponse> = await this.api.get(`/users/${params.userId}/activities`, {
+      params: {
+        action: params.action,
+        status: params.status,
+        deviceType: params.deviceType,
+        dateFrom: params.dateFrom,
+        dateTo: params.dateTo,
+        page: params.page || 1,
+        pageSize: params.pageSize || 20,
+      },
+    });
+    return response.data;
+  }
+
+  // Get Users Without Bank Details
+  async getUsersWithoutBankDetails(): Promise<UserResponse[]> {
+    const response: AxiosResponse<UserResponse[]> = await this.api.get('/users/without-bank-details');
+    return response.data;
+  }
+
+  // Bulk Operations
+  async bulkUpdateUsers(userIds: string[], operation: 'activate' | 'deactivate'): Promise<{ 
+    message: string; 
+    successCount: number; 
+    failedCount: number; 
+  }> {
+    const response = await this.api.post('/users/bulk-update', {
+      userIds,
+      operation,
+    });
+    return response.data;
+  }
+
+  // Export Users Data
+  async exportUsers(params: UserSearchParams = {}): Promise<Blob> {
+    const response = await this.api.get('/users/export', {
+      params,
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+
+  // Get Available Managers (for assignment)
+  async getAvailableManagers(): Promise<UserResponse[]> {
+    const response: AxiosResponse<UserResponse[]> = await this.api.get('/users/managers');
+    return response.data;
+  }
+
+  // Verify Bank Details
+  async verifyBankDetails(userId: string): Promise<{ message: string; verified: boolean }> {
+    const response = await this.api.post(`/users/${userId}/bank-details/verify`);
+    return response.data;
+  }
+
+  // Get User Dashboard Data (role-specific)
+  async getUserDashboard(userId: string): Promise<{
+    user: UserResponse;
+    statistics: any;
+    recentActivities: UserActivityResponse;
+    notifications: any[];
+  }> {
+    const response = await this.api.get(`/users/${userId}/dashboard`);
+    return response.data;
+  }
+
+  // Search Users by Name or Employee ID (for autocomplete)
+  async searchUsers(query: string, limit: number = 10): Promise<UserResponse[]> {
+    const response: AxiosResponse<UserResponse[]> = await this.api.get('/users/search', {
+      params: { q: query, limit },
+    });
+    return response.data;
+  }
+
+  // Get User's Direct Reports
+  async getUserDirectReports(managerId: string): Promise<UserResponse[]> {
+    const response: AxiosResponse<UserResponse[]> = await this.api.get(`/users/${managerId}/direct-reports`);
+    return response.data;
+  }
+
+  // Get Department Users
+  async getDepartmentUsers(department: string): Promise<UserResponse[]> {
+    const response: AxiosResponse<UserResponse[]> = await this.api.get(`/users/department/${department}`);
+    return response.data;
+  }
+
+  // Lock User Account (Admin only)
+  async lockUserAccount(id: string): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/lock`);
+    return response.data;
+  }
+
+  // Unlock User Account (Admin only)
+  async unlockUserAccount(id: string): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/unlock`);
+    return response.data;
+  }
+
+  // Force Password Reset on Next Login
+  async forcePasswordReset(id: string): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/force-password-reset`);
+    return response.data;
+  }
+
+  // Get Users by Role
+  async getUsersByRole(role: string): Promise<UserResponse[]> {
+    const response: AxiosResponse<UserResponse[]> = await this.api.get(`/users/by-role/${role}`);
+    return response.data;
+  }
+
+  // Update User Profile Picture
+  async updateProfilePicture(id: string, file: File): Promise<UserResponse> {
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+    
+    const response: AxiosResponse<UserResponse> = await this.api.post(`/users/${id}/profile-picture`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
+  // Get User Permissions
+  async getUserPermissions(id: string): Promise<string[]> {
+    const response: AxiosResponse<{ permissions: string[] }> = await this.api.get(`/users/${id}/permissions`);
+    return response.data.permissions;
+  }
+
+  // Update User Status (for batch operations)
+  async updateUserStatus(id: string, status: { 
+    active?: boolean; 
+    accountLocked?: boolean; 
+    passwordExpired?: boolean;
+  }): Promise<UserResponse> {
+    const response: AxiosResponse<UserResponse> = await this.api.patch(`/users/${id}/status`, status);
+    return response.data;
+  }
+
+  // Get Recently Active Users
+  async getRecentlyActiveUsers(limit: number = 10): Promise<UserResponse[]> {
+    const response: AxiosResponse<UserResponse[]> = await this.api.get('/users/recently-active', {
+      params: { limit },
+    });
+    return response.data;
+  }
+
+  // Send Welcome Email to New User
+  async sendWelcomeEmail(id: string): Promise<{ message: string }> {
+    const response: AxiosResponse<{ message: string }> = await this.api.post(`/users/${id}/send-welcome-email`);
+    return response.data;
+  }
+
+  // Check Username Availability
   async checkUsernameAvailability(username: string, excludeUserId?: string): Promise<{ available: boolean }> {
-    const queryParams = new URLSearchParams();
-    queryParams.append('username', username);
-    if (excludeUserId) queryParams.append('excludeUserId', excludeUserId);
-
-    const response = await apiClient.get<{ available: boolean }>(
-      `/api/users/check-username?${queryParams.toString()}`
-    );
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    return { available: false };
+    const response: AxiosResponse<{ available: boolean }> = await this.api.get('/users/check-username', {
+      params: { username, excludeUserId },
+    });
+    return response.data;
   }
 
-  /**
-   * Check if email is available
-   */
+  // Check Email Availability
   async checkEmailAvailability(email: string, excludeUserId?: string): Promise<{ available: boolean }> {
-    const queryParams = new URLSearchParams();
-    queryParams.append('email', email);
-    if (excludeUserId) queryParams.append('excludeUserId', excludeUserId);
-
-    const response = await apiClient.get<{ available: boolean }>(
-      `/api/users/check-email?${queryParams.toString()}`
-    );
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    return { available: false };
+    const response: AxiosResponse<{ available: boolean }> = await this.api.get('/users/check-email', {
+      params: { email, excludeUserId },
+    });
+    return response.data;
   }
 
-  /**
-   * Upload user profile image
-   */
-  async uploadProfileImage(userId: string, file: File): Promise<{ imageUrl: string }> {
-    const formData = new FormData();
-    formData.append('image', file);
-
-    const response = await apiClient.upload<{ imageUrl: string }>(
-      `/api/users/${userId}/profile-image`,
-      formData
-    );
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to upload profile image');
+  // Validate Employee ID
+  async validateEmployeeId(employeeId: string, excludeUserId?: string): Promise<{ valid: boolean }> {
+    const response: AxiosResponse<{ valid: boolean }> = await this.api.get('/users/validate-employee-id', {
+      params: { employeeId, excludeUserId },
+    });
+    return response.data;
   }
 
-  /**
-   * Get user's subordinates (for managers)
-   */
-  async getUserSubordinates(userId: string): Promise<UserSummary[]> {
-    const response = await apiClient.get<UserSummary[]>(`/api/users/${userId}/subordinates`);
-
-    if (response.success && response.data) {
-      return response.data;
-    }
-    
-    throw new Error(response.message || 'Failed to fetch subordinates');
+  // Get available roles
+  async getRoles(): Promise<Role[]> {
+    const response: AxiosResponse<Role[]> = await this.api.get('/users/roles');
+    return response.data;
   }
+
+  // Get available departments
+  async getDepartments(): Promise<Department[]> {
+    const response: AxiosResponse<Department[]> = await this.api.get('/users/departments');
+    return response.data;
+  }
+
+  // Get available managers
+  async getManagers(): Promise<UserSummary[]> {
+    const response: AxiosResponse<UserSummary[]> = await this.api.get('/users/managers');
+    return response.data;
+  }
+
 }
 
 // Export singleton instance
-const userService = new UserService();
+export const userService = new UserService();
 export default userService;

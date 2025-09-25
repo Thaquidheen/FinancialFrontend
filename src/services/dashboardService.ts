@@ -5,8 +5,8 @@ import {
   ApprovalDashboardResponse,
   PaymentDashboardResponse,
   DashboardFilters,
-} from '@types/dashboard';
-import { ApiResponse } from '@types/api';
+} from '../types/dashboard';
+import { ApiResponse } from '../types/api';
 
 export class DashboardService {
   /**

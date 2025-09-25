@@ -3,3 +3,4 @@ declare module 'date-fns' {
   export function formatDistance(date: Date, baseDate: Date, options?: { addSuffix?: boolean }): string;
   export function parseISO(dateString: string): Date;
 }
+

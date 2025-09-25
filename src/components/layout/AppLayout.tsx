@@ -17,7 +17,7 @@ import {
 import { THEME_CONFIG } from '@constants/app';
 import { useAuth } from '@contexts/AuthContext';
 import Sidebar from './Sidebar';
-import Header from './Header';
+import Header from './Header.tsx';
 
 interface AppLayoutProps {
   children: React.ReactNode;

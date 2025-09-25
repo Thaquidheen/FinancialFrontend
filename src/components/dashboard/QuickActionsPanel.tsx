@@ -7,8 +7,6 @@ import {
   Button,
   Grid,
   Avatar,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import {
   Add,
@@ -25,7 +23,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@contexts/AuthContext';
-import { USER_ROLES, ROUTES } from '@constants/app';
+import { ROUTES } from '@constants/app';
+import { USER_ROLES } from '../../types/auth';
 
 interface QuickAction {
   id: string;
@@ -280,3 +279,35 @@ const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ onActionClick }) 
                 <Button
                   variant="contained"
                   color="warning"
+                  fullWidth
+                  startIcon={<Approval />}
+                  onClick={() => navigate(ROUTES.APPROVALS)}
+                  sx={{ py: 1.5 }}
+                >
+                  Review Approvals
+                </Button>
+              </Grid>
+            )}
+            
+            {user?.roles?.includes(USER_ROLES.EMPLOYEE) && (
+              <Grid item xs={12} sm={6}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  startIcon={<RequestQuote />}
+                  onClick={() => navigate(ROUTES.QUOTATION_CREATE)}
+                  sx={{ py: 1.5 }}
+                >
+                  Submit Request
+                </Button>
+              </Grid>
+            )}
+          </Grid>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default QuickActionsPanel;
