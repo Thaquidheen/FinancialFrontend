@@ -1,8 +1,8 @@
 // src/services/projectService.ts
-import axios from 'axios';
+
+import apiClient from './api';
 import {
   Project,
-  ProjectSummary,
   BudgetSummary,
   ProjectStatistics,
   CreateProjectRequest,
@@ -12,11 +12,11 @@ import {
   UpdateStatusRequest,
   ProjectFilters,
   PaginatedResponse,
-  ApiResponse,
   ProjectStatus
 } from '@/types/project';
+import { ApiResponse } from '@/types/api';
 
-const API_BASE = '/api/projects';
+const API_BASE = '/projects';
 
 export class ProjectService {
   /**
@@ -30,8 +30,8 @@ export class ProjectService {
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
     if (filters.sortDir) params.append('sortDir', filters.sortDir);
     
-    const response = await axios.get(`${API_BASE}?${params.toString()}`);
-    return response.data;
+    const response = await apiClient.get<PaginatedResponse<Project>>(`${API_BASE}?${params.toString()}`);
+    return response;
   }
 
   /**
@@ -52,104 +52,104 @@ export class ProjectService {
     if (filters.status) params.append('status', filters.status);
     if (filters.managerId) params.append('managerId', filters.managerId.toString());
     
-    const response = await axios.get(`${API_BASE}/search?${params.toString()}`);
-    return response.data;
+    const response = await apiClient.get<PaginatedResponse<Project>>(`${API_BASE}/search?${params.toString()}`);
+    return response;
   }
 
   /**
    * Get project by ID
    */
   async getProjectById(projectId: number): Promise<ApiResponse<Project>> {
-    const response = await axios.get(`${API_BASE}/${projectId}`);
-    return response.data;
+    const response = await apiClient.get<Project>(`${API_BASE}/${projectId}`);
+    return response;
   }
 
   /**
    * Get current user's projects (for Project Managers)
    */
   async getMyProjects(): Promise<ApiResponse<Project[]>> {
-    const response = await axios.get(`${API_BASE}/my-projects`);
-    return response.data;
+    const response = await apiClient.get<Project[]>(`${API_BASE}/my-projects`);
+    return response;
   }
 
   /**
    * Create new project
    */
   async createProject(data: CreateProjectRequest): Promise<ApiResponse<Project>> {
-    const response = await axios.post(API_BASE, data);
-    return response.data;
+    const response = await apiClient.post<Project>(API_BASE, data);
+    return response;
   }
 
   /**
    * Update project
    */
   async updateProject(projectId: number, data: UpdateProjectRequest): Promise<ApiResponse<Project>> {
-    const response = await axios.put(`${API_BASE}/${projectId}`, data);
-    return response.data;
+    const response = await apiClient.put<Project>(`${API_BASE}/${projectId}`, data);
+    return response;
   }
 
   /**
    * Assign project manager
    */
   async assignManager(projectId: number, data: AssignManagerRequest): Promise<ApiResponse<Project>> {
-    const response = await axios.post(`${API_BASE}/${projectId}/assign`, data);
-    return response.data;
+    const response = await apiClient.post<Project>(`${API_BASE}/${projectId}/assign`, data);
+    return response;
   }
 
   /**
    * Update project budget
    */
   async updateProjectBudget(projectId: number, data: UpdateBudgetRequest): Promise<ApiResponse<Project>> {
-    const response = await axios.put(`${API_BASE}/${projectId}/budget`, data);
-    return response.data;
+    const response = await apiClient.put<Project>(`${API_BASE}/${projectId}/budget`, data);
+    return response;
   }
 
   /**
    * Update project status
    */
   async updateProjectStatus(projectId: number, data: UpdateStatusRequest): Promise<ApiResponse<Project>> {
-    const response = await axios.put(`${API_BASE}/${projectId}/status`, data);
-    return response.data;
+    const response = await apiClient.put<Project>(`${API_BASE}/${projectId}/status`, data);
+    return response;
   }
 
   /**
    * Get projects by status
    */
   async getProjectsByStatus(status: ProjectStatus): Promise<ApiResponse<Project[]>> {
-    const response = await axios.get(`${API_BASE}/by-status/${status}`);
-    return response.data;
+    const response = await apiClient.get<Project[]>(`${API_BASE}/by-status/${status}`);
+    return response;
   }
 
   /**
    * Get projects requiring attention (over budget, overdue, etc.)
    */
   async getProjectsRequiringAttention(): Promise<ApiResponse<Project[]>> {
-    const response = await axios.get(`${API_BASE}/requiring-attention`);
-    return response.data;
+    const response = await apiClient.get<Project[]>(`${API_BASE}/requiring-attention`);
+    return response;
   }
 
   /**
    * Get project statistics
    */
   async getProjectStatistics(): Promise<ApiResponse<ProjectStatistics>> {
-    const response = await axios.get(`${API_BASE}/statistics`);
-    return response.data;
+    const response = await apiClient.get<ProjectStatistics>(`${API_BASE}/statistics`);
+    return response;
   }
 
   /**
    * Delete project (if supported by backend)
    */
   async deleteProject(projectId: number): Promise<ApiResponse<void>> {
-    const response = await axios.delete(`${API_BASE}/${projectId}`);
-    return response.data;
+    const response = await apiClient.delete<void>(`${API_BASE}/${projectId}`);
+    return response;
   }
 
   /**
    * Get project budget summary
    */
   async getProjectBudgetSummary(projectId: number): Promise<ApiResponse<BudgetSummary>> {
-    const response = await axios.get(`${API_BASE}/${projectId}/budget/summary`);
-    return response.data;
+    const response = await apiClient.get<BudgetSummary>(`${API_BASE}/${projectId}/budget/summary`);
+    return response;
   }
 
   /**
@@ -162,8 +162,8 @@ export class ProjectService {
     if (filters.status) params.append('status', filters.status);
     if (filters.overBudget !== undefined) params.append('overBudget', filters.overBudget.toString());
     
-    const response = await axios.get(`${API_BASE}/budget-utilization?${params.toString()}`);
-    return response.data;
+    const response = await apiClient.get<Project[]>(`${API_BASE}/budget-utilization?${params.toString()}`);
+    return response;
   }
 
   /**
@@ -180,66 +180,66 @@ export class ProjectService {
     
     params.append('format', format);
     
-    const response = await axios.get(`${API_BASE}/export?${params.toString()}`, {
+    const raw = await apiClient.getRawClient().get(`${API_BASE}/export?${params.toString()}`, {
       responseType: 'blob'
     });
     
-    return response.data;
+    return raw.data as Blob;
   }
 
   /**
    * Bulk update projects status
    */
   async bulkUpdateStatus(projectIds: number[], status: ProjectStatus, reason?: string): Promise<ApiResponse<void>> {
-    const response = await axios.put(`${API_BASE}/bulk/status`, {
+    const response = await apiClient.put<void>(`${API_BASE}/bulk/status`, {
       projectIds,
       status,
       reason
     });
-    return response.data;
+    return response;
   }
 
   /**
    * Get project timeline/history
    */
   async getProjectHistory(projectId: number): Promise<ApiResponse<any[]>> {
-    const response = await axios.get(`${API_BASE}/${projectId}/history`);
-    return response.data;
+    const response = await apiClient.get<any[]>(`${API_BASE}/${projectId}/history`);
+    return response;
   }
 
   /**
    * Get project team members
    */
   async getProjectTeam(projectId: number): Promise<ApiResponse<any[]>> {
-    const response = await axios.get(`${API_BASE}/${projectId}/team`);
-    return response.data;
+    const response = await apiClient.get<any[]>(`${API_BASE}/${projectId}/team`);
+    return response;
   }
 
   /**
    * Add team member to project
    */
   async addTeamMember(projectId: number, userId: number, role?: string): Promise<ApiResponse<void>> {
-    const response = await axios.post(`${API_BASE}/${projectId}/team`, {
+    const response = await apiClient.post<void>(`${API_BASE}/${projectId}/team`, {
       userId,
       role
     });
-    return response.data;
+    return response;
   }
 
   /**
    * Remove team member from project
    */
   async removeTeamMember(projectId: number, userId: number): Promise<ApiResponse<void>> {
-    const response = await axios.delete(`${API_BASE}/${projectId}/team/${userId}`);
-    return response.data;
+    const response = await apiClient.delete<void>(`${API_BASE}/${projectId}/team/${userId}`);
+    return response;
   }
 
   /**
    * Get project documents/attachments
    */
   async getProjectDocuments(projectId: number): Promise<ApiResponse<any[]>> {
-    const response = await axios.get(`${API_BASE}/${projectId}/documents`);
-    return response.data;
+    const response = await apiClient.get<any[]>(`${API_BASE}/${projectId}/documents`);
+    return response;
   }
 
   /**
@@ -250,36 +250,32 @@ export class ProjectService {
     formData.append('file', file);
     if (category) formData.append('category', category);
 
-    const response = await axios.post(`${API_BASE}/${projectId}/documents`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    });
-    return response.data;
+    const response = await apiClient.upload<any>(`${API_BASE}/${projectId}/documents`, formData);
+    return response;
   }
 
   /**
    * Get project quotations
    */
   async getProjectQuotations(projectId: number): Promise<ApiResponse<any[]>> {
-    const response = await axios.get(`/api/quotations/project/${projectId}`);
-    return response.data;
+    const response = await apiClient.get<any[]>(`/api/quotations/project/${projectId}`);
+    return response;
   }
 
   /**
    * Get project approvals
    */
   async getProjectApprovals(projectId: number): Promise<ApiResponse<any[]>> {
-    const response = await axios.get(`/api/approvals/project/${projectId}`);
-    return response.data;
+    const response = await apiClient.get<any[]>(`/api/approvals/project/${projectId}`);
+    return response;
   }
 
   /**
    * Get project payments
    */
   async getProjectPayments(projectId: number): Promise<ApiResponse<any[]>> {
-    const response = await axios.get(`/api/payments/project/${projectId}`);
-    return response.data;
+    const response = await apiClient.get<any[]>(`/api/payments/project/${projectId}`);
+    return response;
   }
 }
 
