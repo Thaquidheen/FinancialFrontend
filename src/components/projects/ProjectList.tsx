@@ -72,6 +72,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
     updateFilters
   } = useProjectsManager(externalFilters);
 
+  const projectItems = projects as Project[];
+
   const canEdit = user?.roles?.some(role => 
     [USER_ROLES.SUPER_ADMIN, USER_ROLES.ACCOUNT_MANAGER].includes(role as any)
   );
@@ -91,7 +93,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
   };
 
   const formatCurrency = (amount: number, currency: string = 'SAR') => {
-    return new Intl.NumberFormat('ar-SA', {
+    return new Intl.NumberFormat('en-SA', {
       style: 'currency',
       currency,
       minimumFractionDigits: 0,
@@ -123,10 +125,10 @@ const ProjectList: React.FC<ProjectListProps> = ({
               <TableCell padding="checkbox">
                 <Checkbox
                   indeterminate={
-                    selectedProjects.length > 0 && selectedProjects.length < projects.length
+                    selectedProjects.length > 0 && selectedProjects.length < projectItems.length
                   }
-                  checked={projects.length > 0 && selectedProjects.length === projects.length}
-                  onChange={() => handleSelectAllProjects(projects)}
+                  checked={projectItems.length > 0 && selectedProjects.length === projectItems.length}
+                  onChange={() => handleSelectAllProjects(projectItems)}
                 />
               </TableCell>
               <TableCell>Project Name</TableCell>
@@ -154,7 +156,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
                   <TableCell><Skeleton width={50} /></TableCell>
                 </TableRow>
               ))
-            ) : projects.length === 0 ? (
+            ) : projectItems.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} align="center">
                   <Typography variant="body2" color="text.secondary" py={4}>
@@ -163,7 +165,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
                 </TableCell>
               </TableRow>
             ) : (
-              projects.map((project) => (
+              projectItems.map((project: Project) => (
                 <TableRow 
                   key={project.id}
                   hover
@@ -232,8 +234,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
 
                   <TableCell>
                     <Chip
-                      label={PROJECT_STATUS_LABELS[project.status]}
-                      color={PROJECT_STATUS_COLORS[project.status]}
+                      label={PROJECT_STATUS_LABELS[project.status as keyof typeof PROJECT_STATUS_LABELS]}
+                      color={PROJECT_STATUS_COLORS[project.status as keyof typeof PROJECT_STATUS_COLORS]}
                       size="small"
                     />
                   </TableCell>
@@ -241,31 +243,39 @@ const ProjectList: React.FC<ProjectListProps> = ({
                   <TableCell align="right">
                     <Box>
                       <Typography variant="body2" fontWeight="medium">
-                        {formatCurrency(project.allocatedBudget, project.currency)}
+                        {formatCurrency(project.allocatedBudget ?? 0, project.currency)}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Used: {formatCurrency(project.usedBudget, project.currency)}
+                        Used: {formatCurrency(project.usedBudget ?? 0, project.currency)}
                       </Typography>
                     </Box>
                   </TableCell>
 
                   <TableCell align="center">
                     <Box width={80}>
-                      <LinearProgress
-                        variant="determinate"
-                        value={Math.min(project.budgetUtilization, 100)}
-                        color={getBudgetUtilizationColor(project.budgetUtilization)}
-                        sx={{ mb: 0.5 }}
-                      />
-                      <Typography variant="caption">
-                        {project.budgetUtilization.toFixed(1)}%
-                      </Typography>
+                      {(() => {
+                        const utilization = Number(project.budgetUtilization ?? 0);
+                        const clamped = Math.min(utilization, 100);
+                        return (
+                          <>
+                            <LinearProgress
+                              variant="determinate"
+                              value={clamped}
+                              color={getBudgetUtilizationColor(utilization)}
+                              sx={{ mb: 0.5 }}
+                            />
+                            <Typography variant="caption">
+                              {utilization.toFixed(1)}%
+                            </Typography>
+                          </>
+                        );
+                      })()}
                     </Box>
                   </TableCell>
 
                   <TableCell>
                     <Typography variant="body2">
-                      {format(new Date(project.createdDate), 'MMM dd, yyyy')}
+                      {project.createdDate ? format(new Date(project.createdDate), 'MMM dd, yyyy') : '-'}
                     </Typography>
                   </TableCell>
 

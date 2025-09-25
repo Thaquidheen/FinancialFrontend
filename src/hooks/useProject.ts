@@ -297,9 +297,9 @@ export const useProjectsManager = (initialFilters: ProjectFilters = {}) => {
 
   return {
     // Data
-    projects: data?.data?.content || [],
-    totalPages: data?.data?.totalPages || 0,
-    totalElements: data?.data?.totalElements || 0,
+    projects: ((data as any)?.data?.content ?? (data as any)?.content) || [],
+    totalPages: ((data as any)?.data?.totalPages ?? (data as any)?.totalPages) || 0,
+    totalElements: ((data as any)?.data?.totalElements ?? (data as any)?.totalElements) || 0,
     
     // State
     filters,
