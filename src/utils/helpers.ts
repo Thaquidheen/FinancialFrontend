@@ -1,9 +1,10 @@
-import { format, formatDistance, parseISO } from 'date-fns';
 import { DATE_FORMATS } from '@constants/app';
 
 // Date formatting utilities
 export const formatDate = (date: string | Date, formatString: string = DATE_FORMATS.DISPLAY): string => {
   try {
+    // @ts-ignore
+    const { parseISO, format } = require('date-fns');
     const dateObj = typeof date === 'string' ? parseISO(date) : date;
     return format(dateObj, formatString);
   } catch (error) {
@@ -14,6 +15,8 @@ export const formatDate = (date: string | Date, formatString: string = DATE_FORM
 
 export const formatRelativeDate = (date: string | Date): string => {
   try {
+    // @ts-ignore
+    const { parseISO, formatDistance } = require('date-fns');
     const dateObj = typeof date === 'string' ? parseISO(date) : date;
     return formatDistance(dateObj, new Date(), { addSuffix: true });
   } catch (error) {
@@ -189,7 +192,7 @@ export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void => {
-  let timeout: NodeJS.Timeout;
+  let timeout: number;
   
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
