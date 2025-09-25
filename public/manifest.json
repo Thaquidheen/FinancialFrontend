@@ -1,0 +1,21 @@
+{
+  "name": "Financial Management System",
+  "short_name": "FinancialApp",
+  "description": "A comprehensive financial management system for project tracking and user management",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1976d2",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}

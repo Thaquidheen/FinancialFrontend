@@ -272,6 +272,10 @@ export const useActiveUsers = (params: Omit<UserSearchParams, 'active'> = {}) =>
   return useUsers({ ...params, active: true });
 };
 
+export const useUserStats = () => {
+  return useUserStatistics();
+};
+
 export const useInactiveUsers = (params: Omit<UserSearchParams, 'active'> = {}) => {
   return useUsers({ ...params, active: false });
 };
@@ -335,6 +339,45 @@ export const useOptimisticUserUpdate = () => {
   };
 };
 
+export const useExportUsers = () => {
+  return useMutation({
+    mutationFn: (params: UserSearchParams = {}) => {
+      return userService.exportUsers(params);
+    },
+    onError: (error) => {
+      console.error('Failed to export users:', error);
+    },
+  });
+};
+export const useRefreshUsers = () => {
+  const queryClient = useQueryClient();
+
+  return {
+    refreshAll: () => {
+      return queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.all });
+    },
+    refresh: () => {
+      return queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.lists() });
+    },
+  };
+};
+export const useBulkUserOperation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ userIds, operation }: { userIds: string[]; operation: string }) => {
+      // This should match your userService method
+      return userService.bulkUpdateUsers(userIds, operation as 'activate' | 'deactivate');
+    },
+    onSuccess: () => {
+      // Invalidate all user-related queries
+      queryClient.invalidateQueries({ queryKey: USER_QUERY_KEYS.all });
+    },
+    onError: (error) => {
+      console.error('Failed to perform bulk operation:', error);
+    },
+  });
+};
 // Error Recovery
 export const useRetryUserOperation = () => {
   const queryClient = useQueryClient();
