@@ -49,11 +49,16 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
   onSuccess
 }) => {
   const [submitError, setSubmitError] = useState<string>('');
+  // Normalize numeric fields to avoid undefined causing runtime errors
+  const allocated = Number(project.allocatedBudget ?? 0);
+  const used = Number(project.usedBudget ?? 0);
+  const remaining = Number(project.remainingBudget ?? (allocated - used));
+  const utilizationNow = Number(project.budgetUtilization ?? (allocated > 0 ? (used / allocated) * 100 : 0));
   const updateBudgetMutation = useUpdateProjectBudget();
 
   const formik = useFormik<UpdateBudgetRequest>({
     initialValues: {
-      allocatedBudget: project.allocatedBudget,
+      allocatedBudget: allocated,
       reason: ''
     },
     validationSchema,
@@ -81,13 +86,13 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
     if (open) {
       formik.resetForm({
         values: {
-          allocatedBudget: project.allocatedBudget,
+          allocatedBudget: allocated,
           reason: ''
         }
       });
       setSubmitError('');
     }
-  }, [open, project.allocatedBudget]);
+  }, [open, allocated]);
 
   const handleClose = () => {
     if (!updateBudgetMutation.isPending) {
@@ -98,7 +103,7 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
   };
 
   const formatCurrency = (amount: number, currency: string = 'SAR') => {
-    return new Intl.NumberFormat('ar-SA', {
+    return new Intl.NumberFormat('en-SA', {
       style: 'currency',
       currency,
       minimumFractionDigits: 0,
@@ -106,9 +111,9 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
     }).format(amount);
   };
 
-  const budgetDifference = formik.values.allocatedBudget - project.allocatedBudget;
+  const budgetDifference = formik.values.allocatedBudget - allocated;
   const newUtilization = formik.values.allocatedBudget > 0 
-    ? (project.usedBudget / formik.values.allocatedBudget) * 100
+    ? (used / formik.values.allocatedBudget) * 100
     : 0;
 
   const getBudgetChangeColor = () => {
@@ -165,7 +170,7 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
                   Allocated Budget
                 </Typography>
                 <Typography variant="h6" color="primary">
-                  {formatCurrency(project.allocatedBudget, project.currency)}
+                  {formatCurrency(allocated, project.currency)}
                 </Typography>
               </Box>
               
@@ -174,7 +179,7 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
                   Used Budget
                 </Typography>
                 <Typography variant="h6" color={project.usedBudget > project.allocatedBudget ? 'error' : 'text.primary'}>
-                  {formatCurrency(project.usedBudget, project.currency)}
+                  {formatCurrency(used, project.currency)}
                 </Typography>
               </Box>
               
@@ -183,7 +188,7 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
                   Remaining Budget
                 </Typography>
                 <Typography variant="h6" color={project.remainingBudget < 0 ? 'error' : 'success'}>
-                  {formatCurrency(project.remainingBudget, project.currency)}
+                  {formatCurrency(remaining, project.currency)}
                 </Typography>
               </Box>
               
@@ -192,7 +197,7 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
                   Utilization
                 </Typography>
                 <Typography variant="h6" color={project.budgetUtilization > 100 ? 'error' : 'info'}>
-                  {project.budgetUtilization.toFixed(1)}%
+                  {utilizationNow.toFixed(1)}%
                 </Typography>
               </Box>
             </Box>

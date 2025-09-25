@@ -19,6 +19,7 @@ import {
   FormControlLabel,
   Checkbox
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material/Select';
 import { Person as PersonIcon } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
 import { Project, AssignManagerRequest } from '@/types/project';
@@ -141,7 +142,7 @@ const AssignManagerModal: React.FC<AssignManagerModalProps> = ({
           </Alert>
         )}
 
-        {managersError && (
+        {!!managersError && (
           <Alert severity="warning" sx={{ mb: 3 }}>
             Unable to load managers. Please try again.
           </Alert>
@@ -154,7 +155,7 @@ const AssignManagerModal: React.FC<AssignManagerModalProps> = ({
               Current Manager
             </Typography>
             <Box display="flex" alignItems="center" gap={2} p={2} bgcolor="grey.50" borderRadius={1}>
-              <Avatar size="small">
+              <Avatar sx={{ width: 24, height: 24 }}>
                 <PersonIcon />
               </Avatar>
               <Box>
@@ -175,7 +176,7 @@ const AssignManagerModal: React.FC<AssignManagerModalProps> = ({
           <InputLabel>Select New Manager</InputLabel>
           <Select
             value={selectedManagerId}
-            onChange={(e) => setSelectedManagerId(e.target.value)}
+            onChange={(e: SelectChangeEvent<string>) => setSelectedManagerId(e.target.value as string)}
             label="Select New Manager"
           >
             <MenuItem value="">
@@ -186,7 +187,7 @@ const AssignManagerModal: React.FC<AssignManagerModalProps> = ({
               .map((manager) => (
                 <MenuItem key={manager.id} value={manager.id.toString()}>
                   <Box display="flex" alignItems="center" gap={2} width="100%">
-                    <Avatar size="small">
+                    <Avatar sx={{ width: 24, height: 24 }}>
                       <PersonIcon />
                     </Avatar>
                     <Box flex={1}>

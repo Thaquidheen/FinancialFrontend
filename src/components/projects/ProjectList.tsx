@@ -45,6 +45,7 @@ interface ProjectListProps {
   onViewProject?: (project: Project) => void;
   onAssignManager?: (project: Project) => void;
   onUpdateBudget?: (project: Project) => void;
+  onUpdateStatus?: (project: Project) => void;
   filters?: ProjectFilters;
 }
 
@@ -53,6 +54,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
   onViewProject,
   onAssignManager,
   onUpdateBudget,
+  onUpdateStatus,
   filters: externalFilters = {}
 }) => {
   const { user } = useAuth();
@@ -355,6 +357,18 @@ const ProjectList: React.FC<ProjectListProps> = ({
           }}>
             <BudgetIcon fontSize="small" sx={{ mr: 1 }} />
             Update Budget
+          </MenuItem>
+        )}
+
+        {canEdit && (
+          <MenuItem onClick={() => {
+            if (selectedProject && onUpdateStatus) {
+              onUpdateStatus(selectedProject);
+            }
+            handleMenuClose();
+          }}>
+            <WarningIcon fontSize="small" sx={{ mr: 1 }} />
+            Update Status
           </MenuItem>
         )}
       </Menu>

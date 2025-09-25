@@ -2,8 +2,6 @@
 import apiClient from './api';
 import {
   Project,
-  ProjectSummary,
-  BudgetSummary,
   ProjectStatistics,
   CreateProjectRequest,
   UpdateProjectRequest,
@@ -11,10 +9,9 @@ import {
   UpdateBudgetRequest,
   UpdateStatusRequest,
   ProjectFilters,
-  PaginatedResponse,
-  ApiResponse,
   ProjectStatus
 } from '@/types/project';
+import type { ApiResponse, PaginatedResponse } from '@/types/api';
 
 const API_BASE = '/projects';
 
@@ -30,7 +27,7 @@ export class ProjectService {
     if (filters.sortBy) params.append('sortBy', filters.sortBy);
     if (filters.sortDir) params.append('sortDir', filters.sortDir);
     
-    const response = await apiClient.get(`${API_BASE}?${params.toString()}`);
+    const response = await apiClient.get<PaginatedResponse<Project>>(`${API_BASE}?${params.toString()}`);
     return response;
   }
 
@@ -52,7 +49,7 @@ export class ProjectService {
     if (filters.status) params.append('status', filters.status);
     if (filters.managerId) params.append('managerId', filters.managerId.toString());
     
-    const response = await apiClient.get(`${API_BASE}/search?${params.toString()}`);
+    const response = await apiClient.get<PaginatedResponse<Project>>(`${API_BASE}/search?${params.toString()}`);
     return response;
   }
 
@@ -60,7 +57,7 @@ export class ProjectService {
    * Get project by ID
    */
   async getProjectById(projectId: number): Promise<ApiResponse<Project>> {
-    const response = await apiClient.get(`${API_BASE}/${projectId}`);
+    const response = await apiClient.get<Project>(`${API_BASE}/${projectId}`);
     return response;
   }
 
@@ -68,7 +65,7 @@ export class ProjectService {
    * Get current user's projects (for Project Managers)
    */
   async getMyProjects(): Promise<ApiResponse<Project[]>> {
-    const response = await apiClient.get(`${API_BASE}/my-projects`);
+    const response = await apiClient.get<Project[]>(`${API_BASE}/my-projects`);
     return response;
   }
 
@@ -76,7 +73,7 @@ export class ProjectService {
    * Create new project
    */
   async createProject(data: CreateProjectRequest): Promise<ApiResponse<Project>> {
-    const response = await apiClient.post(API_BASE, data);
+    const response = await apiClient.post<Project>(API_BASE, data);
     return response;
   }
 
@@ -84,7 +81,7 @@ export class ProjectService {
    * Update project - FIXED to match backend
    */
   async updateProject(projectId: number, data: UpdateProjectRequest): Promise<ApiResponse<Project>> {
-    const response = await apiClient.put(`${API_BASE}/${projectId}`, data);
+    const response = await apiClient.put<Project>(`${API_BASE}/${projectId}`, data);
     return response;
   }
 
@@ -92,7 +89,7 @@ export class ProjectService {
    * Assign project manager - FIXED: use /assign-manager endpoint
    */
   async assignManager(projectId: number, data: AssignManagerRequest): Promise<ApiResponse<Project>> {
-    const response = await apiClient.put(`${API_BASE}/${projectId}/assign-manager`, data);
+    const response = await apiClient.put<Project>(`${API_BASE}/${projectId}/assign-manager`, data);
     return response;
   }
 
@@ -100,7 +97,7 @@ export class ProjectService {
    * Update project budget - FIXED to match backend
    */
   async updateProjectBudget(projectId: number, data: UpdateBudgetRequest): Promise<ApiResponse<Project>> {
-    const response = await apiClient.put(`${API_BASE}/${projectId}/budget`, data);
+    const response = await apiClient.put<Project>(`${API_BASE}/${projectId}/budget`, data);
     return response;
   }
 
@@ -108,7 +105,7 @@ export class ProjectService {
    * Update project status - FIXED to match backend
    */
   async updateProjectStatus(projectId: number, data: UpdateStatusRequest): Promise<ApiResponse<Project>> {
-    const response = await apiClient.put(`${API_BASE}/${projectId}/status`, data);
+    const response = await apiClient.put<Project>(`${API_BASE}/${projectId}/status`, data);
     return response;
   }
 
@@ -116,7 +113,7 @@ export class ProjectService {
    * Get projects by status
    */
   async getProjectsByStatus(status: ProjectStatus): Promise<ApiResponse<Project[]>> {
-    const response = await apiClient.get(`${API_BASE}/by-status/${status}`);
+    const response = await apiClient.get<Project[]>(`${API_BASE}/by-status/${status}`);
     return response;
   }
 
@@ -124,7 +121,7 @@ export class ProjectService {
    * Get projects requiring attention (over budget, overdue, etc.)
    */
   async getProjectsRequiringAttention(): Promise<ApiResponse<Project[]>> {
-    const response = await apiClient.get(`${API_BASE}/requiring-attention`);
+    const response = await apiClient.get<Project[]>(`${API_BASE}/requiring-attention`);
     return response;
   }
 
@@ -132,7 +129,7 @@ export class ProjectService {
    * Get project statistics
    */
   async getProjectStatistics(): Promise<ApiResponse<ProjectStatistics>> {
-    const response = await apiClient.get(`${API_BASE}/statistics`);
+    const response = await apiClient.get<ProjectStatistics>(`${API_BASE}/statistics`);
     return response;
   }
 
@@ -140,7 +137,7 @@ export class ProjectService {
    * Delete project (if supported by backend)
    */
   async deleteProject(projectId: number): Promise<ApiResponse<void>> {
-    const response = await apiClient.delete(`${API_BASE}/${projectId}`);
+    const response = await apiClient.delete<void>(`${API_BASE}/${projectId}`);
     return response;
   }
 
@@ -148,7 +145,7 @@ export class ProjectService {
    * Get project team members - NEW
    */
   async getProjectTeam(projectId: number): Promise<ApiResponse<any[]>> {
-    const response = await apiClient.get(`${API_BASE}/${projectId}/team`);
+    const response = await apiClient.get<any[]>(`${API_BASE}/${projectId}/team`);
     return response;
   }
 
@@ -156,7 +153,7 @@ export class ProjectService {
    * Get project budget status - NEW based on your BudgetTrackingController
    */
   async getProjectBudgetStatus(projectId: number): Promise<ApiResponse<any>> {
-    const response = await apiClient.get(`/financial/budget-tracking/status/${projectId}`);
+    const response = await apiClient.get<any>(`/financial/budget-tracking/status/${projectId}`);
     return response;
   }
 
@@ -169,7 +166,7 @@ export class ProjectService {
     if (params?.startDate) queryParams.append('startDate', params.startDate);
     if (params?.endDate) queryParams.append('endDate', params.endDate);
     
-    const response = await apiClient.get(`/financial/budget-tracking/project/${projectId}?${queryParams.toString()}`);
+    const response = await apiClient.get<any>(`/financial/budget-tracking/project/${projectId}?${queryParams.toString()}`);
     return response;
   }
 }

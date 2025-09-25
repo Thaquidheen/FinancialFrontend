@@ -39,11 +39,15 @@ import {
   PROJECT_STATUS_LABELS,
   DEFAULT_PROJECT_FILTERS
 } from '@/types/project';
+import type { Project } from '@/types/project';
 import { useProjectsManager, useProjectStatistics } from '@hooks/useProject';
 import { useAuth } from '@contexts/AuthContext';
 import { USER_ROLES } from '@/types/auth';
 import ProjectList from '@components/projects/ProjectList';
 import ProjectCard from '@components/projects/ProjectCard';
+import AssignManagerModal from '@components/projects/AssignManagerModal';
+import UpdateBudgetModal from '@components/projects/UpdateBudgetModal';
+import UpdateStatusModal from '@components/projects/UpdateStatusModal';
 import ProjectDetailsPanel from '@components/projects/ProjectDetailsPanel';
 
 const ProjectListPage: React.FC = () => {
@@ -57,6 +61,10 @@ const ProjectListPage: React.FC = () => {
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [detailsPanelOpen, setDetailsPanelOpen] = useState(false);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [budgetModalOpen, setBudgetModalOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [actionProject, setActionProject] = useState<Project | null>(null);
 
   const {
     projects,
@@ -103,6 +111,21 @@ const ProjectListPage: React.FC = () => {
 
   const handleEditProject = (project: any) => {
     navigate(`/projects/${project.id}/edit`);
+  };
+
+  const handleAssignManager = (project: Project) => {
+    setActionProject(project);
+    setAssignModalOpen(true);
+  };
+
+  const handleUpdateBudget = (project: Project) => {
+    setActionProject(project);
+    setBudgetModalOpen(true);
+  };
+
+  const handleUpdateStatus = (project: Project) => {
+    setActionProject(project);
+    setStatusModalOpen(true);
   };
 
   const handleCreateProject = () => {
@@ -329,6 +352,9 @@ const ProjectListPage: React.FC = () => {
         <ProjectList
           onViewProject={handleViewProject}
           onEditProject={handleEditProject}
+          onAssignManager={handleAssignManager}
+          onUpdateBudget={handleUpdateBudget}
+          onUpdateStatus={handleUpdateStatus}
           filters={filters}
         />
       ) : (
@@ -369,12 +395,15 @@ const ProjectListPage: React.FC = () => {
               </Card>
             </Grid>
           ) : (
-            projects.map((project) => (
+            projects.map((project: Project) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={project.id}>
                 <ProjectCard
                   project={project}
                   onView={handleViewProject}
                   onEdit={handleEditProject}
+                  onAssignManager={handleAssignManager}
+                  onUpdateBudget={handleUpdateBudget}
+                  onUpdateStatus={handleUpdateStatus}
                 />
               </Grid>
             ))
@@ -410,6 +439,42 @@ const ProjectListPage: React.FC = () => {
           />
         )}
       </Drawer>
+
+      {/* Assign Manager Modal */}
+      {actionProject && (
+        <AssignManagerModal
+          open={assignModalOpen}
+          onClose={() => setAssignModalOpen(false)}
+          project={actionProject}
+          onSuccess={() => {
+            setAssignModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* Update Budget Modal */}
+      {actionProject && (
+        <UpdateBudgetModal
+          open={budgetModalOpen}
+          onClose={() => setBudgetModalOpen(false)}
+          project={actionProject}
+          onSuccess={() => {
+            setBudgetModalOpen(false);
+          }}
+        />
+      )}
+
+      {/* Update Status Modal */}
+      {actionProject && (
+        <UpdateStatusModal
+          open={statusModalOpen}
+          onClose={() => setStatusModalOpen(false)}
+          project={actionProject}
+          onSuccess={() => {
+            setStatusModalOpen(false);
+          }}
+        />
+      )}
 
       {/* Filter Drawer */}
       <Drawer
