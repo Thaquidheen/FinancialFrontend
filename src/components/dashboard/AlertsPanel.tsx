@@ -6,28 +6,18 @@ import {
   Typography,
   Alert,
   AlertTitle,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
   IconButton,
   Chip,
   Button,
   Skeleton,
-  Collapse,
 } from '@mui/material';
 import {
-  Warning,
-  Error,
-  Info,
-  CheckCircle,
   ExpandMore,
   ExpandLess,
   Close,
   Refresh,
 } from '@mui/icons-material';
 import { BudgetAlert, AlertSeverity } from '../../types/dashboard';
-import { formatCurrency } from '@utils/helpers';
 
 interface AlertsPanelProps {
   alerts: BudgetAlert[];
@@ -50,19 +40,6 @@ const AlertsPanel: React.FC<AlertsPanelProps> = ({
 }) => {
   const [expanded, setExpanded] = React.useState(false);
 
-  const getSeverityIcon = (severity: AlertSeverity) => {
-    switch (severity) {
-      case AlertSeverity.CRITICAL:
-        return <Error color="error" />;
-      case AlertSeverity.HIGH:
-        return <Warning color="warning" />;
-      case AlertSeverity.MEDIUM:
-        return <Info color="info" />;
-      case AlertSeverity.LOW:
-      default:
-        return <CheckCircle color="success" />;
-    }
-  };
 
   const getSeverityColor = (severity: AlertSeverity) => {
     switch (severity) {

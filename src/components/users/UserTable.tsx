@@ -1,3 +1,4 @@
+// src/components/users/UserTable.tsx
 import React, { useState } from 'react';
 import {
   Box,
@@ -47,6 +48,7 @@ interface UserTableColumn {
   sortable?: boolean;
 }
 
+// ✅ FIXED: Updated column definitions to match backend entity fields
 const columns: UserTableColumn[] = [
   { id: 'fullName', label: 'Full Name', minWidth: 200, sortable: true },
   { id: 'username', label: 'Username', minWidth: 150, sortable: true },
@@ -57,7 +59,6 @@ const columns: UserTableColumn[] = [
   { id: 'createdAt', label: 'Created', minWidth: 120, sortable: true },
   { id: 'actions', label: 'Actions', minWidth: 120, align: 'center' },
 ];
-
 
 interface UserTableProps {
   users: User[];
@@ -106,17 +107,17 @@ const UserTable: React.FC<UserTableProps> = ({
     if (event.target.checked) {
       const newSelected = users.map((user) => user.id);
       setSelected(newSelected);
-    } else {
-      setSelected([]);
+      return;
     }
+    setSelected([]);
   };
 
-  const handleSelectClick = (userId: string) => {
-    const selectedIndex = selected.indexOf(userId);
+  const handleSelectClick = (_event: React.MouseEvent<unknown>, id: string) => {
+    const selectedIndex = selected.indexOf(id);
     let newSelected: string[] = [];
 
     if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, userId);
+      newSelected = newSelected.concat(selected, id);
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
     } else if (selectedIndex === selected.length - 1) {
@@ -127,7 +128,6 @@ const UserTable: React.FC<UserTableProps> = ({
         selected.slice(selectedIndex + 1),
       );
     }
-
     setSelected(newSelected);
   };
 
@@ -141,8 +141,8 @@ const UserTable: React.FC<UserTableProps> = ({
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     onSearchParamsChange({
       ...searchParams,
-      page: 0,
       size: parseInt(event.target.value, 10),
+      page: 0,
     });
   };
 
@@ -154,67 +154,54 @@ const UserTable: React.FC<UserTableProps> = ({
     setActionMenuAnchor(null);
   };
 
-  const handleBulkAction = (action: string) => {
-    if (onBulkAction && selected.length > 0) {
-      onBulkAction(action, selected);
-      setSelected([]);
-    }
+  const isSelected = (id: string) => selected.indexOf(id) !== -1;
+
+  const getRoleChips = (roles: string[]) => {
+    return roles.map((role) => (
+      <Chip 
+        key={role} 
+        label={role.replace('_', ' ')} 
+        size="small" 
+        sx={{ mr: 0.5, mb: 0.5 }}
+        color={
+          role === USER_ROLES.SUPER_ADMIN ? 'error' :
+          role === USER_ROLES.ACCOUNT_MANAGER ? 'warning' :
+          role === USER_ROLES.PROJECT_MANAGER ? 'info' :
+          'default'
+        }
+      />
+    ));
   };
 
-  const isSelected = (userId: string) => selected.indexOf(userId) !== -1;
+  const getStatusChip = (user: User) => {
+    if (!user.isActive) {
+      return <Chip label="Inactive" color="default" size="small" />;
+    }
+    // accountLocked not part of the current User type; backend may include it but we won't type-check it here
+    return <Chip label="Active" color="success" size="small" />;
+  };
 
-  const getRoleChips = (roles: string[]) => (
-    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-      {roles.map((role) => {
-        const roleConfig = {
-          [USER_ROLES.SUPER_ADMIN]: { color: 'error' as const, label: 'Super Admin' },
-          [USER_ROLES.ACCOUNT_MANAGER]: { color: 'warning' as const, label: 'Account Mgr' },
-          [USER_ROLES.PROJECT_MANAGER]: { color: 'info' as const, label: 'Project Mgr' },
-          [USER_ROLES.EMPLOYEE]: { color: 'default' as const, label: 'Employee' },
-        };
-
-        const config = roleConfig[role as keyof typeof roleConfig] || { color: 'default' as const, label: role as string };
-
-        return (
-          <Chip
-            key={role}
-            label={config.label}
-            size="small"
-            color={config.color}
-            sx={{ fontSize: '0.75rem', height: 20 }}
-          />
-        );
-      })}
-    </Box>
-  );
-
-  const getStatusChip = (isActive: boolean) => (
-    <Chip
-      label={isActive ? 'Active' : 'Inactive'}
-      size="small"
-      color={isActive ? 'success' : 'default'}
-      sx={{ minWidth: 70 }}
-    />
-  );
-
-  const getUserInitials = (fullName: string) => {
-    const names = fullName.split(' ');
-    return names.length >= 2 ? `${names[0][0]}${names[1][0]}`.toUpperCase() : fullName.slice(0, 2).toUpperCase();
+  const getInitials = (fullName: string) => {
+    return fullName
+      .split(' ')
+      .map(name => name.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   if (error) {
     return (
-      <Paper>
-        <Box sx={{ p: 3 }}>
-          <Alert severity="error">Failed to load users. Please try again.</Alert>
-        </Box>
+      <Paper sx={{ p: 2 }}>
+        <Alert severity="error">
+          {error.message || 'Failed to load users'}
+        </Alert>
       </Paper>
     );
   }
 
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      {/* Enhanced Toolbar */}
+    <Paper sx={{ width: '100%', mb: 2 }}>
       <Toolbar
         sx={{
           pl: { sm: 2 },
@@ -226,37 +213,41 @@ const UserTable: React.FC<UserTableProps> = ({
         }}
       >
         {selected.length > 0 ? (
-          <Typography sx={{ flex: '1 1 100%' }} color="inherit" variant="subtitle1" component="div">
+          <Typography
+            sx={{ flex: '1 1 100%' }}
+            color="inherit"
+            variant="subtitle1"
+            component="div"
+          >
             {selected.length} selected
           </Typography>
         ) : (
-          <Typography sx={{ flex: '1 1 100%' }} variant="h6" id="tableTitle" component="div">
-            Users
+          <Typography
+            sx={{ flex: '1 1 100%' }}
+            variant="h6"
+            id="tableTitle"
+            component="div"
+          >
+            Users ({totalCount})
           </Typography>
         )}
 
         {selected.length > 0 && onBulkAction && (
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Tooltip title="Activate Selected">
-              <IconButton onClick={() => handleBulkAction('activate')}>
-                <LockOpen />
+              <IconButton onClick={() => onBulkAction('activate', selected)}>
+                <PersonAdd />
               </IconButton>
             </Tooltip>
             <Tooltip title="Deactivate Selected">
-              <IconButton onClick={() => handleBulkAction('deactivate')}>
-                <Lock />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete Selected">
-              <IconButton onClick={() => handleBulkAction('delete')}>
-                <Delete />
+              <IconButton onClick={() => onBulkAction('deactivate', selected)}>
+                <PersonRemove />
               </IconButton>
             </Tooltip>
           </Box>
         )}
       </Toolbar>
 
-      {/* Table */}
       <TableContainer>
         <Table stickyHeader aria-labelledby="tableTitle">
           <TableHead>
@@ -267,20 +258,22 @@ const UserTable: React.FC<UserTableProps> = ({
                   indeterminate={selected.length > 0 && selected.length < users.length}
                   checked={users.length > 0 && selected.length === users.length}
                   onChange={handleSelectAllClick}
-                  inputProps={{ 'aria-label': 'select all users' }}
+                  inputProps={{
+                    'aria-label': 'select all users',
+                  }}
                 />
               </TableCell>
               {columns.map((column) => (
                 <TableCell
                   key={column.id}
-                  align={column.align || 'left'}
+                  align={column.align}
                   style={{ minWidth: column.minWidth }}
-                  sortDirection={searchParams.sortBy === column.id ? searchParams.sortDirection || false : false}
+                  sortDirection={searchParams.sortBy === column.id ? searchParams.sortDirection : false}
                 >
                   {column.sortable ? (
                     <TableSortLabel
                       active={searchParams.sortBy === column.id}
-                      direction={searchParams.sortBy === column.id ? searchParams.sortDirection || 'asc' : 'asc'}
+                      direction={searchParams.sortBy === column.id ? searchParams.sortDirection : 'asc'}
                       onClick={() => handleRequestSort(column.id as keyof User)}
                     >
                       {column.label}
@@ -298,113 +291,117 @@ const UserTable: React.FC<UserTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {isLoading
-              ? Array.from(new Array(10)).map((_, index) => (
-                  <TableRow key={index}>
-                    <TableCell padding="checkbox">
-                      <Skeleton variant="rectangular" width={20} height={20} />
+            {isLoading ? (
+              // Loading skeleton
+              Array.from({ length: searchParams.size || 10 }).map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell padding="checkbox">
+                    <Skeleton variant="rectangular" width={20} height={20} />
+                  </TableCell>
+                  {columns.map((column) => (
+                    <TableCell key={column.id}>
+                      <Skeleton variant="text" />
                     </TableCell>
-                    {columns.map((column) => (
-                      <TableCell key={column.id}>
-                        <Skeleton variant="text" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              : users.map((user) => {
-                  const isItemSelected = isSelected(user.id);
-                  
-                  return (
-                    <TableRow
-                      hover
-                      onClick={() => handleSelectClick(user.id)}
-                      role="checkbox"
-                      aria-checked={isItemSelected}
-                      tabIndex={-1}
-                      key={user.id}
-                      selected={isItemSelected}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      <TableCell padding="checkbox">
-                        <Checkbox
-                          color="primary"
-                          checked={isItemSelected}
-                          inputProps={{ 'aria-labelledby': `enhanced-table-checkbox-${user.id}` }}
-                        />
-                      </TableCell>
-                      
-                      {/* Full Name with Avatar */}
-                      <TableCell component="th" id={`enhanced-table-checkbox-${user.id}`} scope="row">
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Avatar
-                            src={user.profileImage}
-                            sx={{ width: 32, height: 32, fontSize: '0.875rem' }}
-                          >
-                            {getUserInitials(user.fullName)}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="body2" fontWeight="medium">
-                              {user.fullName}
-                            </Typography>
-                            {user.position && (
-                              <Typography variant="caption" color="text.secondary">
-                                {user.position}
-                              </Typography>
-                            )}
-                          </Box>
+                  ))}
+                </TableRow>
+              ))
+            ) : users.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length + 1} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    No users found
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              users.map((user) => {
+                const isItemSelected = isSelected(user.id);
+                const labelId = `enhanced-table-checkbox-${user.id}`;
+
+                return (
+                  <TableRow
+                    hover
+                    onClick={(event) => handleSelectClick(event, user.id)}
+                    role="checkbox"
+                    aria-checked={isItemSelected}
+                    tabIndex={-1}
+                    key={user.id}
+                    selected={isItemSelected}
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        color="primary"
+                        checked={isItemSelected}
+                        inputProps={{
+                          'aria-labelledby': labelId,
+                        }}
+                      />
+                    </TableCell>
+
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar>
+                          {getInitials(user.fullName || user.username)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle2">
+                            {user.fullName || user.username}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            ID: {user.id}
+                          </Typography>
                         </Box>
-                      </TableCell>
+                      </Box>
+                    </TableCell>
 
-                      {/* Username */}
-                      <TableCell>{user.username}</TableCell>
+                    <TableCell>{user.username}</TableCell>
 
-                      {/* Email */}
-                      <TableCell>
-                        <Typography variant="body2" sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {user.email}
-                        </Typography>
-                      </TableCell>
+                    <TableCell>{user.email}</TableCell>
 
-                      {/* Roles */}
-                      <TableCell>{getRoleChips(user.roles)}</TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                        {getRoleChips(user.roles || [])}
+                      </Box>
+                    </TableCell>
 
-                      {/* Department */}
-                      <TableCell>{user.department || '-'}</TableCell>
+                    <TableCell>{user.department || 'N/A'}</TableCell>
 
-                      {/* Status */}
-                      <TableCell>{getStatusChip(user.isActive)}</TableCell>
+                    <TableCell>{getStatusChip(user)}</TableCell>
 
-                      {/* Created Date */}
-                      <TableCell>
+                    <TableCell>
+                      {user.createdAt ? (
                         <Tooltip title={formatDate(user.createdAt)}>
                           <Typography variant="body2">
                             {formatRelativeDate(user.createdAt)}
                           </Typography>
                         </Tooltip>
-                      </TableCell>
+                      ) : (
+                        'N/A'
+                      )}
+                    </TableCell>
 
-                      {/* Actions */}
-                      <TableCell align="center">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleActionMenuOpen(e, user.id);
-                          }}
-                        >
-                          <MoreVert />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                    <TableCell align="center">
+                      <IconButton
+                        size="small"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleActionMenuOpen(event, user.id);
+                        }}
+                      >
+                        <MoreVert />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Pagination */}
       <TablePagination
-        rowsPerPageOptions={[10, 25, 50, 100]}
+        rowsPerPageOptions={[5, 10, 25, 50]}
         component="div"
         count={totalCount}
         rowsPerPage={searchParams.size || 10}
@@ -413,41 +410,64 @@ const UserTable: React.FC<UserTableProps> = ({
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
 
-      {/* Actions Menu */}
+      {/* Action Menu */}
       <Menu
         anchorEl={actionMenuAnchor?.element}
         open={Boolean(actionMenuAnchor)}
         onClose={handleActionMenuClose}
         onClick={handleActionMenuClose}
       >
-        <MenuItem onClick={() => actionMenuAnchor && onUserView(users.find(u => u.id === actionMenuAnchor.userId)!)}>
-          <Visibility fontSize="small" sx={{ mr: 1 }} />
+        <MenuItem onClick={() => {
+          const user = users.find(u => u.id === actionMenuAnchor?.userId);
+          if (user) onUserView(user);
+        }}>
+          <Visibility sx={{ mr: 1 }} />
           View Details
         </MenuItem>
-        <MenuItem onClick={() => actionMenuAnchor && onUserEdit(users.find(u => u.id === actionMenuAnchor.userId)!)}>
-          <Edit fontSize="small" sx={{ mr: 1 }} />
+        <MenuItem onClick={() => {
+          const user = users.find(u => u.id === actionMenuAnchor?.userId);
+          if (user) onUserEdit(user);
+        }}>
+          <Edit sx={{ mr: 1 }} />
           Edit User
         </MenuItem>
-        <MenuItem onClick={() => actionMenuAnchor && onRoleAssign(users.find(u => u.id === actionMenuAnchor.userId)!)}>
-          <Assignment fontSize="small" sx={{ mr: 1 }} />
-          Assign Roles
+        <MenuItem onClick={() => {
+          const user = users.find(u => u.id === actionMenuAnchor?.userId);
+          if (user) onRoleAssign(user);
+        }}>
+          <Assignment sx={{ mr: 1 }} />
+          Manage Roles
         </MenuItem>
-        {actionMenuAnchor && users.find(u => u.id === actionMenuAnchor.userId)?.isActive ? (
-          <MenuItem onClick={() => actionMenuAnchor && onUserDeactivate(users.find(u => u.id === actionMenuAnchor.userId)!)}>
-            <PersonRemove fontSize="small" sx={{ mr: 1 }} />
-            Deactivate
-          </MenuItem>
-        ) : (
-          <MenuItem onClick={() => actionMenuAnchor && onUserActivate(users.find(u => u.id === actionMenuAnchor.userId)!)}>
-            <PersonAdd fontSize="small" sx={{ mr: 1 }} />
-            Activate
-          </MenuItem>
-        )}
+        {(() => {
+          const user = users.find(u => u.id === actionMenuAnchor?.userId);
+          if (user?.isActive) {
+            return (
+              <MenuItem onClick={() => {
+                if (user) onUserDeactivate(user);
+              }}>
+                <Lock sx={{ mr: 1 }} />
+                Deactivate
+              </MenuItem>
+            );
+          } else {
+            return (
+              <MenuItem onClick={() => {
+                if (user) onUserActivate(user);
+              }}>
+                <LockOpen sx={{ mr: 1 }} />
+                Activate
+              </MenuItem>
+            );
+          }
+        })()}
         <MenuItem 
-          onClick={() => actionMenuAnchor && onUserDelete(users.find(u => u.id === actionMenuAnchor.userId)!)}
+          onClick={() => {
+            const user = users.find(u => u.id === actionMenuAnchor?.userId);
+            if (user) onUserDelete(user);
+          }}
           sx={{ color: 'error.main' }}
         >
-          <Delete fontSize="small" sx={{ mr: 1 }} />
+          <Delete sx={{ mr: 1 }} />
           Delete User
         </MenuItem>
       </Menu>

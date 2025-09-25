@@ -270,8 +270,6 @@ export const CategorySpendingChart: React.FC<CategorySpendingChartProps> = ({
   isLoading,
   error,
 }) => {
-  const theme = useTheme();
-
   const RADIAN = Math.PI / 180;
   const renderCustomizedLabel = ({
     cx, cy, midAngle, innerRadius, outerRadius, percent
@@ -338,7 +336,7 @@ export const CategorySpendingChart: React.FC<CategorySpendingChartProps> = ({
             fill="#8884d8"
             dataKey="value"
           >
-            {data.map((entry, index) => (
+            {data.map((_, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>

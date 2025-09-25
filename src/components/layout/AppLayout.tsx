@@ -4,20 +4,13 @@ import {
   Drawer,
   AppBar,
   Toolbar,
-  Typography,
-  IconButton,
   useTheme,
   useMediaQuery,
   CssBaseline,
 } from '@mui/material';
-import {
-  Menu as MenuIcon,
-  ChevronLeft as ChevronLeftIcon,
-} from '@mui/icons-material';
 import { THEME_CONFIG } from '@constants/app';
-import { useAuth } from '@contexts/AuthContext';
 import Sidebar from './Sidebar';
-import Header from './Header.tsx';
+import Header from './Header';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -27,7 +20,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
-  const { user } = useAuth();
 
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);

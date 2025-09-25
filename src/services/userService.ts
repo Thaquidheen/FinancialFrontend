@@ -1,8 +1,7 @@
-import axios, { AxiosResponse } from 'axios';
+import apiClient from './api';
 import {
   UserResponse,
   UserSummary,
-  UserListResponse,
   UserSearchParams,
   CreateUserRequest,
   UpdateUserRequest,
@@ -14,138 +13,152 @@ import {
   UserActivityResponse,
   ActivitySearchParams,
   Role,
-  Department,
 } from '../types/user';
 
-// API Base URL - should come from environment variables
-const API_BASE_URL = '/api';
-
 class UserService {
-  private api = axios.create({
-    baseURL: API_BASE_URL,
-  });
-
-  constructor() {
-    // Add request interceptor for authentication
-    this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
-
-    // Add response interceptor for error handling
-    this.api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          // Handle unauthorized access
-          localStorage.removeItem('authToken');
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
-    );
+  private unwrapResponse<T>(response: any): T {
+    if (response && typeof response === 'object' && 'success' in response) {
+      return (response.data as T);
+    }
+    return response as T;
   }
 
   // Get Users List with Search and Pagination
-  async getUsers(params: UserSearchParams = {}): Promise<UserListResponse> {
-    const response: AxiosResponse<UserListResponse> = await this.api.get('/users', {
-      params: {
-        search: params.search,
-        department: params.department,
-        role: params.role,
-        active: params.active,
-        accountLocked: params.accountLocked,
-        managerId: params.managerId,
-        page: params.page || 1,
-        pageSize: params.pageSize || 10,
-        sortBy: params.sortBy || 'fullName',
-        sortDirection: params.sortDirection || 'asc',
-      },
-    });
-    
-    return response.data;
+  async getUsers(params: UserSearchParams = {}): Promise<any> {
+    const mappedParams: Record<string, any> = {
+      page: params.page ?? 0,
+      size: params.size ?? params.pageSize ?? 10,
+      sortBy: params.sortBy ?? 'createdDate',
+      sortDir: params.sortDirection ?? 'asc',
+      search: params.search,
+    };
+
+    const response = await apiClient.get<any>('/users', { params: mappedParams });
+    const payload = this.unwrapResponse<any>(response);
+
+    // Pass-through Spring-style pagination if present
+    if (payload && typeof payload === 'object' && 'content' in payload) {
+      const normalizedContent = (payload.content as any[]).map((item: any) => ({
+        ...item,
+        isActive: item.isActive ?? item.active ?? false,
+        createdAt: item.createdAt ?? item.createdDate ?? item.created_at ?? '',
+        updatedAt: item.updatedAt ?? item.updatedDate ?? item.updated_at ?? '',
+      }));
+      return { ...payload, content: normalizedContent };
+    }
+    // Support legacy users/totalCount shape
+    if (payload && Array.isArray(payload.users)) {
+      const normalizedUsers = (payload.users as any[]).map((item: any) => ({
+        ...item,
+        isActive: item.isActive ?? item.active ?? false,
+        createdAt: item.createdAt ?? item.createdDate ?? item.created_at ?? '',
+        updatedAt: item.updatedAt ?? item.updatedDate ?? item.updated_at ?? '',
+      }));
+      return { ...payload, users: normalizedUsers };
+    }
+
+    if (Array.isArray(payload)) {
+      const normalizedArray = (payload as any[]).map((item: any) => ({
+        ...item,
+        isActive: item.isActive ?? item.active ?? false,
+        createdAt: item.createdAt ?? item.createdDate ?? item.created_at ?? '',
+        updatedAt: item.updatedAt ?? item.updatedDate ?? item.updated_at ?? '',
+      }));
+      return {
+        content: normalizedArray,
+        totalElements: payload.length,
+        number: mappedParams.page,
+        size: mappedParams.size,
+        totalPages: 1,
+        first: true,
+        last: true,
+        empty: payload.length === 0,
+        numberOfElements: payload.length,
+        sort: { empty: true, sorted: false, unsorted: true },
+        pageable: { pageNumber: mappedParams.page, pageSize: mappedParams.size, sort: { empty: true, sorted: false, unsorted: true }, offset: mappedParams.page * mappedParams.size, unpaged: false, paged: true },
+      };
+    }
+
+    return payload;
   }
 
   // Get Single User by ID
   async getUser(id: string): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.get(`/users/${id}`);
-    return response.data;
+    const response = await apiClient.get<UserResponse>(`/users/${id}`);
+    const payload = this.unwrapResponse<UserResponse>(response) as any;
+    return {
+      ...payload,
+      isActive: payload.isActive ?? payload.active ?? false,
+      createdAt: payload.createdAt ?? payload.createdDate ?? payload.created_at ?? '',
+      updatedAt: payload.updatedAt ?? payload.updatedDate ?? payload.updated_at ?? '',
+    } as UserResponse;
   }
 
   // Create New User
   async createUser(userData: CreateUserRequest): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.post('/users', userData);
-    return response.data;
+    const response = await apiClient.post<UserResponse>('/users', userData);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Update User Information
   async updateUser(id: string, userData: UpdateUserRequest): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}`, userData);
-    return response.data;
+    const response = await apiClient.put<UserResponse>(`/users/${id}`, userData);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Update User Roles
   async updateUserRoles(id: string, rolesData: UpdateUserRolesRequest): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/roles`, rolesData);
-    return response.data;
+    const response = await apiClient.put<UserResponse>(`/users/${id}/roles`, rolesData);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Update User Bank Details
   async updateBankDetails(id: string, bankData: UpdateBankDetailsRequest): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/bank-details`, bankData);
-    return response.data;
+    const response = await apiClient.put<UserResponse>(`/users/${id}/bank-details`, bankData);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Change Password
   async changePassword(passwordData: ChangePasswordRequest): Promise<{ message: string }> {
-    const response: AxiosResponse<{ message: string }> = await this.api.post('/auth/change-password', passwordData);
-    return response.data;
+    const response = await apiClient.post<{ message: string }>('/auth/change-password', passwordData);
+    return this.unwrapResponse<{ message: string }>(response);
   }
 
   // Reset Password (Admin only)
   async resetPassword(resetData: ResetPasswordRequest): Promise<{ message: string; temporaryPassword?: string }> {
-    const response: AxiosResponse<{ message: string; temporaryPassword?: string }> = 
-      await this.api.post(`/users/${resetData.userId}/reset-password`, {
-        sendEmail: resetData.sendEmail ?? true,
-      });
-    return response.data;
+    const response = await apiClient.post<{ message: string; temporaryPassword?: string }>(`/users/${resetData.userId}/reset-password`, {
+      sendEmail: resetData.sendEmail ?? true,
+    });
+    return this.unwrapResponse<{ message: string; temporaryPassword?: string }>(response);
   }
 
   // Activate User
   async activateUser(id: string): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/activate`);
-    return response.data;
+    const response = await apiClient.put<UserResponse>(`/users/${id}/activate`);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Deactivate User
   async deactivateUser(id: string): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/deactivate`);
-    return response.data;
+    const response = await apiClient.put<UserResponse>(`/users/${id}/deactivate`);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Delete User
   async deleteUser(id: string): Promise<{ message: string }> {
-    const response: AxiosResponse<{ message: string }> = await this.api.delete(`/users/${id}`);
-    return response.data;
+    const response = await apiClient.delete<{ message: string }>(`/users/${id}`);
+    return this.unwrapResponse<{ message: string }>(response);
   }
 
   // Get User Statistics
   async getUserStatistics(): Promise<UserStatistics> {
-    const response: AxiosResponse<UserStatistics> = await this.api.get('/users/statistics');
-    return response.data;
+    const response = await apiClient.get<UserStatistics>('/users/statistics');
+    return this.unwrapResponse<UserStatistics>(response);
   }
 
   // Get User Activities
   async getUserActivities(params: ActivitySearchParams): Promise<UserActivityResponse> {
-    const response: AxiosResponse<UserActivityResponse> = await this.api.get(`/users/${params.userId}/activities`, {
+    const response = await apiClient.get<UserActivityResponse>(`/users/${params.userId}/activities`, {
       params: {
         action: params.action,
         status: params.status,
@@ -156,13 +169,13 @@ class UserService {
         pageSize: params.pageSize || 20,
       },
     });
-    return response.data;
+    return this.unwrapResponse<UserActivityResponse>(response);
   }
 
   // Get Users Without Bank Details
   async getUsersWithoutBankDetails(): Promise<UserResponse[]> {
-    const response: AxiosResponse<UserResponse[]> = await this.api.get('/users/without-bank-details');
-    return response.data;
+    const response = await apiClient.get<UserResponse[]>('/users/without-bank-details');
+    return this.unwrapResponse<UserResponse[]>(response);
   }
 
   // Bulk Operations
@@ -171,32 +184,34 @@ class UserService {
     successCount: number; 
     failedCount: number; 
   }> {
-    const response = await this.api.post('/users/bulk-update', {
-      userIds,
-      operation,
-    });
-    return response.data;
+    const response = await apiClient.post<{ message: string; successCount: number; failedCount: number }>(
+      '/users/bulk-update',
+      { userIds, operation }
+    );
+    return this.unwrapResponse<{ message: string; successCount: number; failedCount: number }>(response);
   }
 
   // Export Users Data
   async exportUsers(params: UserSearchParams = {}): Promise<Blob> {
-    const response = await this.api.get('/users/export', {
+    const response = await apiClient.get<Blob>('/users/export', {
       params,
       responseType: 'blob',
     });
-    return response.data;
+    return this.unwrapResponse<Blob>(response);
   }
 
   // Get Available Managers (for assignment)
   async getAvailableManagers(): Promise<UserResponse[]> {
-    const response: AxiosResponse<UserResponse[]> = await this.api.get('/users/managers');
-    return response.data;
+    const response = await apiClient.get<UserResponse[]>('/users/project-managers');
+    return this.unwrapResponse<UserResponse[]>(response);
   }
 
   // Verify Bank Details
   async verifyBankDetails(userId: string): Promise<{ message: string; verified: boolean }> {
-    const response = await this.api.post(`/users/${userId}/bank-details/verify`);
-    return response.data;
+    const response = await apiClient.post<{ message: string; verified: boolean }>(
+      `/users/${userId}/bank-details/verify`
+    );
+    return this.unwrapResponse<{ message: string; verified: boolean }>(response);
   }
 
   // Get User Dashboard Data (role-specific)
@@ -206,52 +221,62 @@ class UserService {
     recentActivities: UserActivityResponse;
     notifications: any[];
   }> {
-    const response = await this.api.get(`/users/${userId}/dashboard`);
-    return response.data;
+    const response = await apiClient.get<{
+      user: UserResponse;
+      statistics: any;
+      recentActivities: UserActivityResponse;
+      notifications: any[];
+    }>(`/users/${userId}/dashboard`);
+    return this.unwrapResponse<{
+      user: UserResponse;
+      statistics: any;
+      recentActivities: UserActivityResponse;
+      notifications: any[];
+    }>(response);
   }
 
   // Search Users by Name or Employee ID (for autocomplete)
   async searchUsers(query: string, limit: number = 10): Promise<UserResponse[]> {
-    const response: AxiosResponse<UserResponse[]> = await this.api.get('/users/search', {
+    const response = await apiClient.get<UserResponse[]>('/users/search', {
       params: { q: query, limit },
     });
-    return response.data;
+    return this.unwrapResponse<UserResponse[]>(response);
   }
 
   // Get User's Direct Reports
   async getUserDirectReports(managerId: string): Promise<UserResponse[]> {
-    const response: AxiosResponse<UserResponse[]> = await this.api.get(`/users/${managerId}/direct-reports`);
-    return response.data;
+    const response = await apiClient.get<UserResponse[]>(`/users/${managerId}/direct-reports`);
+    return this.unwrapResponse<UserResponse[]>(response);
   }
 
   // Get Department Users
   async getDepartmentUsers(department: string): Promise<UserResponse[]> {
-    const response: AxiosResponse<UserResponse[]> = await this.api.get(`/users/department/${department}`);
-    return response.data;
+    const response = await apiClient.get<UserResponse[]>(`/users/department/${department}`);
+    return this.unwrapResponse<UserResponse[]>(response);
   }
 
   // Lock User Account (Admin only)
   async lockUserAccount(id: string): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/lock`);
-    return response.data;
+    const response = await apiClient.put<UserResponse>(`/users/${id}/lock`);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Unlock User Account (Admin only)
   async unlockUserAccount(id: string): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/unlock`);
-    return response.data;
+    const response = await apiClient.put<UserResponse>(`/users/${id}/unlock`);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Force Password Reset on Next Login
   async forcePasswordReset(id: string): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.put(`/users/${id}/force-password-reset`);
-    return response.data;
+    const response = await apiClient.put<UserResponse>(`/users/${id}/force-password-reset`);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Get Users by Role
   async getUsersByRole(role: string): Promise<UserResponse[]> {
-    const response: AxiosResponse<UserResponse[]> = await this.api.get(`/users/by-role/${role}`);
-    return response.data;
+    const response = await apiClient.get<UserResponse[]>(`/users/by-role/${role}`);
+    return this.unwrapResponse<UserResponse[]>(response);
   }
 
   // Update User Profile Picture
@@ -259,18 +284,19 @@ class UserService {
     const formData = new FormData();
     formData.append('profilePicture', file);
     
-    const response: AxiosResponse<UserResponse> = await this.api.post(`/users/${id}/profile-picture`, formData, {
+    const response = await apiClient.post<UserResponse>(`/users/${id}/profile-picture`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Get User Permissions
   async getUserPermissions(id: string): Promise<string[]> {
-    const response: AxiosResponse<{ permissions: string[] }> = await this.api.get(`/users/${id}/permissions`);
-    return response.data.permissions;
+    const response = await apiClient.get<{ permissions: string[] }>(`/users/${id}/permissions`);
+    const payload = this.unwrapResponse<{ permissions: string[] }>(response);
+    return payload.permissions;
   }
 
   // Update User Status (for batch operations)
@@ -279,64 +305,131 @@ class UserService {
     accountLocked?: boolean; 
     passwordExpired?: boolean;
   }): Promise<UserResponse> {
-    const response: AxiosResponse<UserResponse> = await this.api.patch(`/users/${id}/status`, status);
-    return response.data;
+    const response = await apiClient.patch<UserResponse>(`/users/${id}/status`, status);
+    return this.unwrapResponse<UserResponse>(response);
   }
 
   // Get Recently Active Users
   async getRecentlyActiveUsers(limit: number = 10): Promise<UserResponse[]> {
-    const response: AxiosResponse<UserResponse[]> = await this.api.get('/users/recently-active', {
+    const response = await apiClient.get<UserResponse[]>('/users/recently-active', {
       params: { limit },
     });
-    return response.data;
+    return this.unwrapResponse<UserResponse[]>(response);
   }
 
   // Send Welcome Email to New User
   async sendWelcomeEmail(id: string): Promise<{ message: string }> {
-    const response: AxiosResponse<{ message: string }> = await this.api.post(`/users/${id}/send-welcome-email`);
-    return response.data;
+    const response = await apiClient.post<{ message: string }>(`/users/${id}/send-welcome-email`);
+    return this.unwrapResponse<{ message: string }>(response);
   }
 
   // Check Username Availability
   async checkUsernameAvailability(username: string, excludeUserId?: string): Promise<{ available: boolean }> {
-    const response: AxiosResponse<{ available: boolean }> = await this.api.get('/users/check-username', {
+    const response = await apiClient.get<{ available: boolean }>('/users/check-username', {
       params: { username, excludeUserId },
     });
-    return response.data;
+    return this.unwrapResponse<{ available: boolean }>(response);
   }
 
   // Check Email Availability
   async checkEmailAvailability(email: string, excludeUserId?: string): Promise<{ available: boolean }> {
-    const response: AxiosResponse<{ available: boolean }> = await this.api.get('/users/check-email', {
+    const response = await apiClient.get<{ available: boolean }>('/users/check-email', {
       params: { email, excludeUserId },
     });
-    return response.data;
+    return this.unwrapResponse<{ available: boolean }>(response);
   }
 
   // Validate Employee ID
   async validateEmployeeId(employeeId: string, excludeUserId?: string): Promise<{ valid: boolean }> {
-    const response: AxiosResponse<{ valid: boolean }> = await this.api.get('/users/validate-employee-id', {
+    const response = await apiClient.get<{ valid: boolean }>('/users/validate-employee-id', {
       params: { employeeId, excludeUserId },
     });
-    return response.data;
+    return this.unwrapResponse<{ valid: boolean }>(response);
   }
 
   // Get available roles
   async getRoles(): Promise<Role[]> {
-    const response: AxiosResponse<Role[]> = await this.api.get('/users/roles');
-    return response.data;
+    try {
+      console.log('Fetching roles from /api/auth/available-roles...');
+      
+      const response = await apiClient.get<any>('/users/roles');
+      const payload = this.unwrapResponse<any>(response);
+      
+      console.log('Roles response:', payload);
+      
+      if (Array.isArray(payload)) {
+        // Backend returns array of role objects directly
+        return payload.map((roleItem: any) => ({
+          id: String(roleItem.id || roleItem.name),
+          name: roleItem.name,
+          displayName: roleItem.displayName || roleItem.name.replace(/_/g, ' '),
+          description: roleItem.description || '',
+          permissions: [],
+          isActive: roleItem.isActive !== false,
+        }));
+      }
+      
+      // Fallback to hardcoded roles if response is unexpected
+      console.warn('Unexpected roles response format, using fallback');
+      return this.getFallbackRoles();
+      
+    } catch (error: any) {
+      console.error('Failed to fetch roles from backend:', error);
+      
+      // If endpoint doesn't exist yet, use fallback
+      if (error.response?.status === 404 || error.response?.status === 403) {
+        console.log('Roles endpoint not available, using hardcoded fallback');
+        return this.getFallbackRoles();
+      }
+      
+      throw error;
+    }
+  }
+  
+  // Fallback roles method
+  private getFallbackRoles(): Role[] {
+    return [
+      {
+        id: 'SUPER_ADMIN',
+        name: 'SUPER_ADMIN',
+        displayName: 'Super Admin',
+        description: 'Super Administrator with full system access',
+        permissions: [],
+        isActive: true,
+      },
+      {
+        id: 'ACCOUNT_MANAGER',
+        name: 'ACCOUNT_MANAGER',
+        displayName: 'Account Manager',
+        description: 'Account Manager with approval and payment processing rights',
+        permissions: [],
+        isActive: true,
+      },
+      {
+        id: 'PROJECT_MANAGER',
+        name: 'PROJECT_MANAGER',
+        displayName: 'Project Manager',
+        description: 'Project Manager with project and quotation management rights',
+        permissions: [],
+        isActive: true,
+      },
+      {
+        id: 'EMPLOYEE',
+        name: 'EMPLOYEE',
+        displayName: 'Employee',
+        description: 'Regular employee with basic system access',
+        permissions: [],
+        isActive: true,
+      },
+    ];
   }
 
-  // Get available departments
-  async getDepartments(): Promise<Department[]> {
-    const response: AxiosResponse<Department[]> = await this.api.get('/users/departments');
-    return response.data;
-  }
+  // Departments not supported by backend
 
   // Get available managers
   async getManagers(): Promise<UserSummary[]> {
-    const response: AxiosResponse<UserSummary[]> = await this.api.get('/users/managers');
-    return response.data;
+    const response = await apiClient.get<UserSummary[]>('/users/project-managers');
+    return this.unwrapResponse<UserSummary[]>(response);
   }
 
 

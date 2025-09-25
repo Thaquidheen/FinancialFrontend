@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
-  Paper,
   TextField,
   Button,
   Typography,
@@ -26,7 +25,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useAuth } from '@contexts/AuthContext';
-import { LoginRequest } from '@types/auth';
+import { LoginRequest } from '../../types/auth';
 import { ROUTES } from '@constants/app';
 
 // Validation schema

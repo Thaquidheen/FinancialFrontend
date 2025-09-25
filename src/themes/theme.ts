@@ -200,20 +200,6 @@ const createThemeOptions = (mode: 'light' | 'dark'): ThemeOptions => ({
         },
       },
     },
-    MuiDataGrid: {
-      styleOverrides: {
-        root: {
-          border: 'none',
-          '& .MuiDataGrid-cell': {
-            borderBottom: `1px solid ${mode === 'light' ? '#f0f0f0' : '#333'}`,
-          },
-          '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: mode === 'light' ? '#fafafa' : '#2a2a2a',
-            borderBottom: `2px solid ${mode === 'light' ? '#e0e0e0' : '#444'}`,
-          },
-        },
-      },
-    },
     MuiChip: {
       styleOverrides: {
         root: {

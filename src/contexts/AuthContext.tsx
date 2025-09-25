@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, LoginRequest, AuthContextType } from '../types/auth';
 import authService from '@services/authService';
+import mockAuthService from '@services/mockAuthService';
+
+// Select auth service via env flag
+const useMockAuth = (import.meta.env.VITE_USE_MOCK_AUTH as string) === 'true';
+const authServiceToUse = useMockAuth ? mockAuthService : authService;
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -28,8 +33,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initializeAuth = async () => {
       setIsLoading(true);
       
-      const storedToken = authService.getCurrentToken();
-      const storedUser = authService.getCurrentUser();
+      const storedToken = authServiceToUse.getCurrentToken();
+      const storedUser = authServiceToUse.getCurrentUser();
 
       if (storedToken && storedUser) {
         setToken(storedToken);
@@ -37,12 +42,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         try {
           // Verify token with backend
-          const updatedUser = await authService.checkAuth();
+          const updatedUser = await authServiceToUse.checkAuth();
           setUser(updatedUser);
         } catch (error) {
           console.warn('Token verification failed:', error);
-          // Token is invalid, clear auth data
-          handleLogout();
+          // For development, if backend is not available, keep the stored user
+          // In production, you would want to clear auth data
         }
       }
       
@@ -57,9 +62,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!isAuthenticated) return;
 
     const checkTokenExpiration = async () => {
-      if (authService.isTokenExpiring()) {
+      if (authServiceToUse.isTokenExpiring()) {
         try {
-          const newToken = await authService.refreshToken();
+          const newToken = await authServiceToUse.refreshToken();
           setToken(newToken);
         } catch (error) {
           console.warn('Token refresh failed:', error);
@@ -78,7 +83,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     
     try {
-      const response = await authService.login(credentials);
+      const response = await authServiceToUse.login(credentials);
       setUser(response.user);
       setToken(response.token);
     } catch (error) {
@@ -91,7 +96,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = (): void => {
     setUser(null);
     setToken(null);
-    authService.logout();
+    authServiceToUse.logout();
   };
 
   const handleLogout = (): void => {
@@ -102,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const refreshToken = async (): Promise<void> => {
     try {
-      const newToken = await authService.refreshToken();
+      const newToken = await authServiceToUse.refreshToken();
       setToken(newToken);
     } catch (error) {
       handleLogout();
@@ -112,7 +117,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const checkAuth = async (): Promise<void> => {
     try {
-      const updatedUser = await authService.checkAuth();
+      const updatedUser = await authServiceToUse.checkAuth();
       setUser(updatedUser);
     } catch (error) {
       handleLogout();

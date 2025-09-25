@@ -26,13 +26,12 @@ import {
   Security,
   CheckCircle,
   Warning,
-  Error as ErrorIcon,
   RestartAlt,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { User, ChangePasswordRequest } from '@types/user';
+import { User, ChangePasswordRequest } from '../../types/user';
 
 // Password strength validation
 const passwordSchema = yup.object().shape({
@@ -201,20 +200,14 @@ const PasswordPanel: React.FC<PasswordPanelProps> = ({
   };
 
   const getPasswordIcon = () => {
-    if (user?.passwordExpired) {
-      return <ErrorIcon color="error" />;
-    }
-    if (user?.lastLoginDate) {
+    if (user?.lastLoginAt) {
       return <CheckCircle color="success" />;
     }
     return <Warning color="warning" />;
   };
 
   const getPasswordStatus = () => {
-    if (user?.passwordExpired) {
-      return { label: 'Password Expired', color: 'error' as const };
-    }
-    if (user?.lastLoginDate) {
+    if (user?.lastLoginAt) {
       return { label: 'Active', color: 'success' as const };
     }
     return { label: 'Never Logged In', color: 'warning' as const };
@@ -275,8 +268,8 @@ const PasswordPanel: React.FC<PasswordPanelProps> = ({
                 Last Login
               </Typography>
               <Typography variant="body2" mb={2}>
-                {user.lastLoginDate
-                  ? new Date(user.lastLoginDate).toLocaleDateString('en-US', {
+                {user.lastLoginAt
+                  ? new Date(user.lastLoginAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',

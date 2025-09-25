@@ -6,7 +6,6 @@ import {
   PaymentDashboardResponse,
   DashboardFilters,
 } from '../types/dashboard';
-import { ApiResponse } from '../types/api';
 
 export class DashboardService {
   /**

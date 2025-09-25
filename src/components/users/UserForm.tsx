@@ -11,21 +11,14 @@ import {
   FormGroup,
   Typography,
   Divider,
-  Card,
-  CardContent,
-  Avatar,
-  IconButton,
   Alert,
-  Autocomplete,
   InputAdornment,
-  CircularProgress,
   Button,
+  CircularProgress,
+  Grid,
 } from '@mui/material';
-import {
-  PhotoCamera,
-  Visibility,
-  VisibilityOff,
-} from '@mui/icons-material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import IconButton from '@mui/material/IconButton';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -34,16 +27,14 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import {
   User,
-  UserSummary,
   CreateUserRequest,
   UpdateUserRequest,
   SaudiBanks,
   VALIDATION_PATTERNS,
   VALIDATION_MESSAGES,
   Role,
-  Department,
 } from '../../types/user';
-import { useRoles, useDepartments, useManagers, useCheckUsernameAvailability, useCheckEmailAvailability } from '../../hooks/useUser';
+import { useRoles } from '../../hooks/useUser';
 
 interface UserFormProps {
   user?: User;
@@ -53,7 +44,7 @@ interface UserFormProps {
   isEditMode?: boolean;
 }
 
-// Validation schema
+// Fixed validation schema with proper nested object structure
 const createUserSchema = yup.object({
   username: yup
     .string()
@@ -86,52 +77,111 @@ const createUserSchema = yup.object({
   phoneNumber: yup
     .string()
     .nullable()
-    .matches(VALIDATION_PATTERNS.SAUDI_MOBILE, VALIDATION_MESSAGES.PHONE_INVALID),
+    .optional()
+    .transform((value) => (value === '' ? null : value))
+    .matches(VALIDATION_PATTERNS.SAUDI_MOBILE, {
+      message: VALIDATION_MESSAGES.PHONE_INVALID,
+      excludeEmptyString: true,
+    }),
   
   nationalId: yup
     .string()
     .nullable()
-    .matches(VALIDATION_PATTERNS.SAUDI_NATIONAL_ID, VALIDATION_MESSAGES.NATIONAL_ID_INVALID),
+    .optional()
+    .transform((value) => (value === '' ? null : value))
+    .matches(VALIDATION_PATTERNS.SAUDI_NATIONAL_ID, {
+      message: VALIDATION_MESSAGES.NATIONAL_ID_INVALID,
+      excludeEmptyString: true,
+    }),
   
   iqamaId: yup
     .string()
     .nullable()
-    .matches(VALIDATION_PATTERNS.IQAMA_ID, VALIDATION_MESSAGES.IQAMA_ID_INVALID),
+    .optional()
+    .transform((value) => (value === '' ? null : value))
+    .matches(VALIDATION_PATTERNS.IQAMA_ID, {
+      message: VALIDATION_MESSAGES.IQAMA_ID_INVALID,
+      excludeEmptyString: true,
+    }),
   
   passportNumber: yup
     .string()
     .nullable()
-    .matches(VALIDATION_PATTERNS.PASSPORT, VALIDATION_MESSAGES.PASSPORT_INVALID),
+    .optional()
+    .transform((value) => (value === '' ? null : value))
+    .matches(VALIDATION_PATTERNS.PASSPORT, {
+      message: VALIDATION_MESSAGES.PASSPORT_INVALID,
+      excludeEmptyString: true,
+    }),
+  
+  department: yup
+    .string()
+    .nullable()
+    .optional()
+    .max(50, 'Department must not exceed 50 characters'),
+  
+  position: yup
+    .string()
+    .nullable()
+    .optional()
+    .max(50, 'Position must not exceed 50 characters'),
+  
+  hireDate: yup
+    .date()
+    .nullable()
+    .optional(),
+  
+  managerId: yup
+    .number()
+    .nullable()
+    .optional()
+    .transform((value) => (value === '' || isNaN(value) ? null : value)),
   
   roles: yup
     .array()
     .of(yup.string())
-    .min(1, 'At least one role must be selected'),
+    .min(1, 'At least one role must be selected')
+    .required('At least one role must be selected'),
   
-  // Bank details validation
-  'bankDetails.bankName': yup
-    .string()
-    .nullable()
-    .when('bankDetails', {
-      is: (bankDetails: any) => bankDetails && Object.values(bankDetails).some((value: any) => value && value.toString().trim() !== ''),
-      then: (schema) => schema.required('Bank name is required when bank details are provided'),
-      otherwise: (schema) => schema.nullable(),
-    }),
-  
-  'bankDetails.iban': yup
-    .string()
-    .nullable()
-    .matches(VALIDATION_PATTERNS.SAUDI_IBAN, VALIDATION_MESSAGES.IBAN_INVALID),
-  
-  'bankDetails.accountNumber': yup
-    .string()
-    .nullable()
-    .matches(/^[0-9]{10,20}$/, VALIDATION_MESSAGES.ACCOUNT_NUMBER_INVALID),
-  
-  'bankDetails.beneficiaryAddress': yup
-    .string()
-    .nullable()
-    .max(200, 'Beneficiary address must be less than 200 characters'),
+  // Fixed nested bankDetails validation
+  bankDetails: yup.object({
+    bankName: yup
+      .string()
+      .nullable()
+      .optional()
+      .when(['accountNumber', 'iban', 'beneficiaryAddress'], {
+        is: (accountNumber: any, iban: any, beneficiaryAddress: any) => 
+          accountNumber || iban || beneficiaryAddress,
+        then: (schema) => schema.required('Bank name is required when other bank details are provided'),
+        otherwise: (schema) => schema.nullable(),
+      }),
+    
+    accountNumber: yup
+      .string()
+      .nullable()
+      .optional()
+      .transform((value) => (value === '' ? null : value))
+      .matches(/^[0-9]{10,20}$/, {
+        message: VALIDATION_MESSAGES.ACCOUNT_NUMBER_INVALID,
+        excludeEmptyString: true,
+      }),
+    
+    iban: yup
+      .string()
+      .nullable()
+      .optional()
+      .transform((value) => (value === '' ? null : value))
+      .matches(VALIDATION_PATTERNS.SAUDI_IBAN, {
+        message: VALIDATION_MESSAGES.IBAN_INVALID,
+        excludeEmptyString: true,
+      }),
+    
+    beneficiaryAddress: yup
+      .string()
+      .nullable()
+      .optional()
+      .max(200, 'Beneficiary address must be less than 200 characters'),
+  }).optional().nullable(),
 });
 
 const updateUserSchema = createUserSchema.omit(['password', 'confirmPassword']);
@@ -144,7 +194,6 @@ const UserForm: React.FC<UserFormProps> = ({
   isEditMode = false,
 }) => {
   const [showPassword, setShowPassword] = React.useState(false);
-  const [profileImage, setProfileImage] = React.useState<string | null>(user?.profileImage || null);
 
   // Helper function to safely extract error messages
   const getErrorMessage = (error: any): string | undefined => {
@@ -153,22 +202,33 @@ const UserForm: React.FC<UserFormProps> = ({
     return undefined;
   };
 
-  const { data: roles = [], isLoading: rolesLoading } = useRoles();
-  const { data: departments = [], isLoading: departmentsLoading } = useDepartments();
-  const { data: managers = [], isLoading: managersLoading } = useManagers();
+  const { data: roles = [] } = useRoles();
+  const fallbackRoles: Role[] = [
+    { id: 'SUPER_ADMIN', name: 'SUPER_ADMIN', displayName: 'Super Admin', description: '', permissions: [], isActive: true },
+    { id: 'PROJECT_MANAGER', name: 'PROJECT_MANAGER', displayName: 'Project Manager', description: '', permissions: [], isActive: true },
+    { id: 'ACCOUNT_MANAGER', name: 'ACCOUNT_MANAGER', displayName: 'Account Manager', description: '', permissions: [], isActive: true },
+    { id: 'EMPLOYEE', name: 'EMPLOYEE', displayName: 'Employee', description: '', permissions: [], isActive: true },
+  ];
+  const availableRoles: Role[] = roles.length > 0 ? roles as Role[] : fallbackRoles;
 
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-    watch,
-    setValue,
     reset,
+    clearErrors,
   } = useForm<any>({
     resolver: yupResolver(isEditMode ? updateUserSchema : createUserSchema),
+    mode: 'onChange', // This will validate on change
     defaultValues: {
       username: user?.username || '',
       email: user?.email || '',
+      password: '',
+      confirmPassword: '',
+      fullName: user?.fullName || '',
+      phoneNumber: user?.phoneNumber || '',
+      nationalId: user?.nationalId || '',
+      iqamaId: user?.iqamaId || '',
       passportNumber: user?.passportNumber || '',
       department: user?.department || '',
       position: user?.position || '',
@@ -183,23 +243,6 @@ const UserForm: React.FC<UserFormProps> = ({
       },
     },
   });
-
-  // Watch for form changes to trigger validations
-  const watchedUsername = watch('username');
-  const watchedEmail = watch('email');
-  const watchedRoles = watch('roles');
-
-  // Username availability check (debounced)
-  const { data: usernameCheck } = useCheckUsernameAvailability(
-    watchedUsername,
-    user?.id
-  );
-
-  // Email availability check (debounced)
-  const { data: emailCheck } = useCheckEmailAvailability(
-    watchedEmail,
-    user?.id
-  );
 
   // Reset form when user changes
   useEffect(() => {
@@ -224,9 +267,9 @@ const UserForm: React.FC<UserFormProps> = ({
           beneficiaryAddress: user.bankDetails?.beneficiaryAddress || '',
         },
       });
-      setProfileImage(user.profileImage || null);
+      clearErrors(); // Clear any existing errors when resetting
     }
-  }, [user, reset]);
+  }, [user, reset, clearErrors]);
 
   const handleFormSubmit = async (data: any) => {
     try {
@@ -234,81 +277,35 @@ const UserForm: React.FC<UserFormProps> = ({
       const formattedData = {
         ...data,
         hireDate: data.hireDate ? data.hireDate.toISOString().split('T')[0] : undefined,
-        bankDetails: data.bankDetails.bankName ? data.bankDetails : undefined,
+        managerId: data.managerId ? Number(data.managerId) : undefined,
+        // Only include bankDetails if at least one field is filled
+        bankDetails: (data.bankDetails?.bankName || data.bankDetails?.accountNumber || 
+                    data.bankDetails?.iban || data.bankDetails?.beneficiaryAddress) 
+                    ? data.bankDetails : undefined,
       };
-
+      
+      console.log('CreateUser submit payload:', formattedData);
       await onSubmit(formattedData);
     } catch (error) {
       console.error('Form submission error:', error);
     }
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const saudiBankOptions = Object.values(SaudiBanks);
-  const departmentOptions = departments.map((dept: Department) => dept.name);
+
+  // Function to check if there are any actual validation errors
+  const hasValidationErrors = () => {
+    const errorKeys = Object.keys(errors);
+    return errorKeys.length > 0 && errorKeys.some(key => {
+      const error = errors[key];
+      return error && (error.message || typeof error === 'string');
+    });
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box component="form" onSubmit={handleSubmit(handleFormSubmit)} sx={{ mt: 2 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Profile Image Section */}
-          <Box>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                  <Box sx={{ position: 'relative' }}>
-                    <Avatar
-                      src={profileImage || undefined}
-                      sx={{ width: 100, height: 100, fontSize: '2rem' }}
-                    >
-                      {watch('fullName')?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'U'}
-                    </Avatar>
-                    <input
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      id="profile-image-upload"
-                      type="file"
-                      onChange={handleImageUpload}
-                    />
-                    <label htmlFor="profile-image-upload">
-                      <IconButton
-                        color="primary"
-                        component="span"
-                        sx={{
-                          position: 'absolute',
-                          bottom: 0,
-                          right: 0,
-                          backgroundColor: 'background.paper',
-                          '&:hover': {
-                            backgroundColor: 'background.paper',
-                          },
-                        }}
-                      >
-                        <PhotoCamera />
-                      </IconButton>
-                    </label>
-                  </Box>
-                  <Box>
-                    <Typography variant="h6">Profile Picture</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Upload a profile picture for the user
-                    </Typography>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Box>
-
           {/* Basic Information */}
           <Box>
             <Typography variant="h6" gutterBottom>
@@ -317,8 +314,11 @@ const UserForm: React.FC<UserFormProps> = ({
             <Divider sx={{ mb: 2 }} />
           </Box>
 
+          {/* Basic Information Grid */}
+          <Grid container spacing={2}>
+          
           {/* Username */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12} md={6}>
             <Controller
               name="username"
               control={control}
@@ -328,19 +328,16 @@ const UserForm: React.FC<UserFormProps> = ({
                   label="Username"
                   fullWidth
                   required
-                  error={!!errors.username || (usernameCheck && !usernameCheck.available)}
-                  helperText={
-                    getErrorMessage(errors.username) ||
-                    (usernameCheck && !usernameCheck.available ? 'Username is already taken' : '')
-                  }
+                  error={!!errors.username}
+                  helperText={getErrorMessage(errors.username)}
                   disabled={isEditMode} // Username cannot be changed
                 />
               )}
             />
-          </Box>
+          </Grid>
 
           {/* Email */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12} md={6}>
             <Controller
               name="email"
               control={control}
@@ -351,20 +348,17 @@ const UserForm: React.FC<UserFormProps> = ({
                   type="email"
                   fullWidth
                   required
-                  error={!!errors.email || (emailCheck && !emailCheck.available)}
-                  helperText={
-                    getErrorMessage(errors.email) ||
-                    (emailCheck && !emailCheck.available ? 'Email is already in use' : '')
-                  }
+                  error={!!errors.email}
+                  helperText={getErrorMessage(errors.email)}
                 />
               )}
             />
-          </Box>
+          </Grid>
 
           {/* Password fields (only for create mode) */}
           {!isEditMode && (
             <>
-              <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+              <Grid item xs={12} md={6}>
                 <Controller
                   name="password"
                   control={control}
@@ -392,9 +386,9 @@ const UserForm: React.FC<UserFormProps> = ({
                     />
                   )}
                 />
-              </Box>
+              </Grid>
 
-              <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+              <Grid item xs={12} md={6}>
                 <Controller
                   name="confirmPassword"
                   control={control}
@@ -410,12 +404,12 @@ const UserForm: React.FC<UserFormProps> = ({
                     />
                   )}
                 />
-              </Box>
+              </Grid>
             </>
           )}
 
           {/* Full Name */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12} md={6}>
             <Controller
               name="fullName"
               control={control}
@@ -430,10 +424,10 @@ const UserForm: React.FC<UserFormProps> = ({
                 />
               )}
             />
-          </Box>
+          </Grid>
 
           {/* Phone Number */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12} md={6}>
             <Controller
               name="phoneNumber"
               control={control}
@@ -448,7 +442,9 @@ const UserForm: React.FC<UserFormProps> = ({
                 />
               )}
             />
-          </Box>
+          </Grid>
+
+          </Grid>
 
           {/* Saudi-specific Information */}
           <Box>
@@ -458,8 +454,9 @@ const UserForm: React.FC<UserFormProps> = ({
             <Divider sx={{ mb: 2 }} />
           </Box>
 
+          <Grid container spacing={2}>
           {/* National ID */}
-          <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
+          <Grid item xs={12} md={4}>
             <Controller
               name="nationalId"
               control={control}
@@ -474,10 +471,10 @@ const UserForm: React.FC<UserFormProps> = ({
                 />
               )}
             />
-          </Box>
+          </Grid>
 
           {/* Iqama ID */}
-          <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
+          <Grid item xs={12} md={4}>
             <Controller
               name="iqamaId"
               control={control}
@@ -492,10 +489,10 @@ const UserForm: React.FC<UserFormProps> = ({
                 />
               )}
             />
-          </Box>
+          </Grid>
 
           {/* Passport Number */}
-          <Box sx={{ flex: '1 1 200px', minWidth: '200px' }}>
+          <Grid item xs={12} md={4}>
             <Controller
               name="passportNumber"
               control={control}
@@ -510,7 +507,8 @@ const UserForm: React.FC<UserFormProps> = ({
                 />
               )}
             />
-          </Box>
+          </Grid>
+          </Grid>
 
           {/* Employment Information */}
           <Box>
@@ -520,42 +518,26 @@ const UserForm: React.FC<UserFormProps> = ({
             <Divider sx={{ mb: 2 }} />
           </Box>
 
-          {/* Department */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid container spacing={2}>
+          {/* Department (free text) */}
+          <Grid item xs={12} md={6}>
             <Controller
               name="department"
               control={control}
               render={({ field }) => (
-                <Autocomplete
+                <TextField
                   {...field}
-                  options={departmentOptions}
-                  freeSolo
-                  loading={departmentsLoading}
-                  onChange={(_, value) => setValue('department', value || '')}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Department"
-                      error={!!errors.department}
-                      helperText={getErrorMessage(errors.department)}
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <>
-                            {departmentsLoading ? <CircularProgress size={20} /> : null}
-                            {params.InputProps.endAdornment}
-                          </>
-                        ),
-                      }}
-                    />
-                  )}
+                  label="Department"
+                  fullWidth
+                  error={!!errors.department}
+                  helperText={getErrorMessage(errors.department)}
                 />
               )}
             />
-          </Box>
+          </Grid>
 
           {/* Position */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12} md={6}>
             <Controller
               name="position"
               control={control}
@@ -569,10 +551,10 @@ const UserForm: React.FC<UserFormProps> = ({
                 />
               )}
             />
-          </Box>
+          </Grid>
 
           {/* Hire Date */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12} md={6}>
             <Controller
               name="hireDate"
               control={control}
@@ -591,34 +573,26 @@ const UserForm: React.FC<UserFormProps> = ({
                 />
               )}
             />
-          </Box>
+          </Grid>
 
-          {/* Manager */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          {/* Manager ID (numeric) */}
+          <Grid item xs={12} md={6}>
             <Controller
               name="managerId"
               control={control}
               render={({ field }) => (
-                <FormControl fullWidth error={!!errors.managerId}>
-                  <InputLabel>Manager</InputLabel>
-                  <Select
-                    {...field}
-                    label="Manager"
-                    displayEmpty
-                  >
-                    <MenuItem value="">
-                      <em>No Manager</em>
-                    </MenuItem>
-                    {managers.map((manager: UserSummary) => (
-                      <MenuItem key={manager.id} value={manager.id}>
-                        {manager.fullName} ({manager.username})
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <TextField
+                  {...field}
+                  label="Manager ID"
+                  type="number"
+                  fullWidth
+                  error={!!errors.managerId}
+                  helperText={getErrorMessage(errors.managerId)}
+                />
               )}
             />
-          </Box>
+          </Grid>
+          </Grid>
 
           {/* Role Assignment */}
           <Box>
@@ -638,7 +612,7 @@ const UserForm: React.FC<UserFormProps> = ({
                     Select User Roles *
                   </Typography>
                   <FormGroup row>
-                    {roles.map((role: Role) => (
+                    {availableRoles.map((role: Role) => (
                       <FormControlLabel
                         key={role.id}
                         control={
@@ -685,13 +659,14 @@ const UserForm: React.FC<UserFormProps> = ({
             <Divider sx={{ mb: 2 }} />
           </Box>
 
+          <Grid container spacing={2}>
           {/* Bank Name */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12} md={6}>
             <Controller
               name="bankDetails.bankName"
               control={control}
               render={({ field }) => (
-                <FormControl fullWidth error={!!errors['bankDetails.bankName']}>
+                 <FormControl fullWidth error={!!(errors.bankDetails as any)?.bankName}>
                   <InputLabel>Bank Name</InputLabel>
                   <Select
                     {...field}
@@ -707,13 +682,18 @@ const UserForm: React.FC<UserFormProps> = ({
                       </MenuItem>
                     ))}
                   </Select>
+                   {(errors.bankDetails as any)?.bankName && (
+                    <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                       {getErrorMessage((errors.bankDetails as any).bankName)}
+                    </Typography>
+                  )}
                 </FormControl>
               )}
             />
-          </Box>
+          </Grid>
 
           {/* Account Number */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12} md={6}>
             <Controller
               name="bankDetails.accountNumber"
               control={control}
@@ -722,15 +702,15 @@ const UserForm: React.FC<UserFormProps> = ({
                   {...field}
                   label="Account Number"
                   fullWidth
-                  error={!!errors['bankDetails.accountNumber']}
-                  helperText={getErrorMessage(errors['bankDetails.accountNumber'])}
+                  error={!!(errors.bankDetails as any)?.accountNumber}
+                  helperText={getErrorMessage((errors.bankDetails as any)?.accountNumber)}
                 />
               )}
             />
-          </Box>
+          </Grid>
 
           {/* IBAN */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12} md={6}>
             <Controller
               name="bankDetails.iban"
               control={control}
@@ -739,16 +719,16 @@ const UserForm: React.FC<UserFormProps> = ({
                   {...field}
                   label="IBAN"
                   fullWidth
-                  error={!!errors['bankDetails.iban']}
-                  helperText={getErrorMessage(errors['bankDetails.iban']) || 'Saudi IBAN format: SA1234567890123456789012'}
+                  error={!!(errors.bankDetails as any)?.iban}
+                  helperText={getErrorMessage((errors.bankDetails as any)?.iban) || 'Saudi IBAN format: SA1234567890123456789012'}
                   placeholder="SA1234567890123456789012"
                 />
               )}
             />
-          </Box>
+          </Grid>
 
           {/* Beneficiary Address */}
-          <Box sx={{ flex: '1 1 300px', minWidth: '300px' }}>
+          <Grid item xs={12}>
             <Controller
               name="bankDetails.beneficiaryAddress"
               control={control}
@@ -759,12 +739,13 @@ const UserForm: React.FC<UserFormProps> = ({
                   fullWidth
                   multiline
                   rows={2}
-                  error={!!errors['bankDetails.beneficiaryAddress']}
-                  helperText={getErrorMessage(errors['bankDetails.beneficiaryAddress'])}
+                  error={!!(errors.bankDetails as any)?.beneficiaryAddress}
+                  helperText={getErrorMessage((errors.bankDetails as any)?.beneficiaryAddress)}
                 />
               )}
             />
-          </Box>
+          </Grid>
+          </Grid>
 
           {/* Form Actions */}
           <Box>
@@ -788,8 +769,8 @@ const UserForm: React.FC<UserFormProps> = ({
           </Box>
         </Box>
 
-        {/* Validation Summary */}
-        {Object.keys(errors).length > 0 && (
+        {/* Validation Summary - Fixed condition */}
+        {hasValidationErrors() && (
           <Alert severity="error" sx={{ mt: 2 }}>
             Please fix the validation errors above before submitting.
           </Alert>

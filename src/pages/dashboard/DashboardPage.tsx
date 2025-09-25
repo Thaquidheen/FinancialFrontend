@@ -30,13 +30,13 @@ import ActivityFeed from '../../components/dashboard/ActivityFeed';
 
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
-  const [dateFilter, setDateFilter] = useState<{ startDate?: Date; endDate?: Date }>({
+  const [dateFilter] = useState<{ startDate?: Date; endDate?: Date }>({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // First day of current month
     endDate: new Date(),
   });
 
   // Hooks for data fetching
-  const { data: dashboardData, isLoading, error, refetch } = useRoleDashboard({
+  const { isLoading, error, refetch } = useRoleDashboard({
     startDate: dateFilter.startDate?.toISOString().split('T')[0],
     endDate: dateFilter.endDate?.toISOString().split('T')[0],
   });

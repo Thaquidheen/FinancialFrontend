@@ -16,7 +16,6 @@ import {
 import {
   Menu as MenuIcon,
   Notifications as NotificationsIcon,
-  AccountCircle,
   Settings,
   Logout,
   Person,
@@ -76,7 +75,20 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
   };
 
   return (
-    <Toolbar sx={{ px: { xs: 2, sm: 3 } }}>
+    <Toolbar
+      sx={{
+        px: { xs: 2.5, sm: 4 },
+        minHeight: 64,
+        alignItems: 'center',
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
       {/* Menu button - show on mobile or when sidebar is collapsed */}
       {(isMobile || !sidebarOpen) && (
         <IconButton
@@ -97,8 +109,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
         component="div"
         sx={{
           flexGrow: 0,
-          display: { xs: 'none', sm: 'block' },
-          mr: 4,
+          display: { xs: 'block', sm: 'block' },
+          mr: { xs: 2, sm: 4 },
+          maxWidth: { xs: '45vw', sm: 'unset' },
         }}
       >
         Financial Management System
@@ -108,7 +121,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
       <Box sx={{ flexGrow: 1 }} />
 
       {/* Header actions */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1.25 } }}>
         {/* Language toggle (placeholder for future) */}
         <Tooltip title="Language">
           <IconButton color="inherit" size="large">
@@ -119,20 +132,25 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
         {/* Notifications */}
         <Tooltip title="Notifications">
           <IconButton color="inherit" size="large">
-            <Badge badgeContent={notificationCount} color="error">
+            <Badge
+              badgeContent={notificationCount}
+              color="error"
+              overlap="circular"
+              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+           >
               <NotificationsIcon />
             </Badge>
           </IconButton>
         </Tooltip>
 
         {/* User Profile */}
-        <Box sx={{ ml: 1 }}>
+        <Box sx={{ ml: { xs: 0.5, md: 1 } }}>
           {/* User info - hidden on mobile */}
-          <Box
+          {/* <Box
             sx={{
               display: { xs: 'none', md: 'flex' },
               alignItems: 'center',
-              mr: 2,
+              mr: 1.5,
             }}
           >
             <Box sx={{ textAlign: 'right', mr: 1 }}>
@@ -143,7 +161,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
                 {user?.roles?.[0] || 'User'}
               </Typography>
             </Box>
-          </Box>
+          </Box> */}
 
           {/* Profile menu trigger */}
           <Tooltip title="Account">
@@ -154,10 +172,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
             >
               <Avatar
                 sx={{
-                  width: 32,
-                  height: 32,
+                  width: 36,
+                  height: 36,
                   bgcolor: 'secondary.main',
-                  fontSize: '0.875rem',
+                  fontSize: '0.9rem',
                 }}
               >
                 {getUserInitials()}
@@ -165,6 +183,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
             </IconButton>
           </Tooltip>
         </Box>
+      </Box>
       </Box>
 
       {/* Profile Menu */}

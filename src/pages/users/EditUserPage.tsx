@@ -30,7 +30,7 @@ import {
   UpdateUserRolesRequest,
   UpdateBankDetailsRequest,
   ChangePasswordRequest,
-} from '@types/user';
+} from '../../types/user';
 import { USER_ROLES, ROUTES } from '@constants/app';
 
 interface TabPanelProps {
@@ -91,7 +91,7 @@ const EditUserPage: React.FC = () => {
   const canManageRoles = hasAdminAccess;
   const canResetPassword = hasAdminAccess;
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
@@ -115,7 +115,7 @@ const EditUserPage: React.FC = () => {
     if (!userId) return;
 
     try {
-      await updateRolesMutation.mutateAsync({ userId, roles: rolesData });
+      await updateRolesMutation.mutateAsync({ userId, rolesData });
       // Show success message or handle success
     } catch (error: any) {
       throw error;
@@ -126,7 +126,7 @@ const EditUserPage: React.FC = () => {
     if (!userId) return;
 
     try {
-      await updateBankDetailsMutation.mutateAsync({ userId, bankDetails });
+      await updateBankDetailsMutation.mutateAsync({ userId, bankData: bankDetails });
       // Show success message or handle success
     } catch (error: any) {
       throw error;
@@ -137,20 +137,21 @@ const EditUserPage: React.FC = () => {
     if (!userId) return;
 
     try {
-      await changePasswordMutation.mutateAsync({ userId, passwordData });
+      await changePasswordMutation.mutateAsync(passwordData);
       // Show success message or handle success
     } catch (error: any) {
       throw error;
     }
   };
 
-  const handlePasswordReset = async () => {
-    if (!userId) return;
-
+  const handlePasswordReset = async (userId: string) => {
     try {
-      const result = await resetPasswordMutation.mutateAsync(userId);
+      await resetPasswordMutation.mutateAsync({ 
+        userId, 
+        email: user?.email || '', 
+        sendEmail: true 
+      });
       // Show temporary password to admin
-      return result;
     } catch (error: any) {
       throw error;
     }
@@ -182,7 +183,7 @@ const EditUserPage: React.FC = () => {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error">
-          {error?.message || 'User not found'}
+          {(error as Error)?.message || 'User not found'}
         </Alert>
       </Box>
     );
@@ -250,11 +251,11 @@ const EditUserPage: React.FC = () => {
             isLoading={updateUserMutation.isPending}
             isEditMode={true}
           />
-          {updateUserMutation.error && (
+          {updateUserMutation.error ? (
             <Alert severity="error" sx={{ mt: 2 }}>
-              {updateUserMutation.error.message || 'Failed to update user'}
+              {(updateUserMutation.error as Error)?.message || 'Failed to update user'}
             </Alert>
-          )}
+          ) : null}
         </TabPanel>
 
         {/* Role Assignment Tab */}
@@ -275,7 +276,7 @@ const EditUserPage: React.FC = () => {
             user={user}
             onBankDetailsUpdate={handleBankDetailsUpdate}
             isLoading={updateBankDetailsMutation.isPending}
-            error={updateBankDetailsMutation.error}
+            error={updateBankDetailsMutation.error as Error | null}
           />
         </TabPanel>
 
@@ -287,8 +288,8 @@ const EditUserPage: React.FC = () => {
             onPasswordReset={canResetPassword ? handlePasswordReset : undefined}
             isChangingPassword={changePasswordMutation.isPending}
             isResettingPassword={resetPasswordMutation.isPending}
-            changePasswordError={changePasswordMutation.error}
-            resetPasswordError={resetPasswordMutation.error}
+            changePasswordError={changePasswordMutation.error as Error | null}
+            resetPasswordError={resetPasswordMutation.error as Error | null}
           />
         </TabPanel>
 

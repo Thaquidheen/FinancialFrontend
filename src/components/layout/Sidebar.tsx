@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   List,
@@ -8,8 +8,6 @@ import {
   ListItemText,
   Toolbar,
   Typography,
-  Divider,
-  Collapse,
   IconButton,
   Avatar,
   Tooltip,
@@ -25,8 +23,6 @@ import {
   Folder,
   Settings,
   ChevronLeft,
-  ExpandLess,
-  ExpandMore,
   Business,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -43,7 +39,6 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   // Get navigation items based on user role
   const getNavigationItems = () => {
@@ -73,13 +68,6 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
     }
   };
 
-  const handleExpandClick = (itemId: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemId)
-        ? prev.filter(id => id !== itemId)
-        : [...prev, itemId]
-    );
-  };
 
   const isActivePath = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');

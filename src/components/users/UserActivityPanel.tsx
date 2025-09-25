@@ -472,7 +472,7 @@ const UserActivityPanel: React.FC<UserActivityPanelProps> = ({ userId }) => {
                   <Pagination
                     count={totalPages}
                     page={currentPage}
-                    onChange={(event, page) => setCurrentPage(page)}
+                    onChange={(_, page) => setCurrentPage(page)}
                     color="primary"
                   />
                 </Box>

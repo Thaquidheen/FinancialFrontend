@@ -16,8 +16,8 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { AccountBalance, Verified, Warning } from '@mui/icons-material';
-import { User, UpdateBankDetailsRequest } from '@types/user';
+import { AccountBalance, Warning } from '@mui/icons-material';
+import { User, UpdateBankDetailsRequest } from '../../types/user';
 
 // Saudi banks list
 const SAUDI_BANKS = [
@@ -49,7 +49,6 @@ const bankDetailsSchema = yup.object().shape({
     .matches(/^SA\d{22}$/, 'Invalid Saudi IBAN format (SA + 22 digits)'),
   beneficiaryAddress: yup
     .string()
-    .required('Beneficiary address is required')
     .min(10, 'Address must be at least 10 characters')
     .max(255, 'Address cannot exceed 255 characters'),
 });
@@ -76,7 +75,7 @@ const BankDetailsPanel: React.FC<BankDetailsPanelProps> = ({
     watch,
     setValue,
     formState: { errors, isDirty, isValid },
-  } = useForm<UpdateBankDetailsRequest>({
+  } = useForm({
     resolver: yupResolver(bankDetailsSchema),
     defaultValues: {
       bankName: user?.bankDetails?.bankName || '',
@@ -134,9 +133,9 @@ const BankDetailsPanel: React.FC<BankDetailsPanelProps> = ({
     return bankCodes[bankName] || '0000';
   };
 
-  const handleSave = async (data: UpdateBankDetailsRequest) => {
+  const handleSave = async (data: any) => {
     try {
-      await onBankDetailsUpdate(data);
+      await onBankDetailsUpdate(data as UpdateBankDetailsRequest);
       setIsEditing(false);
     } catch (error) {
       // Error handling is managed by parent component
@@ -183,21 +182,12 @@ const BankDetailsPanel: React.FC<BankDetailsPanelProps> = ({
                   Current Bank Details
                 </Typography>
                 <Box display="flex" alignItems="center" gap={1}>
-                  {user.bankDetails.verified ? (
-                    <Chip
-                      icon={<Verified />}
-                      label="Verified"
-                      color="success"
-                      size="small"
-                    />
-                  ) : (
-                    <Chip
-                      icon={<Warning />}
-                      label="Pending Verification"
-                      color="warning"
-                      size="small"
-                    />
-                  )}
+                  <Chip
+                    icon={<Warning />}
+                    label="Pending Verification"
+                    color="warning"
+                    size="small"
+                  />
                   <Button
                     variant="outlined"
                     onClick={() => setIsEditing(true)}

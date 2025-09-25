@@ -5,6 +5,11 @@ import { useAuth } from '@contexts/AuthContext';
 import { ProtectedRouteProps } from '../../types/auth';
 import { ROUTES } from '@constants/app';
 import authService from '@services/authService';
+import mockAuthService from '@services/mockAuthService';
+
+// Select auth service via env flag
+const useMockAuth = (import.meta.env.VITE_USE_MOCK_AUTH as string) === 'true';
+const authServiceToUse = useMockAuth ? mockAuthService : authService;
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
@@ -48,7 +53,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check role-based access
   if (requiredRoles.length > 0) {
-    const hasRequiredRole = authService.hasAnyRole(requiredRoles);
+    const hasRequiredRole = authServiceToUse.hasAnyRole(requiredRoles);
     
     if (!hasRequiredRole) {
       return (
@@ -81,7 +86,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check permission-based access
   if (requiredPermissions.length > 0) {
-    const hasRequiredPermission = authService.hasAnyPermission(requiredPermissions);
+    const hasRequiredPermission = authServiceToUse.hasAnyPermission(requiredPermissions);
     
     if (!hasRequiredPermission) {
       return (

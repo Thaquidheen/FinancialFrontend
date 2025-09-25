@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '@contexts/AuthContext';
 import ProtectedRoute from '@components/auth/ProtectedRoute';
 import AppLayout from '@components/layout/AppLayout';
 import LoginPage from '@pages/auth/LoginPage';
@@ -11,6 +10,9 @@ import DashboardPage from '@pages/dashboard/DashboardPage';
 import UserListPage from '@pages/users/UserListPage';
 import CreateUserPage from '@pages/users/CreateUserPage';
 import EditUserPage from '@pages/users/EditUserPage';
+import ProjectListPage from '@pages/projects/ProjectListPage';
+import { CreateProjectPage } from '@pages/projects/CreateProjectPage';
+import { ProjectDetailsPage } from '@pages/projects/ProjectDetailsPage';
 import { lightTheme } from '@themes/theme';
 import { ROUTES } from '@constants/app';
 import { USER_ROLES } from './types/auth';
@@ -38,8 +40,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={lightTheme}>
         <CssBaseline />
-        <AuthProvider>
-          <Router>
+        <Router>
             <Routes>
               {/* Public Routes */}
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -95,10 +96,11 @@ function App() {
                             <ProtectedRoute
                               requiredRoles={[
                                 USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
                                 USER_ROLES.PROJECT_MANAGER,
                               ]}
                             >
-                              <PlaceholderPage title="Projects" />
+                              <ProjectListPage />
                             </ProtectedRoute>
                           }
                         />
@@ -108,10 +110,11 @@ function App() {
                             <ProtectedRoute
                               requiredRoles={[
                                 USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
                                 USER_ROLES.PROJECT_MANAGER,
                               ]}
                             >
-                              <PlaceholderPage title="Create Project" />
+                              <CreateProjectPage />
                             </ProtectedRoute>
                           }
                         />
@@ -121,10 +124,11 @@ function App() {
                             <ProtectedRoute
                               requiredRoles={[
                                 USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
                                 USER_ROLES.PROJECT_MANAGER,
                               ]}
                             >
-                              <PlaceholderPage title="Project Details" />
+                              <ProjectDetailsPage />
                             </ProtectedRoute>
                           }
                         />
@@ -222,7 +226,6 @@ function App() {
               />
             </Routes>
           </Router>
-        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

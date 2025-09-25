@@ -32,6 +32,9 @@ const CreateUserPage: React.FC = (): JSX.Element => {
       
       // At this point, TypeScript knows it's a CreateUserRequest
       const createUserData = userData as CreateUserRequest;
+      // TEMP: debug log
+      // eslint-disable-next-line no-console
+      console.log('CreateUserPage -> calling createUser', createUserData);
       const newUser = await createUserMutation.mutateAsync(createUserData);
       
       // Navigate back to user list with success message

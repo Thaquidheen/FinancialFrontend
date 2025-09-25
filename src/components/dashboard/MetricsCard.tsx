@@ -8,7 +8,6 @@ import {
   Chip,
   LinearProgress,
   Skeleton,
-  useTheme,
   IconButton,
   Tooltip,
 } from '@mui/material';
@@ -50,8 +49,6 @@ export const MetricsCard: React.FC<MetricsCardProps> = ({
   helpText,
   onClick,
 }) => {
-  const theme = useTheme();
-
   const formatValue = (val: number, format: MetricValue['format']): string => {
     switch (format) {
       case 'currency':

@@ -94,15 +94,6 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
-      
-      /* Hide loading indicator once React loads */
-      #root > div:first-child {
-        display: none;
-      }
-      
-      #root > div:not(:first-child) ~ div:first-child {
-        display: flex;
-      }
     </style>
     
     <script type="module" src="/src/main.tsx"></script>
