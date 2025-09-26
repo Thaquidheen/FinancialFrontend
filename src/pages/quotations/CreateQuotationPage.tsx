@@ -56,42 +56,49 @@ const CreateQuotationPage: React.FC = () => {
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Auto-save draft functionality
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (formData.projectId && formData.description) {
-        saveDraft();
-      }
-    }, 30000); // Auto-save every 30 seconds
+  // Auto-save draft functionality - TEMPORARILY DISABLED
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     // Only auto-save if we have basic info and at least one item
+  //     if (formData.projectId && formData.description && formData.items.length > 0) {
+  //       console.log('Auto-save interval triggered');
+  //       saveDraft();
+  //     }
+  //   }, 30000); // Auto-save every 30 seconds
 
-    return () => clearInterval(interval);
-  }, [formData]);
+  //   return () => clearInterval(interval);
+  // }, [formData.projectId, formData.description, formData.items.length]); // Only depend on essential fields
 
   const saveDraft = async () => {
-    if (!validateCurrentStep()) return;
+    // Only save draft if we have basic info and at least one item
+    if (!formData.projectId || !formData.description || formData.items.length === 0) {
+      return;
+    }
 
     try {
       const draftData: CreateQuotationRequest = {
         projectId: formData.projectId!,
         description: formData.description,
         currency: formData.currency,
-        items: formData.items.map(item => ({
+        items: formData.items.map((item, index) => ({
           description: item.description,
-          amount: item.amount,
+          amount: Number(item.amount), // Ensure it's a number
           currency: item.currency,
           category: item.category,
           accountHead: item.accountHead,
           itemDate: item.itemDate,
-          vendorName: item.vendorName,
-          vendorContact: item.vendorContact,
-          itemOrder: item.itemOrder
+          itemOrder: index + 1,
+          vendorName: item.vendorName || undefined,
+          vendorContact: item.vendorContact || undefined
         }))
       };
 
+      console.log('Auto-saving draft with data:', draftData);
       await quotationService.createQuotation(draftData);
       console.log('Draft saved successfully');
     } catch (error) {
       console.error('Error saving draft:', error);
+      // Don't show error to user for auto-save failures
     }
   };
 
@@ -148,9 +155,15 @@ const CreateQuotationPage: React.FC = () => {
   };
 
   const handleNext = () => {
+    console.log('handleNext called, current step:', activeStep);
+    console.log('Form data:', formData);
+    
     if (validateCurrentStep()) {
+      console.log('Validation passed, moving to next step');
       setActiveStep((prevStep) => prevStep + 1);
       setError(null);
+    } else {
+      console.log('Validation failed, staying on current step');
     }
   };
 
@@ -170,16 +183,16 @@ const CreateQuotationPage: React.FC = () => {
         projectId: formData.projectId!,
         description: formData.description,
         currency: formData.currency,
-        items: formData.items.map(item => ({
+        items: formData.items.map((item, index) => ({
           description: item.description,
-          amount: item.amount,
+          amount: Number(item.amount), // Ensure it's a number
           currency: item.currency,
           category: item.category,
           accountHead: item.accountHead,
           itemDate: item.itemDate,
-          vendorName: item.vendorName,
-          vendorContact: item.vendorContact,
-          itemOrder: item.itemOrder
+          itemOrder: index + 1,
+          vendorName: item.vendorName || undefined,
+          vendorContact: item.vendorContact || undefined
         }))
       };
 

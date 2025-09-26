@@ -150,8 +150,10 @@ const QuotationBasicInfo: React.FC<QuotationBasicInfoProps> = ({
                 }}
               />
             )}
-            renderOption={(props, option) => (
-              <Box component="li" {...props}>
+            renderOption={(props, option) => {
+              const { key, ...otherProps } = props;
+              return (
+                <Box component="li" key={key} {...otherProps}>
                 <Box>
                   <Typography variant="body1" fontWeight="medium">
                     {option.name}
@@ -166,7 +168,8 @@ const QuotationBasicInfo: React.FC<QuotationBasicInfoProps> = ({
                   )}
                 </Box>
               </Box>
-            )}
+              );
+            }}
             renderTags={(value, getTagProps) =>
               value.map((option, index) => (
                 <Chip

@@ -15,6 +15,9 @@ import { CreateProjectPage } from '@pages/projects/CreateProjectPage';
 import { ProjectDetailsPage } from '@pages/projects/ProjectDetailsPage';
 import QuotationListPage from '@pages/quotations/QuotationListPage';
 import CreateQuotationPage from '@pages/quotations/CreateQuotationPage';
+import ApprovalQueuePage from '@pages/approvals/ApprovalQueuePage';
+import ApprovalDashboardPage from '@pages/approvals/ApprovalDashboardPage';
+import PaymentDashboardPage from '@pages/payments/PaymentDashboardPage';
 import { lightTheme } from '@themes/theme';
 import { ROUTES } from '@constants/app';
 import { USER_ROLES } from './types/auth';
@@ -175,12 +178,26 @@ function App() {
                                 USER_ROLES.ACCOUNT_MANAGER,
                               ]}
                             >
-                              <PlaceholderPage title="Approvals" />
+                              <ApprovalQueuePage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/approvals/dashboard"
+                          element={
+                            <ProtectedRoute
+                              requiredRoles={[
+                                USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
+                              ]}
+                            >
+                              <ApprovalDashboardPage />
                             </ProtectedRoute>
                           }
                         />
 
-                        {/* Payments - Account Manager */}
+                        {/* Payments - Account Manager */
+                        }
                         <Route
                           path={ROUTES.PAYMENTS}
                           element={
@@ -190,7 +207,7 @@ function App() {
                                 USER_ROLES.ACCOUNT_MANAGER,
                               ]}
                             >
-                              <PlaceholderPage title="Payments" />
+                              <PaymentDashboardPage />
                             </ProtectedRoute>
                           }
                         />

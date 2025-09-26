@@ -73,15 +73,16 @@ const QuotationDocuments: React.FC<QuotationDocumentsProps> = ({
     { value: 'OTHER', label: 'Other' }
   ];
 
-  const getFileIcon = (fileType: string) => {
+  const getFileIcon = (fileType: string | undefined) => {
+    if (!fileType) return <FileIcon />;
     if (fileType.startsWith('image/')) return <ImageIcon />;
     if (fileType === 'application/pdf') return <PdfIcon />;
     if (fileType.includes('document') || fileType.includes('text')) return <DocumentIcon />;
     return <FileIcon />;
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+  const formatFileSize = (bytes: number | undefined) => {
+    if (!bytes || bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -248,8 +249,8 @@ const QuotationDocuments: React.FC<QuotationDocumentsProps> = ({
                 <ListItem key={file.id}>
                   {getFileIcon(file.type)}
                   <ListItemText
-                    primary={file.name}
-                    secondary={`${formatFileSize(file.size)} • ${file.category}`}
+                    primary={file.name || 'Unknown File'}
+                    secondary={`${formatFileSize(file.size)} • ${file.category || 'Unknown Category'}`}
                   />
                   <ListItemSecondaryAction>
                     <IconButton 
@@ -298,11 +299,11 @@ const QuotationDocuments: React.FC<QuotationDocumentsProps> = ({
                   <ListItem key={index} divider={index < documents.length - 1}>
                     {getFileIcon(file.type)}
                     <ListItemText
-                      primary={file.name}
+                      primary={file.name || 'Unknown File'}
                       secondary={
                         <Box>
                           <Typography variant="body2" color="text.secondary">
-                            {formatFileSize(file.size)} • {file.type}
+                            {formatFileSize(file.size)} • {file.type || 'Unknown Type'}
                           </Typography>
                           {fileWithPreview.description && (
                             <Typography variant="caption" color="text.secondary">

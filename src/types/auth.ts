@@ -42,16 +42,17 @@ export interface User {
     expiresIn: number;
   }
   
-  export interface AuthContextType {
-    user: User | null;
-    token: string | null;
-    isAuthenticated: boolean;
-    isLoading: boolean;
-    login: (credentials: LoginRequest) => Promise<void>;
-    logout: () => void;
-    refreshToken: () => Promise<void>;
-    checkAuth: () => Promise<void>;
-  }
+export interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (credentials: LoginRequest) => Promise<void>;
+  logout: () => void;
+  refreshToken: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+  hasPermission: (permission: string) => boolean;
+}
   
   export interface ProtectedRouteProps {
     children: React.ReactNode;

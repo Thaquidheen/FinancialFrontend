@@ -125,6 +125,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const hasPermission = (permission: string): boolean => {
+    if (!user) return false;
+    return user.permissions?.includes(permission) || false;
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -134,6 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     refreshToken,
     checkAuth,
+    hasPermission,
   };
 
   return (

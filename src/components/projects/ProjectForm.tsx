@@ -383,8 +383,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                       }}
                     />
                   )}
-                  renderOption={(props, option: any) => (
-                    <Box component="li" {...props}>
+                  renderOption={(props, option: any) => {
+                    const { key, ...otherProps } = props;
+                    return (
+                      <Box component="li" key={key} {...otherProps}>
                       <Box>
                         <Typography variant="body2">
                           {option.fullName}
@@ -394,7 +396,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                         </Typography>
                       </Box>
                     </Box>
-                  )}
+                    );
+                  }}
                   noOptionsText="No project managers available"
                 />
               </Grid>
