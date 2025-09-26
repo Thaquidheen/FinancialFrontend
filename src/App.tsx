@@ -13,6 +13,8 @@ import EditUserPage from '@pages/users/EditUserPage';
 import ProjectListPage from '@pages/projects/ProjectListPage';
 import { CreateProjectPage } from '@pages/projects/CreateProjectPage';
 import { ProjectDetailsPage } from '@pages/projects/ProjectDetailsPage';
+import QuotationListPage from '@pages/quotations/QuotationListPage';
+import CreateQuotationPage from '@pages/quotations/CreateQuotationPage';
 import { lightTheme } from '@themes/theme';
 import { ROUTES } from '@constants/app';
 import { USER_ROLES } from './types/auth';
@@ -134,8 +136,33 @@ function App() {
                         />
 
                         {/* Quotations */}
-                        <Route path={ROUTES.QUOTATIONS} element={<PlaceholderPage title="Quotations" />} />
-                        <Route path={ROUTES.QUOTATION_CREATE} element={<PlaceholderPage title="Create Quotation" />} />
+                        <Route 
+                          path={ROUTES.QUOTATIONS} 
+                          element={
+                            <ProtectedRoute
+                              requiredRoles={[
+                                USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
+                                USER_ROLES.PROJECT_MANAGER,
+                              ]}
+                            >
+                              <QuotationListPage />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path={ROUTES.QUOTATION_CREATE} 
+                          element={
+                            <ProtectedRoute
+                              requiredRoles={[
+                                USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.PROJECT_MANAGER,
+                              ]}
+                            >
+                              <CreateQuotationPage />
+                            </ProtectedRoute>
+                          } 
+                        />
                         <Route path={ROUTES.QUOTATION_DETAIL} element={<PlaceholderPage title="Quotation Details" />} />
 
                         {/* Approvals - Account Manager */}

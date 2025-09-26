@@ -59,7 +59,17 @@ export const useProject = (projectId: number | null) => {
 export const useMyProjects = () => {
   const { user } = useAuth();
   
-  const hasAccess = user?.roles?.includes(USER_ROLES.PROJECT_MANAGER);
+  const hasAccess = user?.roles?.some(role => 
+    [USER_ROLES.SUPER_ADMIN, USER_ROLES.PROJECT_MANAGER].includes(role as any)
+  );
+
+  // Debug logging
+  console.log('useMyProjects Debug:', {
+    user,
+    userRoles: user?.roles,
+    hasAccess,
+    PROJECT_MANAGER: USER_ROLES.PROJECT_MANAGER
+  });
 
   return useQuery({
     queryKey: PROJECT_QUERY_KEYS.myProjects,
