@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
 import ProtectedRoute from '@components/auth/ProtectedRoute';
 import AppLayout from '@components/layout/AppLayout';
 import LoginPage from '@pages/auth/LoginPage';
@@ -42,10 +43,11 @@ const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={lightTheme}>
-        <CssBaseline />
-        <Router>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={lightTheme}>
+          <CssBaseline />
+          <Router>
             <Routes>
               {/* Public Routes */}
               <Route path={ROUTES.LOGIN} element={<LoginPage />} />
@@ -270,8 +272,9 @@ function App() {
               />
             </Routes>
           </Router>
-      </ThemeProvider>
-    </QueryClientProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 }
 

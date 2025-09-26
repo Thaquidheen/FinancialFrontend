@@ -24,7 +24,7 @@ export class PaymentService {
     const response = await apiClient.get<any>(`${this.basePath}/dashboard`);
     
     // Transform backend response to match frontend interface
-    const data = response.data;
+    const data = response.data || {};
     return {
       statistics: data.statistics || data,
       recentPayments: data.recentPayments || [],
@@ -57,9 +57,13 @@ export class PaymentService {
       { params: queryParams }
     );
 
-    return (response.data ?? {
-      batchId: '', fileName: '', fileUrl: '', paymentCount: 0, totalAmount: 0, expiresAt: new Date().toISOString()
-    }) as BankFileResponse;
+    return response.data ?? {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: 20,
+      number: 0
+    };
   }
 
   /**
@@ -76,17 +80,14 @@ export class PaymentService {
       }
     );
 
-    return (response.data ?? {
-      pendingPayments: 0,
-      processingPayments: 0,
-      completedPayments: 0,
-      totalPendingAmount: 0,
-      totalProcessingAmount: 0,
-      totalCompletedAmount: 0,
-      paymentsByBank: {},
-      paymentsByStatus: {} as any,
-      monthlyTrends: []
-    }) as PaymentStatistics;
+    return response.data ?? {
+      batchId: '',
+      fileName: '',
+      fileUrl: '',
+      paymentCount: 0,
+      totalAmount: 0,
+      expiresAt: new Date().toISOString()
+    };
   }
 
   /**
@@ -118,10 +119,10 @@ export class PaymentService {
       request
     );
 
-    return (response.data ?? {
-      id: '', quotationId: '', employeeId: '', employeeName: '', employeeFullName: '', amount: 0,
-      currency: 'SAR', status: 'READY_FOR_PAYMENT' as any, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-    }) as Payment;
+    return response.data ?? {
+      message: 'Payments confirmed successfully',
+      processedCount: '0'
+    };
   }
 
   /**
@@ -149,7 +150,13 @@ export class PaymentService {
       { params: queryParams }
     );
 
-    return (response.data ?? []) as any[];
+    return response.data ?? {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: 20,
+      number: 0
+    };
   }
 
   /**
@@ -209,6 +216,13 @@ export class PaymentService {
   }
 
   /**
+   * Get payment statistics (alias for getPaymentStatistics)
+   */
+  async getStatistics(): Promise<PaymentStatistics> {
+    return this.getPaymentStatistics();
+  }
+
+  /**
    * Get payment statistics
    */
   async getPaymentStatistics(): Promise<PaymentStatistics> {
@@ -216,7 +230,17 @@ export class PaymentService {
       `${this.basePath}/statistics`
     );
 
-    return response.data;
+    return response.data ?? {
+      pendingPayments: 0,
+      processingPayments: 0,
+      completedPayments: 0,
+      totalPendingAmount: 0,
+      totalProcessingAmount: 0,
+      totalCompletedAmount: 0,
+      paymentsByBank: {},
+      paymentsByStatus: {} as any,
+      monthlyTrends: []
+    };
   }
 
   /**
@@ -241,7 +265,18 @@ export class PaymentService {
       `${this.basePath}/${paymentId}`
     );
 
-    return response.data;
+    return response.data ?? {
+      id: '',
+      quotationId: '',
+      employeeId: '',
+      employeeName: '',
+      employeeFullName: '',
+      amount: 0,
+      currency: 'SAR',
+      status: 'READY_FOR_PAYMENT' as any,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
   }
 
   /**
@@ -279,7 +314,7 @@ export class PaymentService {
       `${this.basePath}/${paymentId}/history`
     );
 
-    return response.data;
+    return response.data ?? [];
   }
 
   /**
@@ -310,6 +345,37 @@ export class PaymentService {
       { paymentIds }
     );
 
+    return response.data;
+  }
+
+  /**
+   * Generate payment report
+   */
+  async generateReport(
+    reportType: string,
+    filters: any,
+    format: string
+  ): Promise<Blob> {
+    const response = await apiClient.post(
+      `${this.basePath}/reports/${reportType}`,
+      { filters, format },
+      { responseType: 'blob' }
+    );
+    return response.data;
+  }
+
+  /**
+   * Export payments
+   */
+  async exportPayments(
+    format: 'excel' | 'csv' | 'pdf',
+    filters: PaymentSearchParams
+  ): Promise<Blob> {
+    const response = await apiClient.post(
+      `${this.basePath}/export`,
+      { format, filters },
+      { responseType: 'blob' }
+    );
     return response.data;
   }
 

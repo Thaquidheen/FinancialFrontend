@@ -68,7 +68,7 @@ import {
       }
   
       // Extract components
-      const countryCode = cleanIBAN.substring(0, 2); // SA
+      // const _countryCode = cleanIBAN.substring(0, 2); // SA
       const checkDigits = cleanIBAN.substring(2, 4);
       const bankCode = cleanIBAN.substring(4, 6);
       const accountNumber = cleanIBAN.substring(6);

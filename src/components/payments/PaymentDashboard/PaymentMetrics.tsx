@@ -17,11 +17,9 @@ import {
   AttachMoney,
   Schedule,
   CheckCircle,
-  Warning,
   TrendingUp,
   TrendingDown,
   AccountBalance,
-  Receipt,
   Info
 } from '@mui/icons-material';
 import { PaymentStatistics } from '../../../types/payment.types';
@@ -100,7 +98,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
         </Box>
 
         <Typography variant="h4" fontWeight="bold" color="text.primary" gutterBottom>
-          {typeof value === 'number' ? value.toLocaleString() : value}
+          {typeof value === 'number' ? (value || 0).toLocaleString() : value}
         </Typography>
 
         <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -155,7 +153,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
               }}
             />
             <Typography variant="caption" color="text.secondary" mt={0.5}>
-              {progress.current.toLocaleString()} of {progress.target.toLocaleString()}
+              {(progress.current || 0).toLocaleString()} of {(progress.target || 0).toLocaleString()}
             </Typography>
           </Box>
         )}
@@ -204,8 +202,8 @@ const PaymentMetrics: React.FC<PaymentMetricsProps> = ({
     );
   }
 
-  const totalPayments = statistics.pendingPayments + statistics.processingPayments + statistics.completedPayments;
-  const totalAmount = statistics.totalPendingAmount + statistics.totalProcessingAmount + statistics.totalCompletedAmount;
+  const totalPayments = (statistics.pendingPayments || 0) + (statistics.processingPayments || 0) + (statistics.completedPayments || 0);
+  const totalAmount = (statistics.totalPendingAmount || 0) + (statistics.totalProcessingAmount || 0) + (statistics.totalCompletedAmount || 0);
 
   return (
     <Box className={className}>
@@ -214,12 +212,12 @@ const PaymentMetrics: React.FC<PaymentMetricsProps> = ({
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <MetricCard
             title="Pending Payments"
-            value={statistics.pendingPayments}
-            subtitle={saudiBankService.formatSAR(statistics.totalPendingAmount)}
+            value={statistics.pendingPayments || 0}
+            subtitle={saudiBankService.formatSAR(statistics.totalPendingAmount || 0)}
             icon={<Schedule />}
             color="warning"
             progress={{
-              current: statistics.pendingPayments,
+              current: statistics.pendingPayments || 0,
               target: totalPayments,
               label: 'Of Total Payments'
             }}
@@ -231,12 +229,12 @@ const PaymentMetrics: React.FC<PaymentMetricsProps> = ({
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <MetricCard
             title="Processing"
-            value={statistics.processingPayments}
-            subtitle={saudiBankService.formatSAR(statistics.totalProcessingAmount)}
+            value={statistics.processingPayments || 0}
+            subtitle={saudiBankService.formatSAR(statistics.totalProcessingAmount || 0)}
             icon={<AccountBalance />}
             color="info"
             progress={{
-              current: statistics.processingPayments,
+              current: statistics.processingPayments || 0,
               target: totalPayments,
               label: 'Of Total Payments'
             }}
@@ -248,12 +246,12 @@ const PaymentMetrics: React.FC<PaymentMetricsProps> = ({
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <MetricCard
             title="Completed"
-            value={statistics.completedPayments}
-            subtitle={saudiBankService.formatSAR(statistics.totalCompletedAmount)}
+            value={statistics.completedPayments || 0}
+            subtitle={saudiBankService.formatSAR(statistics.totalCompletedAmount || 0)}
             icon={<CheckCircle />}
             color="success"
             progress={{
-              current: statistics.completedPayments,
+              current: statistics.completedPayments || 0,
               target: totalPayments,
               label: 'Of Total Payments'
             }}
@@ -277,12 +275,12 @@ const PaymentMetrics: React.FC<PaymentMetricsProps> = ({
         <Grid item xs={12} sm={6} md={4} lg={2}>
           <MetricCard
             title="Success Rate"
-            value={`${totalPayments > 0 ? ((statistics.completedPayments / totalPayments) * 100).toFixed(1) : 0}%`}
+            value={`${totalPayments > 0 ? (((statistics.completedPayments || 0) / totalPayments) * 100).toFixed(1) : 0}%`}
             subtitle="Payment completion rate"
             icon={<TrendingUp />}
             color="success"
             progress={{
-              current: statistics.completedPayments,
+              current: statistics.completedPayments || 0,
               target: totalPayments,
               label: 'Completion Rate'
             }}

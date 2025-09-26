@@ -1,7 +1,7 @@
 // src/pages/payments/PaymentDashboardPage.tsx
 
 import React from 'react';
-import { Box, Container } from '@mui/material';
+import { Container } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import PaymentDashboard from '../../components/payments/PaymentDashboard/PaymentDashboard';
 import { useAuth } from '../../contexts/AuthContext';

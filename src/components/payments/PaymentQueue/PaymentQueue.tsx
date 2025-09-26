@@ -8,15 +8,6 @@ import {
   Button,
   Chip,
   Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   LinearProgress,
   Tooltip,
   IconButton
@@ -27,15 +18,13 @@ import {
   FilterList,
   Clear,
   AccountBalance,
-  Warning,
-  CheckCircle,
-  Info
+  CheckCircle
 } from '@mui/icons-material';
 import { usePaymentQueue } from '../../../hooks/payments/usePaymentQueue';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 import PaymentQueueTable from './PaymentQueueTable';
 import PaymentQueueFilters from './PaymentQueueFilters';
-import BankFileGenerationDialog from '../BankFileGeneration/BankFileGenerationDialog';
+// import BankFileGenerationDialog from '../BankFileGeneration/BankFileGenerationDialog';
 
 interface PaymentQueueProps {
   className?: string;
@@ -97,7 +86,7 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
     )];
 
     if (selectedBanks.length === 1) {
-      setSelectedBank(selectedBanks[0]);
+      setSelectedBank(selectedBanks[0] || '');
     }
 
     setShowGenerateDialog(true);
@@ -108,7 +97,7 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
       return;
     }
 
-    await generateBankFile(selectedBank, comments || undefined);
+    await generateBankFile(selectedBank, comments || '');
     setShowGenerateDialog(false);
     setSelectedBank('');
     setComments('');
@@ -138,9 +127,11 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
         </Box>
         <Box display="flex" gap={1}>
           <Tooltip title="Refresh Queue">
-            <IconButton onClick={refetch} disabled={isLoading}>
-              <Refresh />
-            </IconButton>
+            <span>
+              <IconButton onClick={() => refetch()} disabled={isLoading}>
+                <Refresh />
+              </IconButton>
+            </span>
           </Tooltip>
           <Button
             variant="outlined"
@@ -218,7 +209,7 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
             Quick Select by Bank
           </Typography>
           <Box display="flex" gap={1} flexWrap="wrap">
-            {Array.from(paymentsByBank.entries()).map(([bankName, bankPayments]) => {
+            {Array.from(paymentsByBank.entries()).map(([bankName, bankPayments]: [string, any[]]) => {
               const bank = saudiBankService.getBankByCode(bankName) || 
                           saudiBankService.getAllBanks().find(b => b.name === bankName);
               
@@ -292,7 +283,7 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
       </Paper>
 
       {/* Bank File Generation Dialog */}
-      <BankFileGenerationDialog
+      {/* <BankFileGenerationDialog
         open={showGenerateDialog}
         onClose={handleCloseGenerateDialog}
         onConfirm={handleConfirmGeneration}
@@ -304,7 +295,7 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
         onCommentsChange={setComments}
         isGenerating={isGeneratingFile}
         validationResult={validationResult}
-      />
+      /> */}
     </Box>
   );
 };

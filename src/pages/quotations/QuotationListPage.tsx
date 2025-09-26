@@ -8,22 +8,30 @@ import {
   Grid,
   Chip,
   IconButton,
-  Menu,
-  MenuItem,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   Alert,
   Tooltip,
-  Fab
+  Fab,
+  Card,
+  CardContent,
+  Avatar,
+  Badge,
+  TextField,
+  InputAdornment,
+  ButtonGroup,
+  Breadcrumbs,
+  Link
 } from '@mui/material';
 import {
   DataGrid,
   GridColDef,
   GridRowSelectionModel,
   GridActionsCellItem,
-  GridRowParams
+  GridRowParams,
+  GridToolbar
 } from '@mui/x-data-grid';
 import {
   Add as AddIcon,
@@ -33,17 +41,24 @@ import {
   Send as SubmitIcon,
   FileDownload as ExportIcon,
   FilterList as FilterIcon,
-  MoreVert as MoreVertIcon,
   CheckCircle as ApproveIcon,
-  Cancel as RejectIcon
+  CheckCircle,
+  Cancel as RejectIcon,
+  Search as SearchIcon,
+  TrendingUp,
+  Schedule,
+  Assignment,
+  AttachMoney,
+  Refresh,
+  Dashboard,
+  Clear
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useQuotations } from '../../hooks/quotations/useQuotations';
 import { quotationService } from '../../services/quotation/quotationService';
-import { QuotationSummary, QuotationStatus } from '../../types/quotation';
+import { QuotationSummary, QuotationStatus, Currency } from '../../types/quotation';
 import QuotationFilters from '../../components/quotations/QuotationFilters';
-import QuotationBulkActions from '../../components/quotations/QuotationBulkActions';
 import { formatCurrency, formatDate } from '../../utils/quotations/quotationFormatters';
 
 const QuotationListPage: React.FC = () => {
@@ -53,7 +68,8 @@ const QuotationListPage: React.FC = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState<QuotationSummary | null>(null);
-  const [bulkActionAnchor, setBulkActionAnchor] = useState<null | HTMLElement>(null);
+  const [quickSearch, setQuickSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'table' | 'card'>('table');
 
   const {
     quotations,
@@ -69,41 +85,86 @@ const QuotationListPage: React.FC = () => {
     handleReject
   } = useQuotations();
 
-  // Define columns based on user role
+  // Filter quotations based on quick search
+  const filteredQuotations = useMemo(() => {
+    if (!quickSearch.trim()) return quotations;
+    
+    const searchTerm = quickSearch.toLowerCase();
+    return quotations.filter(quotation =>
+      quotation.description.toLowerCase().includes(searchTerm) ||
+      quotation.projectName.toLowerCase().includes(searchTerm) ||
+      quotation.id.toString().includes(searchTerm) ||
+      quotation.createdByName?.toLowerCase().includes(searchTerm)
+    );
+  }, [quotations, quickSearch]);
+
+  // Calculate statistics
+  const statistics = useMemo(() => {
+    const total = quotations.length;
+    const pending = quotations.filter(q => q.status === QuotationStatus.PENDING).length;
+    const approved = quotations.filter(q => q.status === QuotationStatus.APPROVED).length;
+    const draft = quotations.filter(q => q.status === QuotationStatus.DRAFT).length;
+    const rejected = quotations.filter(q => q.status === QuotationStatus.REJECTED).length;
+    const totalAmount = quotations.reduce((sum, q) => sum + q.totalAmount, 0);
+    const exceedsBudget = quotations.filter(q => q.exceedsBudget).length;
+
+    return { total, pending, approved, draft, rejected, totalAmount, exceedsBudget };
+  }, [quotations]);
+
+  // Define enhanced columns with better formatting
   const columns: GridColDef[] = useMemo(() => {
     const baseColumns: GridColDef[] = [
       {
         field: 'id',
         headerName: 'ID',
-        width: 80,
-        sortable: true
+        width: 90,
+        sortable: true,
+        renderCell: (params) => (
+          <Box display="flex" alignItems="center" gap={1}>
+            <Avatar sx={{ width: 24, height: 24, fontSize: 12, bgcolor: 'primary.main' }}>
+              {params.value.toString().slice(-2)}
+            </Avatar>
+            <Typography variant="body2" fontWeight="medium">
+              {params.value}
+            </Typography>
+          </Box>
+        )
       },
       {
         field: 'description',
         headerName: 'Description',
-        width: 300,
+        flex: 1,
+        minWidth: 250,
         sortable: true,
         renderCell: (params) => (
-          <Tooltip title={params.value}>
-            <Typography variant="body2" noWrap>
-              {params.value}
+          <Box>
+            <Tooltip title={params.value}>
+              <Typography variant="body2" noWrap fontWeight="medium" sx={{ mb: 0.5 }}>
+                {params.value}
+              </Typography>
+            </Tooltip>
+            <Typography variant="caption" color="text.secondary">
+              {params.row.itemCount} items • Created {formatDate(params.row.createdDate)}
             </Typography>
-          </Tooltip>
+          </Box>
         )
       },
       {
         field: 'projectName',
         headerName: 'Project',
-        width: 200,
+        width: 180,
         sortable: true,
         renderCell: (params) => (
           <Box>
-            <Typography variant="body2" fontWeight={500}>
+            <Typography variant="body2" fontWeight="medium" sx={{ mb: 0.5 }}>
               {params.value}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {params.row.projectCode}
-            </Typography>
+            <Chip 
+              label={params.row.projectCode} 
+              size="small" 
+              variant="outlined" 
+              sx={{ height: 20, fontSize: '0.7rem' }}
+            />
           </Box>
         )
       },
@@ -112,17 +173,25 @@ const QuotationListPage: React.FC = () => {
         headerName: 'Amount',
         width: 150,
         sortable: true,
+        align: 'right',
+        headerAlign: 'right',
         renderCell: (params) => (
           <Box textAlign="right">
-            <Typography variant="body2" fontWeight={500}>
+            <Typography 
+              variant="body2" 
+              fontWeight="bold" 
+              color={params.row.exceedsBudget ? 'error.main' : 'text.primary'}
+              sx={{ mb: 0.5 }}
+            >
               {formatCurrency(params.value, params.row.currency)}
             </Typography>
             {params.row.exceedsBudget && (
               <Chip
-                label="Exceeds Budget"
+                label="Over Budget"
                 color="error"
                 size="small"
                 variant="outlined"
+                sx={{ height: 20, fontSize: '0.65rem' }}
               />
             )}
           </Box>
@@ -131,35 +200,12 @@ const QuotationListPage: React.FC = () => {
       {
         field: 'status',
         headerName: 'Status',
-        width: 120,
+        width: 130,
         sortable: true,
+        align: 'center',
+        headerAlign: 'center',
         renderCell: (params) => (
           <QuotationStatusChip status={params.value} />
-        )
-      },
-      {
-        field: 'createdDate',
-        headerName: 'Created',
-        width: 120,
-        sortable: true,
-        renderCell: (params) => (
-          <Typography variant="body2">
-            {formatDate(params.value)}
-          </Typography>
-        )
-      },
-      {
-        field: 'itemCount',
-        headerName: 'Items',
-        width: 80,
-        sortable: false,
-        align: 'center',
-        renderCell: (params) => (
-          <Chip
-            label={params.value}
-            size="small"
-            variant="outlined"
-          />
         )
       }
     ];
@@ -169,26 +215,39 @@ const QuotationListPage: React.FC = () => {
       baseColumns.push({
         field: 'createdByName',
         headerName: 'Created By',
-        width: 150,
-        sortable: true
+        width: 140,
+        sortable: true,
+        renderCell: (params) => (
+          <Box display="flex" alignItems="center" gap={1}>
+            <Avatar sx={{ width: 24, height: 24, fontSize: '0.7rem' }}>
+              {params.value?.charAt(0)?.toUpperCase() || 'U'}
+            </Avatar>
+            <Typography variant="body2">
+              {params.value}
+            </Typography>
+          </Box>
+        )
       });
     }
 
-    // Add actions column
+    // Enhanced actions column
     baseColumns.push({
       field: 'actions',
       type: 'actions',
       headerName: 'Actions',
-      width: 150,
+      width: 120,
+      align: 'center',
+      headerAlign: 'center',
       getActions: (params: GridRowParams<QuotationSummary>) => {
         const actions = [];
 
         // View action
         actions.push(
           <GridActionsCellItem
-            icon={<ViewIcon />}
+            icon={<ViewIcon sx={{ fontSize: 18 }} />}
             label="View"
             onClick={() => navigate(`/quotations/${params.id}`)}
+            showInMenu
           />
         );
 
@@ -197,9 +256,10 @@ const QuotationListPage: React.FC = () => {
             (user?.roles?.includes('PROJECT_MANAGER') || user?.roles?.includes('SUPER_ADMIN'))) {
           actions.push(
             <GridActionsCellItem
-              icon={<EditIcon />}
+              icon={<EditIcon sx={{ fontSize: 18 }} />}
               label="Edit"
               onClick={() => navigate(`/quotations/${params.id}/edit`)}
+              showInMenu
             />
           );
         }
@@ -209,9 +269,10 @@ const QuotationListPage: React.FC = () => {
             (user?.roles?.includes('PROJECT_MANAGER') || user?.roles?.includes('SUPER_ADMIN'))) {
           actions.push(
             <GridActionsCellItem
-              icon={<SubmitIcon />}
+              icon={<SubmitIcon sx={{ fontSize: 18 }} />}
               label="Submit"
               onClick={() => handleSubmitQuotation(params.row)}
+              showInMenu
             />
           );
         }
@@ -221,16 +282,16 @@ const QuotationListPage: React.FC = () => {
             (user?.roles?.includes('ACCOUNT_MANAGER') || user?.roles?.includes('SUPER_ADMIN'))) {
           actions.push(
             <GridActionsCellItem
-              icon={<ApproveIcon />}
+              icon={<ApproveIcon sx={{ fontSize: 18 }} />}
               label="Approve"
               onClick={() => handleApproveQuotation(params.row)}
-              color="success"
+              showInMenu
             />,
             <GridActionsCellItem
-              icon={<RejectIcon />}
+              icon={<RejectIcon sx={{ fontSize: 18 }} />}
               label="Reject"
               onClick={() => handleRejectQuotation(params.row)}
-              color="error"
+              showInMenu
             />
           );
         }
@@ -240,10 +301,10 @@ const QuotationListPage: React.FC = () => {
             (user?.roles?.includes('PROJECT_MANAGER') || user?.roles?.includes('SUPER_ADMIN'))) {
           actions.push(
             <GridActionsCellItem
-              icon={<DeleteIcon />}
+              icon={<DeleteIcon sx={{ fontSize: 18 }} />}
               label="Delete"
               onClick={() => handleDeleteQuotation(params.row)}
-              color="error"
+              showInMenu
             />
           );
         }
@@ -304,8 +365,6 @@ const QuotationListPage: React.FC = () => {
   };
 
   const handleBulkAction = (action: string) => {
-    setBulkActionAnchor(null);
-    // Handle bulk actions based on selection
     console.log(`Bulk ${action} for quotations:`, selectionModel);
   };
 
@@ -326,187 +385,366 @@ const QuotationListPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" component="h1">
-          Quotations
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-          <QuotationBulkActions
-            selectedQuotations={quotations.filter((_, index) => selectionModel.includes(index))}
-            onActionComplete={() => {
-              refreshQuotations();
-              setSelectionModel([]);
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
+      {/* Header Section */}
+      <Paper elevation={0} sx={{ px: 3, py: 2, borderRadius: 0 }}>
+        {/* Breadcrumbs */}
+        <Breadcrumbs sx={{ mb: 2 }}>
+          <Link 
+            color="inherit" 
+            href="/dashboard" 
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/dashboard');
             }}
-            onError={(error) => {
-              console.error('Bulk action error:', error);
-              // You could show a toast notification here
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+          >
+            <Dashboard sx={{ fontSize: 16 }} />
+            Dashboard
+          </Link>
+          <Typography color="text.primary">Quotations</Typography>
+        </Breadcrumbs>
+
+        {/* Main Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box>
+            <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.5 }}>
+              Quotation Management
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manage and track all quotations across projects
+            </Typography>
+          </Box>
+          
+          <Box display="flex" gap={1} alignItems="center">
+            <Tooltip title="Refresh Data">
+              <IconButton onClick={refreshQuotations} disabled={loading}>
+                <Refresh />
+              </IconButton>
+            </Tooltip>
+            
+            <Button
+              startIcon={<FilterIcon />}
+              onClick={() => setFilterOpen(true)}
+              variant="outlined"
+              size="small"
+            >
+              Advanced Filters
+            </Button>
+            
+            <Button
+              startIcon={<ExportIcon />}
+              onClick={handleExport}
+              variant="outlined"
+              size="small"
+            >
+              Export
+            </Button>
+            
+            {(user?.roles?.includes('PROJECT_MANAGER') || user?.roles?.includes('SUPER_ADMIN')) && (
+              <Button
+                startIcon={<AddIcon />}
+                onClick={() => navigate('/quotations/create')}
+                variant="contained"
+                size="medium"
+              >
+                New Quotation
+              </Button>
+            )}
+          </Box>
+        </Box>
+
+        {/* Search and Quick Actions */}
+        <Box display="flex" gap={2} alignItems="center" mb={2}>
+          <TextField
+            placeholder="Search quotations..."
+            value={quickSearch}
+            onChange={(e) => setQuickSearch(e.target.value)}
+            size="small"
+            sx={{ minWidth: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              endAdornment: quickSearch && (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="clear search"
+                    onClick={() => setQuickSearch('')}
+                    size="small"
+                  >
+                    <Clear />
+                  </IconButton>
+                </InputAdornment>
+              )
             }}
           />
-          <Button
-            startIcon={<FilterIcon />}
-            onClick={() => setFilterOpen(true)}
-            variant="outlined"
-          >
-            Filters
-          </Button>
-          <Button
-            startIcon={<ExportIcon />}
-            onClick={handleExport}
-            variant="outlined"
-          >
-            Export
-          </Button>
-          {(user?.roles?.includes('PROJECT_MANAGER') || user?.roles?.includes('SUPER_ADMIN')) && (
-            <Button
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/quotations/create')}
-              variant="contained"
+          
+          <ButtonGroup variant="outlined" size="small">
+            <Button 
+              onClick={() => setViewMode('table')}
+              variant={viewMode === 'table' ? 'contained' : 'outlined'}
             >
-              Create Quotation
+              Table
             </Button>
-          )}
+            <Button 
+              onClick={() => setViewMode('card')}
+              variant={viewMode === 'card' ? 'contained' : 'outlined'}
+            >
+              Cards
+            </Button>
+          </ButtonGroup>
         </Box>
-      </Box>
+      </Paper>
 
       {/* Error Alert */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => {}}>
+        <Alert severity="error" sx={{ m: 2, mb: 0 }} onClose={() => {}}>
           {error}
         </Alert>
       )}
 
-      {/* Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="primary">
-              {pagination.totalElements}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total Quotations
-            </Typography>
-          </Paper>
+      {/* Statistics Dashboard */}
+      <Box sx={{ px: 3, py: 2 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'primary.main' }}>
+              <CardContent sx={{ py: 2 }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Box>
+                    <Typography variant="h4" fontWeight="bold" color="primary">
+                      {statistics.total}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total Quotations
+                    </Typography>
+                  </Box>
+                  <Avatar sx={{ bgcolor: 'primary.light' }}>
+                    <Assignment />
+                  </Avatar>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'warning.main' }}>
+              <CardContent sx={{ py: 2 }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Box>
+                    <Typography variant="h4" fontWeight="bold" color="warning.main">
+                      {statistics.pending}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Pending Approval
+                    </Typography>
+                  </Box>
+                  <Badge badgeContent={statistics.pending} color="warning">
+                    <Avatar sx={{ bgcolor: 'warning.light' }}>
+                      <Schedule />
+                    </Avatar>
+                  </Badge>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'success.main' }}>
+              <CardContent sx={{ py: 2 }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Box>
+                    <Typography variant="h4" fontWeight="bold" color="success.main">
+                      {statistics.approved}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Approved
+                    </Typography>
+                  </Box>
+                  <Avatar sx={{ bgcolor: 'success.light' }}>
+                    <CheckCircle />
+                  </Avatar>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'info.main' }}>
+              <CardContent sx={{ py: 2 }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Box>
+                    <Typography variant="h4" fontWeight="bold" color="info.main">
+                      {formatCurrency(statistics.totalAmount, Currency.SAR)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total Value
+                    </Typography>
+                  </Box>
+                  <Avatar sx={{ bgcolor: 'info.light' }}>
+                    <AttachMoney />
+                  </Avatar>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'error.main' }}>
+              <CardContent sx={{ py: 2 }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Box>
+                    <Typography variant="h4" fontWeight="bold" color="error.main">
+                      {statistics.exceedsBudget}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Over Budget
+                    </Typography>
+                  </Box>
+                  <Avatar sx={{ bgcolor: 'error.light' }}>
+                    <TrendingUp />
+                  </Avatar>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="warning.main">
-              {quotations.filter(q => q.status === QuotationStatus.PENDING).length}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Pending Approval
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="success.main">
-              {quotations.filter(q => q.status === QuotationStatus.APPROVED).length}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Approved
-            </Typography>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Paper sx={{ p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" color="error.main">
-              {quotations.filter(q => q.exceedsBudget).length}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Exceed Budget
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
+      </Box>
 
-      {/* Bulk Actions */}
+      {/* Bulk Selection Bar */}
       {selectionModel.length > 0 && (
-        <Box sx={{ mb: 2 }}>
-          <Paper sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="body2">
+        <Paper elevation={1} sx={{ mx: 3, mb: 2, p: 2 }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Typography variant="body2" color="primary" fontWeight="medium">
               {selectionModel.length} quotation(s) selected
             </Typography>
-            <IconButton
-              onClick={(event) => setBulkActionAnchor(event.currentTarget)}
-            >
-              <MoreVertIcon />
-            </IconButton>
-            <Menu
-              anchorEl={bulkActionAnchor}
-              open={Boolean(bulkActionAnchor)}
-              onClose={() => setBulkActionAnchor(null)}
-            >
+            <Box display="flex" gap={1}>
               {user?.roles?.includes('ACCOUNT_MANAGER') || user?.roles?.includes('SUPER_ADMIN') ? (
-                [
-                  <MenuItem key="approve" onClick={() => handleBulkAction('approve')}>
-                    <ApproveIcon sx={{ mr: 1 }} /> Bulk Approve
-                  </MenuItem>,
-                  <MenuItem key="reject" onClick={() => handleBulkAction('reject')}>
-                    <RejectIcon sx={{ mr: 1 }} /> Bulk Reject
-                  </MenuItem>
-                ]
+                <>
+                  <Button
+                    size="small"
+                    startIcon={<ApproveIcon />}
+                    onClick={() => handleBulkAction('approve')}
+                    color="success"
+                    variant="outlined"
+                  >
+                    Bulk Approve
+                  </Button>
+                  <Button
+                    size="small"
+                    startIcon={<RejectIcon />}
+                    onClick={() => handleBulkAction('reject')}
+                    color="error"
+                    variant="outlined"
+                  >
+                    Bulk Reject
+                  </Button>
+                </>
               ) : (
-                <MenuItem onClick={() => handleBulkAction('submit')}>
-                  <SubmitIcon sx={{ mr: 1 }} /> Bulk Submit
-                </MenuItem>
+                <Button
+                  size="small"
+                  startIcon={<SubmitIcon />}
+                  onClick={() => handleBulkAction('submit')}
+                  variant="outlined"
+                >
+                  Bulk Submit
+                </Button>
               )}
-              <MenuItem onClick={() => handleBulkAction('export')}>
-                <ExportIcon sx={{ mr: 1 }} /> Export Selected
-              </MenuItem>
-            </Menu>
-          </Paper>
-        </Box>
+              <Button
+                size="small"
+                startIcon={<ExportIcon />}
+                onClick={() => handleBulkAction('export')}
+                variant="outlined"
+              >
+                Export Selected
+              </Button>
+              <Button
+                size="small"
+                onClick={() => setSelectionModel([])}
+                variant="text"
+              >
+                Clear Selection
+              </Button>
+            </Box>
+          </Box>
+        </Paper>
       )}
 
       {/* Data Grid */}
-      <Paper sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <DataGrid
-          rows={quotations}
-          columns={columns}
-          loading={loading}
-          paginationMode="server"
-          sortingMode="server"
-          filterMode="server"
-          checkboxSelection
-          disableRowSelectionOnClick
-          rowSelectionModel={selectionModel}
-          onRowSelectionModelChange={setSelectionModel}
-          paginationModel={{
-            page: pagination.page,
-            pageSize: pagination.size
-          }}
-          onPaginationModelChange={(model) => {
-            setFilters({
-              ...filters,
-              page: model.page,
-              size: model.pageSize
-            });
-          }}
-          onSortModelChange={(model) => {
-            if (model.length > 0) {
+      <Box sx={{ flexGrow: 1, px: 3, pb: 3 }}>
+        <Paper elevation={1} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <DataGrid
+            rows={filteredQuotations}
+            columns={columns}
+            loading={loading}
+            paginationMode="server"
+            sortingMode="server"
+            checkboxSelection
+            disableRowSelectionOnClick
+            rowSelectionModel={selectionModel}
+            onRowSelectionModelChange={setSelectionModel}
+            paginationModel={{
+              page: pagination.page,
+              pageSize: pagination.size
+            }}
+            onPaginationModelChange={(model) => {
               setFilters({
                 ...filters,
-                sortBy: model[0].field,
-                sortDir: model[0].sort || 'asc'
+                page: model.page,
+                size: model.pageSize
               });
-            }
-          }}
-          rowCount={pagination.totalElements}
-          pageSizeOptions={[10, 25, 50, 100]}
-          sx={{
-            '& .MuiDataGrid-row:hover': {
-              cursor: 'pointer'
-            }
-          }}
-          onRowClick={(params) => {
-            if (!selectionModel.includes(params.id)) {
-              navigate(`/quotations/${params.id}`);
-            }
-          }}
-        />
-      </Paper>
+            }}
+            onSortModelChange={(model) => {
+              if (model.length > 0) {
+                setFilters({
+                  ...filters,
+                  sortBy: model[0].field,
+                  sortDir: model[0].sort || 'asc'
+                });
+              }
+            }}
+            rowCount={pagination.totalElements}
+            pageSizeOptions={[10, 25, 50, 100]}
+            slots={{ toolbar: GridToolbar }}
+            slotProps={{
+              toolbar: {
+                showQuickFilter: true,
+                quickFilterProps: { debounceMs: 500 },
+              },
+            }}
+            sx={{
+              border: 0,
+              '& .MuiDataGrid-main': {
+                '& .MuiDataGrid-row': {
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                    cursor: 'pointer'
+                  }
+                },
+                '& .MuiDataGrid-cell': {
+                  borderColor: 'grey.200',
+                  py: 1.5
+                }
+              },
+              '& .MuiDataGrid-columnHeaders': {
+                backgroundColor: 'grey.50',
+                borderColor: 'grey.200'
+              },
+              '& .MuiDataGrid-footerContainer': {
+                backgroundColor: 'grey.50',
+                borderColor: 'grey.200'
+              }
+            }}
+            onRowClick={(params) => {
+              if (!selectionModel.includes(params.id)) {
+                navigate(`/quotations/${params.id}`);
+              }
+            }}
+          />
+        </Paper>
+      </Box>
 
       {/* Floating Action Button for Mobile */}
       {(user?.roles?.includes('PROJECT_MANAGER') || user?.roles?.includes('SUPER_ADMIN')) && (
@@ -515,8 +753,8 @@ const QuotationListPage: React.FC = () => {
           aria-label="add"
           sx={{
             position: 'fixed',
-            bottom: 16,
-            right: 16,
+            bottom: 24,
+            right: 24,
             display: { xs: 'flex', sm: 'none' }
           }}
           onClick={() => navigate('/quotations/create')}
@@ -534,18 +772,41 @@ const QuotationListPage: React.FC = () => {
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Quotation</DialogTitle>
+      <Dialog 
+        open={deleteDialogOpen} 
+        onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Avatar sx={{ bgcolor: 'error.light' }}>
+              <DeleteIcon />
+            </Avatar>
+            Delete Quotation
+          </Box>
+        </DialogTitle>
         <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            This action cannot be undone. The quotation and all associated data will be permanently deleted.
+          </Alert>
           <Typography>
-            Are you sure you want to delete quotation "{selectedQuotation?.description}"?
-            This action cannot be undone.
+            Are you sure you want to delete quotation <strong>"{selectedQuotation?.description}"</strong>?
           </Typography>
+          <Box mt={2} p={2} bgcolor="grey.50" borderRadius={1}>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Quotation ID:</strong> {selectedQuotation?.id}<br />
+              <strong>Project:</strong> {selectedQuotation?.projectName}<br />
+              <strong>Amount:</strong> {selectedQuotation ? formatCurrency(selectedQuotation.totalAmount, selectedQuotation.currency) : ''}
+            </Typography>
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setDeleteDialogOpen(false)} variant="outlined">
+            Cancel
+          </Button>
           <Button onClick={confirmDelete} color="error" variant="contained">
-            Delete
+            Delete Quotation
           </Button>
         </DialogActions>
       </Dialog>
@@ -553,32 +814,41 @@ const QuotationListPage: React.FC = () => {
   );
 };
 
-// Status Chip Component
+// Enhanced Status Chip Component
 const QuotationStatusChip: React.FC<{ status: QuotationStatus }> = ({ status }) => {
-  const getStatusColor = (status: QuotationStatus) => {
+  const getStatusConfig = (status: QuotationStatus) => {
     switch (status) {
       case QuotationStatus.DRAFT:
-        return 'default';
+        return { color: 'default' as const, icon: <EditIcon sx={{ fontSize: 14 }} /> };
       case QuotationStatus.SUBMITTED:
       case QuotationStatus.PENDING:
-        return 'warning';
+        return { color: 'warning' as const, icon: <Schedule sx={{ fontSize: 14 }} /> };
       case QuotationStatus.APPROVED:
-        return 'success';
+        return { color: 'success' as const, icon: <CheckCircle sx={{ fontSize: 14 }} /> };
       case QuotationStatus.REJECTED:
-        return 'error';
+        return { color: 'error' as const, icon: <RejectIcon sx={{ fontSize: 14 }} /> };
       case QuotationStatus.CANCELLED:
-        return 'default';
+        return { color: 'default' as const, icon: <RejectIcon sx={{ fontSize: 14 }} /> };
       default:
-        return 'default';
+        return { color: 'default' as const, icon: null };
     }
   };
+
+  const config = getStatusConfig(status);
 
   return (
     <Chip
       label={status}
-      color={getStatusColor(status)}
+      color={config.color}
       size="small"
       variant="filled"
+      icon={config.icon || undefined}
+      sx={{
+        fontWeight: 'medium',
+        '& .MuiChip-icon': {
+          marginLeft: 1
+        }
+      }}
     />
   );
 };
