@@ -79,7 +79,7 @@ export class DashboardService {
    * Get Payment Dashboard (Account Manager)
    */
   async getPaymentDashboard(): Promise<PaymentDashboardResponse> {
-    const response = await apiClient.get<PaymentDashboardResponse>('/api/payments/dashboard');
+    const response = await apiClient.get<PaymentDashboardResponse>('/payments/dashboard');
 
     if (response.success && response.data) {
       return response.data;

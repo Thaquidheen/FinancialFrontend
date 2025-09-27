@@ -56,7 +56,7 @@ export const usePaymentBatches = ({
     queryKey: ['payment-batches', filters],
     queryFn: () => paymentService.getPaymentBatches({
       ...filters,
-      includePayments: true // Always include payments for batch actions
+      includePayments: false // Always include payments for batch actions
     }),
     refetchInterval: autoRefresh ? refreshInterval : false,
     staleTime: 60000, // Consider data stale after 1 minute
