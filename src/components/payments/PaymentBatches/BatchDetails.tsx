@@ -50,7 +50,7 @@ import {
   History
 } from '@mui/icons-material';
 import { PaymentBatch, PaymentBatchStatus } from '../../../types/payment.types';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 import { PAYMENT_BATCH_STATUS_LABELS } from '../../../constants/payments/paymentConstants';
 import BatchStatusTracker from './BatchStatusTracker';
 import BatchTimeline from './BatchTimeline';

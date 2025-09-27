@@ -30,15 +30,10 @@ import {
   Visibility,
   Edit,
   AccountBalance,
-  Person,
-  AttachMoney,
-  Schedule,
-  FilterList,
-  CheckCircle,
   Warning
 } from '@mui/icons-material';
 import { PaymentSummaryResponse } from '../../../types/payment.types';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 import PaymentStatusBadge from '../shared/PaymentStatusBadge';
 import BankIcon from '../shared/BankIcon';
 
@@ -132,7 +127,6 @@ const PaymentQueueTable: React.FC<PaymentQueueTableProps> = ({
   currentPage,
   pageSize,
   totalElements,
-  totalPages,
   sortBy,
   sortDirection,
   isLoading,
@@ -155,7 +149,7 @@ const PaymentQueueTable: React.FC<PaymentQueueTableProps> = ({
     }
   };
 
-  const handlePaymentSelect = (paymentId: string) => (event: React.MouseEvent) => {
+  const handlePaymentSelect = (paymentId: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     event.stopPropagation();
     onSelectPayment(paymentId);
   };
@@ -461,7 +455,7 @@ const PaymentQueueTable: React.FC<PaymentQueueTableProps> = ({
           count={totalElements}
           rowsPerPage={pageSize}
           page={currentPage}
-          onPageChange={(event, newPage) => onPageChange(newPage)}
+          onPageChange={(_, newPage) => onPageChange(newPage)}
           onRowsPerPageChange={(event) => {
             onPageSizeChange(parseInt(event.target.value, 10));
           }}

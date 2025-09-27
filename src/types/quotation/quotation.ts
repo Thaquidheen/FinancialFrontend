@@ -155,11 +155,15 @@ export enum QuotationStatus {
     items: Omit<LineItem, 'id'>[];
   }
   
-  export interface UpdateQuotationRequest {
-    description?: string;
-    dueDate?: string;
-    items?: LineItem[];
-  }
+export interface UpdateQuotationRequest {
+  description?: string;
+  dueDate?: string;
+  items?: LineItem[];
+}
+
+export interface SubmitQuotationRequest {
+  submissionNotes?: string;
+}
   
   export interface QuotationStatistics {
     totalQuotations: number;

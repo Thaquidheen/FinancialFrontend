@@ -13,7 +13,6 @@ import {
   Alert,
   Divider,
   LinearProgress,
-  Collapse,
   Card,
   CardContent,
   List,
@@ -21,24 +20,20 @@ import {
   ListItemIcon,
   ListItemText,
   Chip,
-  IconButton,
-  Tooltip
+  IconButton
 } from '@mui/material';
 import {
-  SelectAll,
   AccountBalance,
-  Visibility,
   GetApp,
   CheckCircle,
   Warning,
-  Error,
   Info,
   Close,
-  Refresh
+  Schedule
 } from '@mui/icons-material';
-import { PaymentSummaryResponse, BankFileRequest } from '../../../types/payment.types';
+import { PaymentSummaryResponse } from '../../../types/payment.types';
 import { SaudiBankDefinition } from '../../../types/saudiBanking.types';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 import { usePaymentQueue } from '../../../hooks/payments/usePaymentQueue';
 import PaymentSelection from './PaymentSelection';
 import PaymentValidation from './PaymentValidation';
@@ -79,8 +74,7 @@ const BankFileWizard: React.FC<BankFileWizardProps> = ({
     payments,
     isLoading,
     generateBankFile,
-    getAvailableBanks,
-    validateSelection
+    getAvailableBanks
   } = usePaymentQueue();
 
   const availableBanks = getAvailableBanks();
@@ -112,12 +106,6 @@ const BankFileWizard: React.FC<BankFileWizardProps> = ({
     setGenerationError(null);
 
     try {
-      const request: BankFileRequest = {
-        paymentIds: selectedPayments,
-        bankName: selectedBank,
-        comments: comments || undefined
-      };
-
       await generateBankFile(selectedBank, comments);
       
       // Simulate file generation result
@@ -228,7 +216,6 @@ const BankFileWizard: React.FC<BankFileWizardProps> = ({
 
   if (!open) return null;
 
-  const currentStep = steps[activeStep];
   const isLastStep = activeStep === steps.length - 1;
 
   return (
@@ -419,7 +406,7 @@ const BankFileWizard: React.FC<BankFileWizardProps> = ({
             </Box>
             
             <Box display="flex" alignItems="center" gap={1}>
-              {steps.map((step, index) => (
+              {steps.map((_, index) => (
                 <Box
                   key={index}
                   width={8}

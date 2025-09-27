@@ -31,13 +31,12 @@ import {
   PlayArrow,
   CheckCircle,
   Error,
-  Person,
   Info,
   Warning,
   AccessTime
 } from '@mui/icons-material';
 import { PaymentBatch, PaymentBatchStatus } from '../../../types/payment.types';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 
 interface BatchTimelineProps {
   batch: PaymentBatch;
@@ -204,12 +203,21 @@ const BatchTimeline: React.FC<BatchTimelineProps> = ({
     }
   };
 
+  const getChipColor = (status: TimelineEvent['status']) => {
+    switch (status) {
+      case 'completed': return 'success';
+      case 'current': return 'primary';
+      case 'failed': return 'error';
+      default: return 'default';
+    }
+  };
+
   const events = generateTimelineEvents();
 
   if (compact) {
     return (
       <Box className={className}>
-        {events.filter(event => event.status !== 'pending').map((event, index) => (
+        {events.filter(event => event.status !== 'pending').map((event) => (
           <Box key={event.id} display="flex" alignItems="center" gap={2} py={1}>
             <Avatar
               sx={{
@@ -233,7 +241,7 @@ const BatchTimeline: React.FC<BatchTimelineProps> = ({
             <Chip
               size="small"
               label={event.status}
-              color={getTimelineItemColor(event.status)}
+              color={getChipColor(event.status)}
               variant="outlined"
             />
           </Box>
@@ -331,7 +339,7 @@ const BatchTimeline: React.FC<BatchTimelineProps> = ({
                     <Chip
                       size="small"
                       label={event.status}
-                      color={getTimelineItemColor(event.status)}
+                      color={getChipColor(event.status)}
                       variant={event.status === 'current' ? 'filled' : 'outlined'}
                     />
                   </Box>

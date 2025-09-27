@@ -24,6 +24,16 @@ import {
   Settings,
   ChevronLeft,
   Business,
+  Search,
+  Home,
+  LocalOffer,
+  Inventory,
+  Percent,
+  BarChart,
+  AttachMoney,
+  Description,
+  Groups,
+  Bookmark,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@contexts/AuthContext';
@@ -50,13 +60,13 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
 
   // Icon mapping
   const iconMap: { [key: string]: React.ReactElement } = {
-    Dashboard: <Dashboard />,
+    Dashboard: <Home />,
     People: <People />,
     Work: <Work />,
     RequestQuote: <RequestQuote />,
     Approval: <Approval />,
     Payment: <Payment />,
-    Assessment: <Assessment />,
+    Assessment: <BarChart />,
     Folder: <Folder />,
     Settings: <Settings />,
   };
@@ -90,79 +100,89 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
   const navigationItems = getNavigationItems();
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ 
+      height: '100%', 
+      display: 'flex', 
+      flexDirection: 'column',
+      backgroundColor: '#1a1d29', // Dark blue background
+      color: '#ffffff'
+    }}>
+      {/* Search Bar */}
+      {open && (
+        <Box sx={{ p: 2, borderBottom: '1px solid #2d3748' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            backgroundColor: '#2d3748',
+            borderRadius: 1,
+            px: 2,
+            py: 1
+          }}>
+            <Search sx={{ color: '#a0aec0', mr: 1, fontSize: 20 }} />
+            <Typography variant="body2" color="#a0aec0">
+              Search
+            </Typography>
+          </Box>
+        </Box>
+      )}
+
       {/* Sidebar Header */}
       <Toolbar
         sx={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: open ? 'space-between' : 'center',
-          px: 2,
+          px: open ? 2 : 1,
           minHeight: THEME_CONFIG.HEADER_HEIGHT,
-          borderBottom: 1,
-          borderColor: 'divider',
+          borderBottom: '1px solid #2d3748',
+          backgroundColor: '#1a1d29',
         }}
       >
-        {open && (
+        {open ? (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
-              <Business />
+            <Avatar sx={{ bgcolor: '#4a5568', width: 32, height: 32 }}>
+              <Business sx={{ color: '#ffffff' }} />
             </Avatar>
             <Box>
-              <Typography variant="h6" noWrap component="div" sx={{ fontSize: '1rem' }}>
+              <Typography variant="h6" noWrap component="div" sx={{ fontSize: '1rem', color: '#ffffff' }}>
                 Financial ERP
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography variant="caption" sx={{ color: '#a0aec0' }} noWrap>
                 Management System
               </Typography>
             </Box>
           </Box>
+        ) : (
+          <Tooltip title="Financial ERP - Click to expand">
+            <IconButton 
+              onClick={onClose} 
+              sx={{ 
+                p: 0,
+                '&:hover': { 
+                  bgcolor: '#2d3748',
+                  borderRadius: 1
+                }
+              }}
+            >
+              <Avatar sx={{ bgcolor: '#4a5568', width: 32, height: 32 }}>
+                <Business sx={{ color: '#ffffff' }} />
+              </Avatar>
+            </IconButton>
+          </Tooltip>
         )}
         
-        {!isMobile && (
-          <Tooltip title={open ? 'Collapse' : 'Expand'}>
-            <IconButton onClick={onClose} size="small">
-              {open ? <ChevronLeft /> : <Business />}
+        {!isMobile && open && (
+          <Tooltip title="Collapse">
+            <IconButton onClick={onClose} size="small" sx={{ color: '#a0aec0' }}>
+              <ChevronLeft />
             </IconButton>
           </Tooltip>
         )}
       </Toolbar>
 
-      {/* User Info Section */}
-      {open && (
-        <Box
-          sx={{
-            p: 2,
-            borderBottom: 1,
-            borderColor: 'divider',
-            backgroundColor: 'action.hover',
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar
-              sx={{
-                bgcolor: 'secondary.main',
-                width: 40,
-                height: 40,
-                fontSize: '1rem',
-              }}
-            >
-              {getUserInitials()}
-            </Avatar>
-            <Box sx={{ minWidth: 0, flex: 1 }}>
-              <Typography variant="subtitle2" noWrap>
-                {getUserDisplayName()}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {user?.roles?.[0]?.replace('_', ' ') || 'User'}
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-      )}
 
       {/* Navigation Menu */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
+      <Box sx={{ flex: 1, overflow: 'auto', backgroundColor: '#1a1d29' }}>
         <List sx={{ pt: 1 }}>
           {navigationItems.map((item) => (
             <ListItem key={item.path} disablePadding sx={{ display: 'block' }}>
@@ -174,15 +194,22 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
                     minHeight: 48,
                     justifyContent: open ? 'initial' : 'center',
                     px: 2.5,
+                    color: '#ffffff',
+                    '&:hover': {
+                      backgroundColor: '#2d3748',
+                    },
                     '&.Mui-selected': {
-                      backgroundColor: 'primary.main',
-                      color: 'primary.contrastText',
+                      backgroundColor: '#3182ce',
+                      color: '#ffffff',
                       '&:hover': {
-                        backgroundColor: 'primary.dark',
+                        backgroundColor: '#2c5aa0',
                       },
                       '& .MuiListItemIcon-root': {
-                        color: 'primary.contrastText',
+                        color: '#ffffff',
                       },
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: '#a0aec0',
                     },
                   }}
                 >
@@ -193,7 +220,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
                       justifyContent: 'center',
                     }}
                   >
-                    {iconMap[item.icon] || <Dashboard />}
+                    {iconMap[item.icon] || <Home />}
                   </ListItemIcon>
                   <ListItemText
                     primary={item.label}
@@ -201,6 +228,7 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
                       opacity: open ? 1 : 0,
                       '& .MuiTypography-root': {
                         fontWeight: isActivePath(item.path) ? 600 : 400,
+                        color: 'inherit',
                       },
                     }}
                   />
@@ -216,15 +244,14 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose, isMobile }) => {
         <Box
           sx={{
             p: 2,
-            borderTop: 1,
-            borderColor: 'divider',
-            backgroundColor: 'background.paper',
+            borderTop: '1px solid #2d3748',
+            backgroundColor: '#1a1d29',
           }}
         >
-          <Typography variant="caption" color="text.secondary" align="center" display="block">
+          <Typography variant="caption" sx={{ color: '#a0aec0' }} align="center" display="block">
             © 2025 Financial ERP
           </Typography>
-          <Typography variant="caption" color="text.secondary" align="center" display="block">
+          <Typography variant="caption" sx={{ color: '#a0aec0' }} align="center" display="block">
             Version 1.0.0
           </Typography>
         </Box>

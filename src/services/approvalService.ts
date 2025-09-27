@@ -145,14 +145,17 @@ class ApprovalService {
       last: boolean;
     }>(`${API_ENDPOINTS.PENDING}?${params.toString()}`);
 
+    // Handle both wrapped and unwrapped responses
+    const responseData = response.data || response;
+    
     return {
-      content: response.data?.content?.map(this.mapPendingApprovalToFrontend) || [],
-      totalElements: response.data?.totalElements || 0,
-      totalPages: response.data?.totalPages || 0,
-      currentPage: response.data?.number || 0,
-      size: response.data?.size || 20,
-      hasNext: !response.data?.last,
-      hasPrevious: !response.data?.first,
+      content: (responseData as any)?.content?.map((item: BackendPendingApprovalsResponse) => this.mapPendingApprovalToFrontend(item)) || [],
+      totalElements: (responseData as any)?.totalElements || 0,
+      totalPages: (responseData as any)?.totalPages || 0,
+      currentPage: (responseData as any)?.number || 0,
+      size: (responseData as any)?.size || 20,
+      hasNext: !(responseData as any)?.last,
+      hasPrevious: !(responseData as any)?.first,
     };
   }
 
@@ -179,7 +182,7 @@ class ApprovalService {
     }>(`${API_ENDPOINTS.URGENT}?${params.toString()}`);
 
     return {
-      content: response.data?.content?.map(this.mapPendingApprovalToFrontend) || [],
+      content: response.data?.content?.map((item: BackendPendingApprovalsResponse) => this.mapPendingApprovalToFrontend(item)) || [],
       totalElements: response.data?.totalElements || 0,
       totalPages: response.data?.totalPages || 0,
       currentPage: response.data?.number || 0,
@@ -398,24 +401,24 @@ class ApprovalService {
   // Helper methods to map backend data to frontend types
   private mapPendingApprovalToFrontend(backend: BackendPendingApprovalsResponse): ApprovalItem {
     return {
-      id: backend.quotationId.toString(),
-      quotationId: backend.quotationId.toString(),
-      quotationNumber: `Q-${backend.quotationId.toString().padStart(6, '0')}`,
-      projectName: backend.projectName,
-      projectId: backend.projectId.toString(),
-      projectManagerName: backend.createdByName,
+      id: backend.quotationId?.toString() || '0',
+      quotationId: backend.quotationId?.toString() || '0',
+      quotationNumber: `Q-${(backend.quotationId || 0).toString().padStart(6, '0')}`,
+      projectName: backend.projectName || 'Unknown Project',
+      projectId: backend.projectId?.toString() || '0',
+      projectManagerName: backend.createdByName || 'Unknown Manager',
       projectManagerId: '1', // Backend doesn't provide this
-      totalAmount: backend.totalAmount,
-      currency: backend.currency,
-      submissionDate: new Date(backend.submittedDate),
+      totalAmount: backend.totalAmount || 0,
+      currency: backend.currency || 'SAR',
+      submissionDate: backend.submittedDate ? new Date(backend.submittedDate) : new Date(),
       urgencyLevel: this.mapBackendPriorityToUrgency(backend.priority),
       status: 'PENDING' as const, // All pending approvals are pending
-      daysWaiting: backend.daysPending,
+      daysWaiting: backend.daysPending || 0,
       hasDocuments: false, // Backend doesn't provide this info
       budgetCompliance: backend.exceedsBudget ? 'EXCEEDED' : 'COMPLIANT',
-      description: backend.description,
-      lineItemCount: backend.itemCount,
-      lastUpdated: new Date(backend.createdDate),
+      description: backend.description || 'No description',
+      lineItemCount: backend.itemCount || 0,
+      lastUpdated: backend.createdDate ? new Date(backend.createdDate) : new Date(),
     };
   }
 
@@ -440,7 +443,11 @@ class ApprovalService {
     return actionMap[status] || 'APPROVE';
   }
 
-  private mapBackendPriorityToUrgency(priority: string): ApprovalItem['urgencyLevel'] {
+  private mapBackendPriorityToUrgency(priority?: string): ApprovalItem['urgencyLevel'] {
+    if (!priority) {
+      return 'LOW';
+    }
+    
     const priorityMap: Record<string, ApprovalItem['urgencyLevel']> = {
       'HIGH': 'HIGH',
       'MEDIUM': 'MEDIUM',

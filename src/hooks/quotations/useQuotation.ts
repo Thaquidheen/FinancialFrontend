@@ -46,7 +46,7 @@ export const useQuotation = (id: number): UseQuotationReturn => {
 
   const submit = async () => {
     if (!quotation) return;
-    await quotationService.submitQuotation(quotation.id);
+    await quotationService.submitQuotation(quotation.id, {});
     await refresh();
   };
 

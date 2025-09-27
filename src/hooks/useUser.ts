@@ -264,12 +264,12 @@ export const useInactiveUsers = (params: Omit<UserSearchParams, 'active'> = {}) 
   return useUsers({ ...params, active: false });
 };
 
-export const useProjectManagers = (params: Omit<UserSearchParams, 'role'> = {}) => {
-  return useUsers({ ...params, role: 'PROJECT_MANAGER' });
+export const useProjectManagers = (params: Omit<UserSearchParams, 'roles'> = {}) => {
+  return useUsers({ ...params, roles: ['PROJECT_MANAGER'] });
 };
 
-export const useAccountManagers = (params: Omit<UserSearchParams, 'role'> = {}) => {
-  return useUsers({ ...params, role: 'ACCOUNT_MANAGER' });
+export const useAccountManagers = (params: Omit<UserSearchParams, 'roles'> = {}) => {
+  return useUsers({ ...params, roles: ['ACCOUNT_MANAGER'] });
 };
 
 export const useUsersWithoutBankDetails = () => ({ data: [] } as any);
@@ -320,7 +320,6 @@ export const useRefreshUsers = () => {
     },
   };
 };
-export const useBulkUserOperation = () => ({ mutateAsync: async () => ({ message: 'noop', successCount: 0, failedCount: 0 }), isPending: false } as any);
 // Error Recovery
 export const useRetryUserOperation = () => {
   const queryClient = useQueryClient();

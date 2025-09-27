@@ -94,7 +94,7 @@ export const useQuotations = (initialFilters: QuotationFilters = {}): UseQuotati
   }, [refreshQuotations]);
 
   const handleSubmit = useCallback(async (id: number) => {
-    await quotationService.submitQuotation(id);
+    await quotationService.submitQuotation(id, {});
     await refreshQuotations();
   }, [refreshQuotations]);
 

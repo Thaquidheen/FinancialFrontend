@@ -9,11 +9,8 @@ import {
   Button,
   Card,
   CardContent,
-  CardActions,
   Alert,
   Chip,
-  IconButton,
-  Tooltip,
   LinearProgress
 } from '@mui/material';
 import {
@@ -21,7 +18,6 @@ import {
   Queue,
   CheckCircle,
   History,
-  Refresh,
   TrendingUp
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
@@ -94,51 +90,104 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
   const alerts: PaymentAlert[] = dashboardData?.alerts || [];
 
   return (
-    <Box className={className}>
-      {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1" fontWeight="bold">
-          Payment Processing Dashboard
-        </Typography>
-        <Tooltip title="Refresh Dashboard">
-          <IconButton 
-            onClick={handleRefresh}
-            disabled={isLoading}
-            color="primary"
+    <Box className={className} sx={{ 
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      bgcolor: '#f8fafc', // Light gray background
+    }}>
+      {/* Header Section */}
+      <Box 
+        sx={{ 
+          borderBottom: '1px solid #e2e8f0',
+          px: 3,
+          py: 2,
+          bgcolor: '#ffffff',
+          borderRadius: 0,
+        }}
+      >
+        <Box sx={{ mb: 2 }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            fontWeight={700}
+            sx={{ 
+              color: '#1a202c',
+              fontSize: '1.875rem',
+              letterSpacing: '-0.025em',
+              mb: 0.5
+            }}
           >
-            <Refresh />
-          </IconButton>
-        </Tooltip>
+            Payment Processing Dashboard
+          </Typography>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#64748b',
+              fontSize: '0.875rem'
+            }}
+          >
+            Manage and process payments for approved quotations
+          </Typography>
+        </Box>
       </Box>
 
-      {isLoading && <LinearProgress sx={{ mb: 2 }} />}
+      {/* Main Content Area */}
+      <Box sx={{ flex: 1, overflow: 'hidden', p: 3 }}>
+        {isLoading && <LinearProgress sx={{ mb: 2 }} />}
 
-      {/* Alerts */}
-      {alerts.length > 0 && (
-        <Box mb={3}>
-          {alerts.map((alert) => (
-            <Alert
-              key={alert.id}
-              severity={alert.type.toLowerCase() as any}
-              sx={{ mb: 1 }}
-              action={
-                alert.actionUrl && alert.actionText ? (
-                  <Button
-                    color="inherit"
-                    size="small"
-                    onClick={() => navigate(alert.actionUrl!)}
-                  >
-                    {alert.actionText}
-                  </Button>
-                ) : undefined
-              }
-            >
-              <Typography variant="subtitle2">{alert.title}</Typography>
-              <Typography variant="body2">{alert.message}</Typography>
-            </Alert>
-          ))}
-        </Box>
-      )}
+        {/* Alerts */}
+        {alerts.length > 0 && (
+          <Box mb={3}>
+            {alerts.map((alert) => (
+              <Alert
+                key={alert.id}
+                severity={alert.type.toLowerCase() as any}
+                sx={{ 
+                  mb: 1,
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  bgcolor: '#ffffff',
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                }}
+                action={
+                  alert.actionUrl && alert.actionText ? (
+                    <Button
+                      color="inherit"
+                      size="small"
+                      onClick={() => navigate(alert.actionUrl!)}
+                      sx={{
+                        borderRadius: '8px',
+                        fontWeight: 500
+                      }}
+                    >
+                      {alert.actionText}
+                    </Button>
+                  ) : undefined
+                }
+              >
+                <Typography 
+                  variant="subtitle2"
+                  sx={{ 
+                    color: '#1a202c',
+                    fontWeight: 600
+                  }}
+                >
+                  {alert.title}
+                </Typography>
+                <Typography 
+                  variant="body2"
+                  sx={{ 
+                    color: '#64748b',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  {alert.message}
+                </Typography>
+              </Alert>
+            ))}
+          </Box>
+        )}
 
       <Grid container spacing={3}>
         {/* Key Metrics */}
@@ -151,45 +200,86 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
 
         {/* Quick Actions */}
         <Grid item xs={12} lg={4}>
-          <Paper sx={{ p: 3, height: 'fit-content' }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 3, 
+              height: 'fit-content',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              bgcolor: '#ffffff',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{ 
+                color: '#1a202c',
+                fontWeight: 600,
+                fontSize: '1.125rem'
+              }}
+            >
               Quick Actions
             </Typography>
             <Grid container spacing={2}>
               {quickActions.map((action) => (
                 <Grid item xs={12} key={action.id}>
                   <Card 
-                    variant="outlined" 
+                    elevation={0}
                     sx={{ 
                       cursor: action.enabled ? 'pointer' : 'not-allowed',
                       opacity: action.enabled ? 1 : 0.6,
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      bgcolor: '#ffffff',
                       '&:hover': action.enabled ? {
-                        boxShadow: 2,
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                         transform: 'translateY(-1px)',
-                        transition: 'all 0.2s'
+                        transition: 'all 0.2s',
+                        borderColor: '#3b82f6'
                       } : {}
                     }}
                     onClick={() => action.enabled && handleQuickAction(action.actionType)}
                   >
                     <CardContent sx={{ pb: 1 }}>
                       <Box display="flex" alignItems="center" mb={1}>
-                        {action.icon === 'FileSpreadsheet' && <FileDownload color="primary" />}
-                        {action.icon === 'Queue' && <Queue color="primary" />}
-                        {action.icon === 'CheckCircle' && <CheckCircle color="primary" />}
-                        {action.icon === 'History' && <History color="primary" />}
-                        <Typography variant="subtitle1" sx={{ ml: 1, fontWeight: 'medium' }}>
+                        {action.icon === 'FileSpreadsheet' && <FileDownload sx={{ color: '#3b82f6' }} />}
+                        {action.icon === 'Queue' && <Queue sx={{ color: '#3b82f6' }} />}
+                        {action.icon === 'CheckCircle' && <CheckCircle sx={{ color: '#3b82f6' }} />}
+                        {action.icon === 'History' && <History sx={{ color: '#3b82f6' }} />}
+                        <Typography 
+                          variant="subtitle1" 
+                          sx={{ 
+                            ml: 1, 
+                            fontWeight: 600,
+                            color: '#1a202c',
+                            fontSize: '0.875rem'
+                          }}
+                        >
                           {action.title}
                         </Typography>
                         {action.count !== undefined && action.count > 0 && (
                           <Chip 
                             label={action.count} 
                             size="small" 
-                            color="primary" 
-                            sx={{ ml: 'auto' }}
+                            sx={{ 
+                              ml: 'auto',
+                              bgcolor: '#dbeafe',
+                              color: '#1e40af',
+                              fontWeight: 500,
+                              border: 'none'
+                            }}
                           />
                         )}
                       </Box>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#64748b',
+                          fontSize: '0.75rem'
+                        }}
+                      >
                         {action.description}
                       </Typography>
                     </CardContent>
@@ -210,8 +300,25 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
 
         {/* Bank Distribution */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 3,
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              bgcolor: '#ffffff',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{ 
+                color: '#1a202c',
+                fontWeight: 600,
+                fontSize: '1.125rem'
+              }}
+            >
               Payment Distribution by Bank
             </Typography>
             {statistics?.paymentsByBank && (
@@ -224,10 +331,22 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
                   return (
                     <Box key={bankCode} mb={2}>
                       <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-                        <Typography variant="body2" fontWeight="medium">
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: '#374151',
+                            fontWeight: 500
+                          }}
+                        >
                           {bankName}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: '#64748b',
+                            fontSize: '0.875rem'
+                          }}
+                        >
                           {Number(count)} payments ({percentage.toFixed(1)}%)
                         </Typography>
                       </Box>
@@ -237,9 +356,10 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
                         sx={{ 
                           height: 8, 
                           borderRadius: 4,
-                          backgroundColor: 'grey.200',
+                          bgcolor: '#f1f5f9',
                           '& .MuiLinearProgress-bar': {
-                            backgroundColor: bank?.primaryColor || 'primary.main'
+                            bgcolor: bank?.primaryColor || '#3b82f6',
+                            borderRadius: 4
                           }
                         }}
                       />
@@ -249,7 +369,14 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
               </Box>
             )}
             {!statistics?.paymentsByBank && !isLoading && (
-              <Typography variant="body2" color="text.secondary" textAlign="center">
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#64748b',
+                  fontSize: '0.875rem',
+                  textAlign: 'center'
+                }}
+              >
                 No payment data available
               </Typography>
             )}
@@ -258,9 +385,28 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
 
         {/* Monthly Trends */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom display="flex" alignItems="center">
-              <TrendingUp sx={{ mr: 1 }} />
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 3,
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              bgcolor: '#ffffff',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              display="flex" 
+              alignItems="center"
+              sx={{ 
+                color: '#1a202c',
+                fontWeight: 600,
+                fontSize: '1.125rem'
+              }}
+            >
+              <TrendingUp sx={{ mr: 1, color: '#3b82f6' }} />
               Monthly Payment Trends
             </Typography>
             {statistics?.monthlyTrends && statistics.monthlyTrends.length > 0 ? (
@@ -273,19 +419,37 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
                     alignItems="center" 
                     py={1}
                     borderBottom={index < statistics.monthlyTrends.length - 1 ? 1 : 0}
-                    borderColor="grey.200"
+                    sx={{ borderColor: '#e2e8f0' }}
                   >
-                    <Typography variant="body2">
+                    <Typography 
+                      variant="body2"
+                      sx={{ 
+                        color: '#374151',
+                        fontWeight: 500
+                      }}
+                    >
                       {new Date(trend.month).toLocaleDateString('en-US', { 
                         month: 'short', 
                         year: 'numeric' 
                       })}
                     </Typography>
                     <Box textAlign="right">
-                      <Typography variant="body2" fontWeight="medium">
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: '#1a202c',
+                          fontWeight: 600
+                        }}
+                      >
                         {trend.completed} payments
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          color: '#64748b',
+                          fontSize: '0.75rem'
+                        }}
+                      >
                         {saudiBankService.formatSAR(trend.amount)}
                       </Typography>
                     </Box>
@@ -293,7 +457,14 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
                 ))}
               </Box>
             ) : (
-              <Typography variant="body2" color="text.secondary" textAlign="center">
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#64748b',
+                  fontSize: '0.875rem',
+                  textAlign: 'center'
+                }}
+              >
                 No trend data available
               </Typography>
             )}
@@ -309,6 +480,7 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
           />
         </Grid>
       </Grid>
+      </Box>
     </Box>
   );
 };

@@ -41,8 +41,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         sx={{
           zIndex: theme.zIndex.drawer + 1,
           width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`,
-          ml: isMobile ? 0 : `${drawerWidth}px`,
-          transition: theme.transitions.create(['width', 'margin'], {
+          backgroundColor: '#1a1d29', // Dark blue background to match sidebar
+          transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
           }),
@@ -57,9 +57,8 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       {/* Sidebar */}
       <Drawer
-        variant={isMobile ? 'temporary' : 'persistent'}
-        open={sidebarOpen}
-        onClose={handleSidebarClose}
+        variant={isMobile ? 'temporary' : 'permanent'}
+        {...(isMobile ? { open: sidebarOpen, onClose: handleSidebarClose } : {})}
         sx={{
           width: drawerWidth,
           flexShrink: 0,
@@ -67,10 +66,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             width: drawerWidth,
             boxSizing: 'border-box',
             overflowX: 'hidden',
+            backgroundColor: '#1a1d29', // Dark blue background
             transition: theme.transitions.create('width', {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.enteringScreen,
             }),
+            borderRight: 'none',
           },
         }}
       >
@@ -89,21 +90,22 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           width: isMobile ? '100%' : `calc(100% - ${drawerWidth}px)`,
           minHeight: '100vh',
           backgroundColor: theme.palette.background.default,
-          transition: theme.transitions.create('margin', {
+          transition: theme.transitions.create('width', {
             easing: theme.transitions.easing.sharp,
             duration: theme.transitions.duration.leavingScreen,
           }),
         }}
       >
-        {/* Toolbar spacer */}
-        <Toolbar />
+        {/* Toolbar spacer without horizontal padding to avoid left gap */}
+        <Toolbar sx={{ px: 0, minHeight: THEME_CONFIG.HEADER_HEIGHT }} />
         
         {/* Page content */}
         <Box
           sx={{
-            padding: theme.spacing(3),
+            padding: 0,
             maxWidth: '100%',
             overflow: 'auto',
+            minHeight: 'calc(100vh - 64px)', // Account for header height
           }}
         >
           {children}

@@ -65,12 +65,9 @@ const ProjectList: React.FC<ProjectListProps> = ({
     projects,
     totalElements,
     filters,
-    selectedProjects,
     isLoading,
     error,
     handlePageChange,
-    handleSelectProject,
-    handleSelectAllProjects,
     updateFilters
   } = useProjectsManager(externalFilters);
 
@@ -81,7 +78,11 @@ const ProjectList: React.FC<ProjectListProps> = ({
   );
 
   const canAssign = user?.roles?.some(role => 
-    [USER_ROLES.SUPER_ADMIN, USER_ROLES.ACCOUNT_MANAGER].includes(role as any)
+    [USER_ROLES.SUPER_ADMIN].includes(role as any)
+  );
+
+  const canUpdateBudget = user?.roles?.some(role => 
+    [USER_ROLES.SUPER_ADMIN].includes(role as any)
   );
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, project: Project) => {
@@ -124,15 +125,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  indeterminate={
-                    selectedProjects.length > 0 && selectedProjects.length < projectItems.length
-                  }
-                  checked={projectItems.length > 0 && selectedProjects.length === projectItems.length}
-                  onChange={() => handleSelectAllProjects(projectItems)}
-                />
-              </TableCell>
               <TableCell>Project Name</TableCell>
               <TableCell>Location</TableCell>
               <TableCell>Manager</TableCell>
@@ -147,7 +139,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
             {isLoading ? (
               Array.from({ length: 5 }).map((_, index) => (
                 <TableRow key={index}>
-                  <TableCell><Skeleton width={24} height={24} /></TableCell>
                   <TableCell><Skeleton width={200} /></TableCell>
                   <TableCell><Skeleton width={120} /></TableCell>
                   <TableCell><Skeleton width={150} /></TableCell>
@@ -160,7 +151,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
               ))
             ) : projectItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} align="center">
+                <TableCell colSpan={8} align="center">
                   <Typography variant="body2" color="text.secondary" py={4}>
                     No projects found
                   </Typography>
@@ -171,15 +162,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
                 <TableRow 
                   key={project.id}
                   hover
-                  selected={selectedProjects.includes(project.id)}
                 >
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      checked={selectedProjects.includes(project.id)}
-                      onChange={() => handleSelectProject(project.id)}
-                    />
-                  </TableCell>
-                  
                   <TableCell>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Typography variant="body2" fontWeight="medium">
@@ -348,7 +331,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
           </MenuItem>
         )}
 
-        {canEdit && (
+        {canUpdateBudget && (
           <MenuItem onClick={() => {
             if (selectedProject && onUpdateBudget) {
               onUpdateBudget(selectedProject);

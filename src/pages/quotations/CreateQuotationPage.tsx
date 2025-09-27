@@ -206,7 +206,7 @@ const CreateQuotationPage: React.FC = () => {
 
       // Submit for approval if requested
       if (submitForApproval) {
-        await quotationService.submitQuotation(createdQuotation.id);
+        await quotationService.submitQuotation(createdQuotation.id, {});
       }
 
       navigate(`/quotations/${createdQuotation.id}`, {
@@ -286,122 +286,301 @@ const CreateQuotationPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Create New Quotation
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Follow the steps below to create a new quotation for your project
-        </Typography>
-      </Box>
-
-      {/* Progress Stepper */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Stepper activeStep={activeStep} alternativeLabel>
-          {steps.map((label, index) => (
-            <Step key={label}>
-              <StepLabel
-                error={activeStep === index && Object.keys(formErrors).length > 0}
-              >
-                {label}
-              </StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-
-        {/* Summary Information */}
-        {formData.projectId && (
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Total Amount: <strong>{getTotalAmount().toLocaleString()} {formData.currency}</strong>
-              {' • '}
-              Items: <strong>{formData.items.length}</strong>
-              {' • '}
-              Documents: <strong>{formData.documents.length}</strong>
-            </Typography>
-          </Box>
-        )}
-      </Paper>
-
-      {/* Error Alert */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Step Content */}
-      <Paper sx={{ p: 3, mb: 3, minHeight: 400 }}>
-        {getStepContent(activeStep)}
-      </Paper>
-
-      {/* Navigation Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Button
-          onClick={handleDiscard}
-          color="error"
-          variant="outlined"
-        >
-          Discard
-        </Button>
-
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button
-            disabled={activeStep === 0}
-            onClick={handleBack}
+    <Box sx={{ 
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      bgcolor: '#f8fafc', // Light gray background
+    }}>
+      {/* Header Section */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          borderBottom: '1px solid #e2e8f0',
+          px: 3,
+          py: 2,
+          bgcolor: '#ffffff',
+          borderRadius: 0,
+        }}
+      >
+        <Box sx={{ mb: 2 }}>
+          <Typography 
+            variant="h4" 
+            component="h1" 
+            fontWeight={700}
+            sx={{ 
+              color: '#1a202c',
+              fontSize: '1.875rem',
+              letterSpacing: '-0.025em',
+              mb: 0.5
+            }}
           >
-            Back
-          </Button>
-
-          {activeStep === steps.length - 1 ? (
-            <>
-              <Button
-                variant="outlined"
-                onClick={() => handleSubmit(false)}
-                disabled={loading}
-                startIcon={loading ? <CircularProgress size={20} /> : null}
-              >
-                Save as Draft
-              </Button>
-              <Button
-                variant="contained"
-                onClick={() => handleSubmit(true)}
-                disabled={loading}
-                startIcon={loading ? <CircularProgress size={20} /> : null}
-              >
-                Create & Submit
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={handleNext}
-            >
-              Next
-            </Button>
-          )}
-        </Box>
-      </Box>
-
-      {/* Discard Confirmation Dialog */}
-      <Dialog open={discardDialogOpen} onClose={() => setDiscardDialogOpen(false)}>
-        <DialogTitle>Discard Changes?</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to discard this quotation? All entered data will be lost.
+            Create New Quotation
           </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDiscardDialogOpen(false)}>
-            Continue Editing
-          </Button>
-          <Button onClick={confirmDiscard} color="error" variant="contained">
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#64748b',
+              fontSize: '0.875rem'
+            }}
+          >
+            Follow the steps below to create a new quotation for your project
+          </Typography>
+        </Box>
+      </Paper>
+
+      {/* Main Content Area */}
+      <Box sx={{ flex: 1, overflow: 'hidden', p: 3 }}>
+        {/* Progress Stepper */}
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: 3, 
+            mb: 3,
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            bgcolor: '#ffffff',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <Stepper 
+            activeStep={activeStep} 
+            alternativeLabel
+            sx={{
+              '& .MuiStepLabel-root .MuiStepLabel-label': {
+                color: '#64748b',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+              },
+              '& .MuiStepLabel-root .MuiStepLabel-label.Mui-active': {
+                color: '#3b82f6',
+                fontWeight: 600,
+              },
+              '& .MuiStepLabel-root .MuiStepLabel-label.Mui-completed': {
+                color: '#16a34a',
+                fontWeight: 600,
+              },
+              '& .MuiStep-root .MuiStepConnector-root .MuiStepConnector-line': {
+                borderColor: '#e2e8f0',
+              },
+              '& .MuiStep-root .MuiStepConnector-root.Mui-active .MuiStepConnector-line': {
+                borderColor: '#3b82f6',
+              },
+              '& .MuiStep-root .MuiStepConnector-root.Mui-completed .MuiStepConnector-line': {
+                borderColor: '#16a34a',
+              },
+            }}
+          >
+            {steps.map((label, index) => (
+              <Step key={label}>
+                <StepLabel
+                  error={activeStep === index && Object.keys(formErrors).length > 0}
+                >
+                  {label}
+                </StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+
+          {/* Summary Information */}
+          {formData.projectId && (
+            <Box 
+              sx={{ 
+                mt: 3, 
+                p: 2, 
+                bgcolor: '#f8fafc', 
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#64748b',
+                  fontSize: '0.875rem',
+                  '& strong': {
+                    color: '#1a202c',
+                    fontWeight: 600,
+                  }
+                }}
+              >
+                Total Amount: <strong>{getTotalAmount().toLocaleString()} {formData.currency}</strong>
+                {' • '}
+                Items: <strong>{formData.items.length}</strong>
+                {' • '}
+                Documents: <strong>{formData.documents.length}</strong>
+              </Typography>
+            </Box>
+          )}
+        </Paper>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3,
+              borderRadius: '12px',
+              border: '1px solid #fecaca',
+              bgcolor: '#fef2f2',
+            }}
+          >
+            {error}
+          </Alert>
+        )}
+
+        {/* Step Content */}
+        <Paper 
+          elevation={0}
+          sx={{ 
+            p: 3, 
+            mb: 3, 
+            minHeight: 400,
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            bgcolor: '#ffffff',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          {getStepContent(activeStep)}
+        </Paper>
+
+        {/* Navigation Buttons */}
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            bgcolor: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            p: 3,
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <Button
+            onClick={handleDiscard}
+            variant="outlined"
+            sx={{
+              borderColor: '#fecaca',
+              color: '#dc2626',
+              borderRadius: '8px',
+              '&:hover': {
+                borderColor: '#fca5a5',
+                backgroundColor: '#fef2f2',
+              }
+            }}
+          >
             Discard
           </Button>
-        </DialogActions>
-      </Dialog>
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              disabled={activeStep === 0}
+              onClick={handleBack}
+              variant="outlined"
+              sx={{
+                borderColor: '#d1d5db',
+                color: '#374151',
+                borderRadius: '8px',
+                '&:hover': {
+                  borderColor: '#9ca3af',
+                  backgroundColor: '#f9fafb',
+                },
+                '&:disabled': {
+                  borderColor: '#e5e7eb',
+                  color: '#9ca3af',
+                }
+              }}
+            >
+              Back
+            </Button>
+
+            {activeStep === steps.length - 1 ? (
+              <>
+                <Button
+                  variant="outlined"
+                  onClick={() => handleSubmit(false)}
+                  disabled={loading}
+                  startIcon={loading ? <CircularProgress size={20} /> : null}
+                  sx={{
+                    borderColor: '#d1d5db',
+                    color: '#374151',
+                    borderRadius: '8px',
+                    '&:hover': {
+                      borderColor: '#9ca3af',
+                      backgroundColor: '#f9fafb',
+                    },
+                    '&:disabled': {
+                      borderColor: '#e5e7eb',
+                      color: '#9ca3af',
+                    }
+                  }}
+                >
+                  Save as Draft
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => handleSubmit(true)}
+                  disabled={loading}
+                  startIcon={loading ? <CircularProgress size={20} /> : null}
+                  sx={{
+                    bgcolor: '#3b82f6',
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    '&:hover': {
+                      bgcolor: '#2563eb',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    },
+                    '&:disabled': {
+                      bgcolor: '#e5e7eb',
+                      color: '#9ca3af',
+                    }
+                  }}
+                >
+                  Create & Submit
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                sx={{
+                  bgcolor: '#3b82f6',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  borderRadius: '8px',
+                  '&:hover': {
+                    bgcolor: '#2563eb',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  }
+                }}
+              >
+                Next
+              </Button>
+            )}
+          </Box>
+        </Box>
+
+        {/* Discard Confirmation Dialog */}
+        <Dialog open={discardDialogOpen} onClose={() => setDiscardDialogOpen(false)}>
+          <DialogTitle>Discard Changes?</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to discard this quotation? All entered data will be lost.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDiscardDialogOpen(false)}>
+              Continue Editing
+            </Button>
+            <Button onClick={confirmDiscard} color="error" variant="contained">
+              Discard
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
     </Box>
   );
 };

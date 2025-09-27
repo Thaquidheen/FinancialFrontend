@@ -24,7 +24,7 @@ import { usePaymentQueue } from '../../../hooks/payments/usePaymentQueue';
 import { saudiBankService } from '../../../services/saudiBankService';
 import PaymentQueueTable from './PaymentQueueTable';
 import PaymentQueueFilters from './PaymentQueueFilters';
-// import BankFileGenerationDialog from '../BankFileGeneration/BankFileGenerationDialog';
+import BankFileGenerationDialog from '../BankFileGeneration/BankFileGenerationDialog';
 
 interface PaymentQueueProps {
   className?: string;
@@ -283,7 +283,7 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
       </Paper>
 
       {/* Bank File Generation Dialog */}
-      {/* <BankFileGenerationDialog
+      <BankFileGenerationDialog
         open={showGenerateDialog}
         onClose={handleCloseGenerateDialog}
         onConfirm={handleConfirmGeneration}
@@ -295,7 +295,7 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
         onCommentsChange={setComments}
         isGenerating={isGeneratingFile}
         validationResult={validationResult}
-      /> */}
+      />
     </Box>
   );
 };

@@ -80,6 +80,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
         px: { xs: 2.5, sm: 4 },
         minHeight: 64,
         alignItems: 'center',
+        backgroundColor: '#1a1d29', // Dark blue background to match sidebar
+        color: '#ffffff',
+        borderBottom: '1px solid #2d3748',
       }}
     >
       <Box
@@ -96,7 +99,13 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
           color="inherit"
           aria-label="open drawer"
           onClick={onMenuClick}
-          sx={{ mr: 2 }}
+          sx={{ 
+            mr: 2,
+            color: '#ffffff',
+            '&:hover': {
+              backgroundColor: '#2d3748',
+            }
+          }}
         >
           <MenuIcon />
         </IconButton>
@@ -112,6 +121,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
           display: { xs: 'block', sm: 'block' },
           mr: { xs: 2, sm: 4 },
           maxWidth: { xs: '45vw', sm: 'unset' },
+          color: '#ffffff',
+          fontWeight: 600,
         }}
       >
         Financial Management System
@@ -124,14 +135,34 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
       <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1.25 } }}>
         {/* Language toggle (placeholder for future) */}
         <Tooltip title="Language">
-          <IconButton color="inherit" size="large">
+          <IconButton 
+            color="inherit" 
+            size="large"
+            sx={{ 
+              color: '#a0aec0',
+              '&:hover': {
+                backgroundColor: '#2d3748',
+                color: '#ffffff',
+              }
+            }}
+          >
             <Language />
           </IconButton>
         </Tooltip>
 
         {/* Notifications */}
         <Tooltip title="Notifications">
-          <IconButton color="inherit" size="large">
+          <IconButton 
+            color="inherit" 
+            size="large"
+            sx={{ 
+              color: '#a0aec0',
+              '&:hover': {
+                backgroundColor: '#2d3748',
+                color: '#ffffff',
+              }
+            }}
+          >
             <Badge
               badgeContent={notificationCount}
               color="error"
@@ -169,13 +200,20 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
               onClick={handleProfileMenuOpen}
               color="inherit"
               size="large"
+              sx={{ 
+                '&:hover': {
+                  backgroundColor: '#2d3748',
+                }
+              }}
             >
               <Avatar
                 sx={{
                   width: 36,
                   height: 36,
-                  bgcolor: 'secondary.main',
+                  bgcolor: '#4a5568',
                   fontSize: '0.9rem',
+                  color: '#ffffff',
+                  border: '2px solid #2d3748',
                 }}
               >
                 {getUserInitials()}
@@ -193,12 +231,14 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
         onClose={handleProfileMenuClose}
         onClick={handleProfileMenuClose}
         PaperProps={{
-          elevation: 3,
+          elevation: 8,
           sx: {
             overflow: 'visible',
-            filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.1))',
+            filter: 'drop-shadow(0px 4px 12px rgba(0,0,0,0.3))',
             mt: 1.5,
             minWidth: 220,
+            backgroundColor: '#1a1d29',
+            border: '1px solid #2d3748',
             '&:before': {
               content: '""',
               display: 'block',
@@ -207,7 +247,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
               right: 14,
               width: 10,
               height: 10,
-              bgcolor: 'background.paper',
+              bgcolor: '#1a1d29',
+              border: '1px solid #2d3748',
+              borderBottom: 'none',
+              borderRight: 'none',
               transform: 'translateY(-50%) rotate(45deg)',
               zIndex: 0,
             },
@@ -217,32 +260,65 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         {/* User info in menu */}
-        <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="subtitle2" noWrap>
+        <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #2d3748' }}>
+          <Typography variant="subtitle2" noWrap sx={{ color: '#ffffff' }}>
             {getUserDisplayName()}
           </Typography>
-          <Typography variant="body2" color="text.secondary" noWrap>
+          <Typography variant="body2" noWrap sx={{ color: '#a0aec0' }}>
             {user?.email}
           </Typography>
         </Box>
 
-        <MenuItem onClick={handleProfileClick}>
+        <MenuItem 
+          onClick={handleProfileClick}
+          sx={{ 
+            color: '#ffffff',
+            '&:hover': {
+              backgroundColor: '#2d3748',
+            },
+            '& .MuiListItemIcon-root': {
+              color: '#a0aec0',
+            }
+          }}
+        >
           <ListItemIcon>
             <Person fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Profile" />
         </MenuItem>
 
-        <MenuItem onClick={handleSettingsClick}>
+        <MenuItem 
+          onClick={handleSettingsClick}
+          sx={{ 
+            color: '#ffffff',
+            '&:hover': {
+              backgroundColor: '#2d3748',
+            },
+            '& .MuiListItemIcon-root': {
+              color: '#a0aec0',
+            }
+          }}
+        >
           <ListItemIcon>
             <Settings fontSize="small" />
           </ListItemIcon>
           <ListItemText primary="Settings" />
         </MenuItem>
 
-        <Divider />
+        <Divider sx={{ borderColor: '#2d3748' }} />
 
-        <MenuItem onClick={handleLogout}>
+        <MenuItem 
+          onClick={handleLogout}
+          sx={{ 
+            color: '#ffffff',
+            '&:hover': {
+              backgroundColor: '#2d3748',
+            },
+            '& .MuiListItemIcon-root': {
+              color: '#a0aec0',
+            }
+          }}
+        >
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>

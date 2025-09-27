@@ -1,4 +1,5 @@
 // src/types/project.ts
+
 export interface Project {
     id: number;
     name: string;
@@ -24,8 +25,6 @@ export interface Project {
   }
   
   export enum ProjectStatus {
-    DRAFT = 'DRAFT',
-    PLANNING = 'PLANNING',
     ACTIVE = 'ACTIVE',
     ON_HOLD = 'ON_HOLD',
     COMPLETED = 'COMPLETED',
@@ -58,11 +57,12 @@ export interface Project {
     totalProjects: number;
     activeProjects: number;
     completedProjects: number;
-    overBudgetProjects: number;
-    overdueProjects: number;
-    totalBudgetAllocated: number;
-    totalBudgetUsed: number;
-    averageBudgetUtilization: number;
+    onHoldProjects: number;
+    totalBudget: number;
+    totalSpent: number;
+    averageCompletion: number;
+    managerWorkload: any[];
+    departmentStats: any[];
   }
   
   // Request DTOs
@@ -101,28 +101,7 @@ export interface Project {
     reason?: string;
   }
   
-  // API Response wrapper
-  export interface ApiResponse<T> {
-    success: boolean;
-    message: string;
-    data?: T;
-    error?: string;
-    timestamp: string;
-  }
-  
-  export interface PaginatedResponse<T> {
-    content: T[];
-    pageable: {
-      page: number;
-      size: number;
-      sort: string;
-    };
-    totalElements: number;
-    totalPages: number;
-    first: boolean;
-    last: boolean;
-    numberOfElements: number;
-  }
+  // Note: ApiResponse and PaginatedResponse are imported from '@/types/api'
   
   // Form data interfaces
   export interface ProjectFormData {
@@ -168,8 +147,6 @@ export interface Project {
   }
   
   export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-    [ProjectStatus.DRAFT]: 'Draft',
-    [ProjectStatus.PLANNING]: 'Planning',
     [ProjectStatus.ACTIVE]: 'Active',
     [ProjectStatus.ON_HOLD]: 'On Hold',
     [ProjectStatus.COMPLETED]: 'Completed',
@@ -177,8 +154,6 @@ export interface Project {
   };
   
   export const PROJECT_STATUS_COLORS: Record<ProjectStatus, 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'> = {
-    [ProjectStatus.DRAFT]: 'default',
-    [ProjectStatus.PLANNING]: 'info',
     [ProjectStatus.ACTIVE]: 'success',
     [ProjectStatus.ON_HOLD]: 'warning',
     [ProjectStatus.COMPLETED]: 'primary',

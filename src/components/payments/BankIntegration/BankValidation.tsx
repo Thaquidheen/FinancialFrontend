@@ -9,7 +9,6 @@ import {
   Typography,
   Button,
   Alert,
-  Chip,
   List,
   ListItem,
   ListItemIcon,
@@ -37,7 +36,7 @@ import {
   ContentCopy,
   Refresh
 } from '@mui/icons-material';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 import { SaudiIBANValidation, SaudiBankDefinition } from '../../../types/saudiBanking.types';
 
 interface BankValidationProps {
@@ -74,7 +73,7 @@ const BankValidation: React.FC<BankValidationProps> = ({
     // Get bank information if IBAN is valid
     let bank: SaudiBankDefinition | null = null;
     if (result.isValid && result.bankCode) {
-      bank = saudiBankService.getBankByCode(result.bankCode);
+      bank = saudiBankService.getBankByCode(result.bankCode) || null;
       setBankInfo(bank);
     } else {
       setBankInfo(null);
@@ -172,9 +171,9 @@ const BankValidation: React.FC<BankValidationProps> = ({
                     </IconButton>
                   )
                 }}
-                error={validationResult?.errors.length > 0}
+                error={validationResult?.errors && validationResult.errors.length > 0}
                 helperText={
-                  validationResult?.errors.length > 0 
+                  validationResult?.errors && validationResult.errors.length > 0 
                     ? validationResult.errors[0]
                     : "Enter a 24-digit Saudi IBAN starting with 'SA'"
                 }
@@ -269,7 +268,7 @@ const BankValidation: React.FC<BankValidationProps> = ({
             )}
 
             {/* Errors and Warnings */}
-            {validationResult.errors.length > 0 && (
+            {validationResult.errors && validationResult.errors.length > 0 && (
               <Box mt={2}>
                 <Typography variant="subtitle2" color="error" gutterBottom>
                   Errors Found:

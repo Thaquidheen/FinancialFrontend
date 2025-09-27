@@ -25,15 +25,46 @@ class UserService {
 
   // Get Users List with Search and Pagination
   async getUsers(params: UserSearchParams = {}): Promise<any> {
-    const mappedParams: Record<string, any> = {
-      page: params.page ?? 0,
-      size: params.size ?? params.pageSize ?? 10,
-      sortBy: params.sortBy ?? 'createdDate',
-      sortDir: params.sortDirection ?? 'asc',
-      search: params.search,
-    };
+    // Check if we have role filtering - use dedicated endpoints for specific roles
+    if (params.roles?.length === 1) {
+      const role = params.roles[0];
+      if (role === 'PROJECT_MANAGER') {
+        return this.getProjectManagers();
+      } else if (role === 'ACCOUNT_MANAGER') {
+        return this.getAccountManagers();
+      }
+    }
+    
+    // Check if we have search/filter parameters
+    const hasSearchOrFilters = params.search || params.roles?.length || params.departments?.length || params.isActive !== undefined;
+    
+    if (hasSearchOrFilters) {
+      // Use search endpoint for filtered results
+      const searchParams: Record<string, any> = {
+        page: params.page ?? 0,
+        size: params.size ?? params.pageSize ?? 10,
+        fullName: params.search,
+        department: params.departments?.[0] || params.department, // Backend expects single department
+        active: params.isActive ?? params.active,
+      };
+      
+      const response = await apiClient.get<any>('/users/search', { params: searchParams });
+      return this.processUserResponse(response);
+    } else {
+      // Use basic endpoint for unfiltered results
+      const mappedParams: Record<string, any> = {
+        page: params.page ?? 0,
+        size: params.size ?? params.pageSize ?? 10,
+        sortBy: params.sortBy ?? 'createdDate',
+        sortDir: params.sortDirection ?? 'asc',
+      };
 
-    const response = await apiClient.get<any>('/users', { params: mappedParams });
+      const response = await apiClient.get<any>('/users', { params: mappedParams });
+      return this.processUserResponse(response);
+    }
+  }
+
+  private processUserResponse(response: any): any {
     const payload = this.unwrapResponse<any>(response);
 
     // Pass-through Spring-style pagination if present
@@ -41,8 +72,8 @@ class UserService {
       const normalizedContent = (payload.content as any[]).map((item: any) => ({
         ...item,
         isActive: item.isActive ?? item.active ?? false,
-        createdAt: item.createdAt ?? item.createdDate ?? item.created_at ?? '',
-        updatedAt: item.updatedAt ?? item.updatedDate ?? item.updated_at ?? '',
+        createdAt: item.createdAt ?? item.createdDate ?? item.created_at ?? null,
+        updatedAt: item.updatedAt ?? item.updatedDate ?? item.updated_at ?? null,
       }));
       return { ...payload, content: normalizedContent };
     }
@@ -51,8 +82,8 @@ class UserService {
       const normalizedUsers = (payload.users as any[]).map((item: any) => ({
         ...item,
         isActive: item.isActive ?? item.active ?? false,
-        createdAt: item.createdAt ?? item.createdDate ?? item.created_at ?? '',
-        updatedAt: item.updatedAt ?? item.updatedDate ?? item.updated_at ?? '',
+        createdAt: item.createdAt ?? item.createdDate ?? item.created_at ?? null,
+        updatedAt: item.updatedAt ?? item.updatedDate ?? item.updated_at ?? null,
       }));
       return { ...payload, users: normalizedUsers };
     }
@@ -61,21 +92,21 @@ class UserService {
       const normalizedArray = (payload as any[]).map((item: any) => ({
         ...item,
         isActive: item.isActive ?? item.active ?? false,
-        createdAt: item.createdAt ?? item.createdDate ?? item.created_at ?? '',
-        updatedAt: item.updatedAt ?? item.updatedDate ?? item.updated_at ?? '',
+        createdAt: item.createdAt ?? item.createdDate ?? item.created_at ?? null,
+        updatedAt: item.updatedAt ?? item.updatedDate ?? item.updated_at ?? null,
       }));
       return {
         content: normalizedArray,
         totalElements: payload.length,
-        number: mappedParams.page,
-        size: mappedParams.size,
+        number: 0,
+        size: payload.length,
         totalPages: 1,
         first: true,
         last: true,
         empty: payload.length === 0,
         numberOfElements: payload.length,
         sort: { empty: true, sorted: false, unsorted: true },
-        pageable: { pageNumber: mappedParams.page, pageSize: mappedParams.size, sort: { empty: true, sorted: false, unsorted: true }, offset: mappedParams.page * mappedParams.size, unpaged: false, paged: true },
+        pageable: { pageNumber: 0, pageSize: payload.length, sort: { empty: true, sorted: false, unsorted: true }, offset: 0, unpaged: false, paged: true },
       };
     }
 
@@ -204,6 +235,48 @@ class UserService {
   async getAvailableManagers(): Promise<UserResponse[]> {
     const response = await apiClient.get<UserResponse[]>('/users/project-managers');
     return this.unwrapResponse<UserResponse[]>(response);
+  }
+
+  // Get Project Managers - returns paginated response format
+  async getProjectManagers(): Promise<any> {
+    const response = await apiClient.get<UserResponse[]>('/users/project-managers');
+    const managers = this.unwrapResponse<UserResponse[]>(response);
+    
+    // Convert to paginated response format for consistency
+    return {
+      content: managers,
+      totalElements: managers.length,
+      number: 0,
+      size: managers.length,
+      totalPages: 1,
+      first: true,
+      last: true,
+      empty: managers.length === 0,
+      numberOfElements: managers.length,
+      sort: { empty: true, sorted: false, unsorted: true },
+      pageable: { pageNumber: 0, pageSize: managers.length, sort: { empty: true, sorted: false, unsorted: true }, offset: 0, unpaged: false, paged: true },
+    };
+  }
+
+  // Get Account Managers - returns paginated response format
+  async getAccountManagers(): Promise<any> {
+    const response = await apiClient.get<UserResponse[]>('/users/account-managers');
+    const managers = this.unwrapResponse<UserResponse[]>(response);
+    
+    // Convert to paginated response format for consistency
+    return {
+      content: managers,
+      totalElements: managers.length,
+      number: 0,
+      size: managers.length,
+      totalPages: 1,
+      first: true,
+      last: true,
+      empty: managers.length === 0,
+      numberOfElements: managers.length,
+      sort: { empty: true, sorted: false, unsorted: true },
+      pageable: { pageNumber: 0, pageSize: managers.length, sort: { empty: true, sorted: false, unsorted: true }, offset: 0, unpaged: false, paged: true },
+    };
   }
 
   // Verify Bank Details

@@ -15,8 +15,8 @@ export interface User {
     permissions: string[];
     manager?: UserSummary;
     bankDetails?: UserBankDetails;
-    createdAt: string;
-    updatedAt: string;
+    createdAt: string | null;
+    updatedAt: string | null;
     lastLoginAt?: string;
     profileImage?: string;
   }
@@ -296,12 +296,21 @@ export interface User {
     position?: string;
     hireDate?: string;
     isActive: boolean;
+    accountLocked?: boolean;
     roles: string[];
     permissions: string[];
     manager?: UserSummary;
     bankDetails?: UserBankDetails;
-    createdAt: string;
-    updatedAt: string;
+    // Direct bank properties for backward compatibility
+    bankName?: string;
+    accountNumber?: string;
+    iban?: string;
+    beneficiaryName?: string;
+    beneficiaryAddress?: string;
+    swiftCode?: string;
+    profilePicture?: string;
+    createdAt: string | null;
+    updatedAt: string | null;
     lastLoginAt?: string;
     profileImage?: string;
   }

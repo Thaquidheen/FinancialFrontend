@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 // Removed notistack to avoid missing dependency
 import {
-  Project,
   CreateProjectRequest,
   UpdateProjectRequest,
   AssignManagerRequest,
@@ -63,13 +62,6 @@ export const useMyProjects = () => {
     [USER_ROLES.SUPER_ADMIN, USER_ROLES.PROJECT_MANAGER].includes(role as any)
   );
 
-  // Debug logging
-  console.log('useMyProjects Debug:', {
-    user,
-    userRoles: user?.roles,
-    hasAccess,
-    PROJECT_MANAGER: USER_ROLES.PROJECT_MANAGER
-  });
 
   return useQuery({
     queryKey: PROJECT_QUERY_KEYS.myProjects,
@@ -84,7 +76,7 @@ export const useProjectStatistics = () => {
   const { user } = useAuth();
   
   const hasAccess = user?.roles?.some(role => 
-    [USER_ROLES.SUPER_ADMIN, USER_ROLES.ACCOUNT_MANAGER].includes(role as any)
+    [USER_ROLES.SUPER_ADMIN, USER_ROLES.ACCOUNT_MANAGER, USER_ROLES.PROJECT_MANAGER].includes(role as any)
   );
 
   return useQuery({
@@ -252,6 +244,7 @@ export const useUpdateProjectStatus = () => {
 
 // Hook for managing projects list with local state
 export const useProjectsManager = (initialFilters: ProjectFilters = {}) => {
+  const { user } = useAuth();
   const [filters, setFilters] = useState<ProjectFilters>({
     page: 0,
     size: 20,
@@ -260,9 +253,46 @@ export const useProjectsManager = (initialFilters: ProjectFilters = {}) => {
     ...initialFilters
   });
 
-  const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
+  // Determine which hook to use based on user role
+  const isProjectManager = user?.roles?.some(role => role === USER_ROLES.PROJECT_MANAGER);
+  const isAdminOrAccountManager = user?.roles?.some(role => 
+    [USER_ROLES.SUPER_ADMIN, USER_ROLES.ACCOUNT_MANAGER].includes(role as any)
+  );
 
-  const { data, isLoading, error, refetch } = useProjects(filters);
+  // Debug role detection
+  console.log('Role Detection Debug:', {
+    user,
+    userRoles: user?.roles,
+    isProjectManager,
+    isAdminOrAccountManager,
+    PROJECT_MANAGER: USER_ROLES.PROJECT_MANAGER,
+    SUPER_ADMIN: USER_ROLES.SUPER_ADMIN,
+    ACCOUNT_MANAGER: USER_ROLES.ACCOUNT_MANAGER
+  });
+
+
+  // Use different hooks based on user role
+  const projectsQuery = useProjects(filters);
+  const myProjectsQuery = useMyProjects();
+
+  // Select the appropriate query result
+  // If user is ONLY a project manager (not admin/account manager), use myProjects
+  // Otherwise, use the general projects query
+  const shouldUseMyProjects = isProjectManager && !isAdminOrAccountManager;
+  const { data, isLoading, error, refetch } = shouldUseMyProjects 
+    ? myProjectsQuery 
+    : projectsQuery;
+
+  console.log('Query Selection Debug:', {
+    shouldUseMyProjects,
+    myProjectsData: myProjectsQuery.data,
+    projectsData: projectsQuery.data,
+    myProjectsLoading: myProjectsQuery.isLoading,
+    projectsLoading: projectsQuery.isLoading,
+    myProjectsError: myProjectsQuery.error,
+    projectsError: projectsQuery.error
+  });
+
 
   const updateFilters = useCallback((newFilters: Partial<ProjectFilters>) => {
     setFilters((prev: ProjectFilters) => ({ ...prev, ...newFilters, page: 0 })); // Reset to first page
@@ -276,25 +306,6 @@ export const useProjectsManager = (initialFilters: ProjectFilters = {}) => {
     setFilters((prev: ProjectFilters) => ({ ...prev, sortBy, sortDir, page: 0 }));
   }, []);
 
-  const handleSelectProject = useCallback((projectId: number) => {
-    setSelectedProjects((prev: number[]) => 
-      prev.includes(projectId) 
-        ? prev.filter(id => id !== projectId)
-        : [...prev, projectId]
-    );
-  }, []);
-
-  const handleSelectAllProjects = useCallback((projects: Project[]) => {
-    const allIds = projects.map(p => p.id);
-    setSelectedProjects((prev: number[]) => 
-      prev.length === allIds.length ? [] : allIds
-    );
-  }, []);
-
-  const clearSelection = useCallback(() => {
-    setSelectedProjects([]);
-  }, []);
-
   const resetFilters = useCallback(() => {
     setFilters({
       page: 0,
@@ -302,18 +313,56 @@ export const useProjectsManager = (initialFilters: ProjectFilters = {}) => {
       sortBy: 'name',
       sortDir: 'asc'
     });
-    clearSelection();
-  }, [clearSelection]);
+  }, []);
+
+  // Handle different response formats
+  let projects: any[] = [];
+  let totalPages = 0;
+  let totalElements = 0;
+
+
+  if (shouldUseMyProjects) {
+    // For project managers, handle both response formats:
+    // 1. New format: { success: true, data: [...], message: "..." }
+    // 2. Old format: [...] (raw array)
+    console.log('Project Manager Data Debug:', {
+      data,
+      isArray: Array.isArray(data),
+      dataType: typeof data,
+      hasDataProperty: data && typeof data === 'object' && 'data' in data
+    });
+    
+    if (Array.isArray(data)) {
+      // Old format: raw array
+      projects = data as any[];
+      console.log('Using raw array format, projects:', projects);
+    } else if (data && typeof data === 'object' && data.data) {
+      // New format: wrapped in ApiResponse
+      projects = Array.isArray(data.data) ? data.data : [];
+      console.log('Using wrapped format, projects:', projects);
+    } else {
+      // Fallback
+      projects = [];
+      console.log('Using fallback, projects:', projects);
+    }
+    totalPages = 1;
+    totalElements = projects.length;
+  } else {
+    // For admins/account managers, useProjects returns paginated data
+    const paginatedData = data as any;
+    projects = (paginatedData?.data?.content ?? paginatedData?.content) || [];
+    totalPages = (paginatedData?.data?.totalPages ?? paginatedData?.totalPages) || 0;
+    totalElements = (paginatedData?.data?.totalElements ?? paginatedData?.totalElements) || 0;
+  }
 
   return {
     // Data
-    projects: ((data as any)?.data?.content ?? (data as any)?.content) || [],
-    totalPages: ((data as any)?.data?.totalPages ?? (data as any)?.totalPages) || 0,
-    totalElements: ((data as any)?.data?.totalElements ?? (data as any)?.totalElements) || 0,
+    projects,
+    totalPages,
+    totalElements,
     
     // State
     filters,
-    selectedProjects,
     isLoading,
     error,
     
@@ -321,9 +370,6 @@ export const useProjectsManager = (initialFilters: ProjectFilters = {}) => {
     updateFilters,
     handlePageChange,
     handleSortChange,
-    handleSelectProject,
-    handleSelectAllProjects,
-    clearSelection,
     resetFilters,
     refetch
   };

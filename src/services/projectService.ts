@@ -141,34 +141,6 @@ export class ProjectService {
     return response;
   }
 
-  /**
-   * Get project team members - NEW
-   */
-  async getProjectTeam(projectId: number): Promise<ApiResponse<any[]>> {
-    const response = await apiClient.get<any[]>(`${API_BASE}/${projectId}/team`);
-    return response;
-  }
-
-  /**
-   * Get project budget status - NEW based on your BudgetTrackingController
-   */
-  async getProjectBudgetStatus(projectId: number): Promise<ApiResponse<any>> {
-    const response = await apiClient.get<any>(`/financial/budget-tracking/status/${projectId}`);
-    return response;
-  }
-
-  /**
-   * Get project budget tracking - NEW
-   */
-  async getProjectBudgetTracking(projectId: number, params?: any): Promise<ApiResponse<any>> {
-    const queryParams = new URLSearchParams();
-    if (params?.type) queryParams.append('type', params.type);
-    if (params?.startDate) queryParams.append('startDate', params.startDate);
-    if (params?.endDate) queryParams.append('endDate', params.endDate);
-    
-    const response = await apiClient.get<any>(`/financial/budget-tracking/project/${projectId}?${queryParams.toString()}`);
-    return response;
-  }
 }
 
 // Create and export service instance

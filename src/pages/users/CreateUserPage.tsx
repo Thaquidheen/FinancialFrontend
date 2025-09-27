@@ -55,66 +55,153 @@ const CreateUserPage: React.FC = (): JSX.Element => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ 
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      bgcolor: '#f8fafc', // Light gray background
+    }}>
       {!hasAdminAccess ? (
-        <Alert severity="error">
-          You don't have permission to create users.
-        </Alert>
+        <Box sx={{ p: 3 }}>
+          <Alert 
+            severity="error"
+            sx={{ 
+              borderRadius: '12px',
+              border: '1px solid #fecaca',
+              bgcolor: '#fef2f2',
+            }}
+          >
+            You don't have permission to create users.
+          </Alert>
+        </Box>
       ) : (
         <>
-          {/* Breadcrumbs */}
-          <Breadcrumbs sx={{ mb: 3 }}>
-            <Link
-              color="inherit"
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate(ROUTES.DASHBOARD);
-              }}
-            >
-              Dashboard
-            </Link>
-            <Link
-              color="inherit"
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate(ROUTES.USERS);
-              }}
-            >
-              Users
-            </Link>
-            <Typography color="text.primary">Create User</Typography>
-          </Breadcrumbs>
-
-          {/* Page Header */}
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h4" component="h1" fontWeight="bold" gutterBottom>
-              Create New User
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Add a new user to the system with appropriate roles and permissions
-            </Typography>
-          </Box>
-
-          {/* Form */}
-          <Paper sx={{ p: 4 }}>
-            <UserForm
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              isLoading={createUserMutation.isPending}
-              isEditMode={false}
-            />
+          {/* Header Section */}
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              borderBottom: '1px solid #e2e8f0',
+              px: 3,
+              py: 2,
+              bgcolor: '#ffffff',
+              borderRadius: 0,
+            }}
+          >
+            <Box sx={{ mb: 2 }}>
+              <Typography 
+                variant="h4" 
+                component="h1" 
+                fontWeight={700}
+                sx={{ 
+                  color: '#1a202c',
+                  fontSize: '1.875rem',
+                  letterSpacing: '-0.025em',
+                  mb: 0.5
+                }}
+              >
+                Create New User
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: '#64748b',
+                  fontSize: '0.875rem'
+                }}
+              >
+                Add a new user to the system with appropriate roles and permissions
+              </Typography>
+            </Box>
           </Paper>
 
-          {/* Error display */}
-          {createUserMutation.error && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {createUserMutation.error instanceof Error 
-                ? createUserMutation.error.message 
-                : 'Failed to create user'}
-            </Alert>
-          )}
+          {/* Main Content Area */}
+          <Box sx={{ flex: 1, overflow: 'hidden', p: 3 }}>
+            {/* Breadcrumbs */}
+            <Breadcrumbs sx={{ mb: 3 }}>
+              <Link
+                sx={{ 
+                  color: '#3b82f6',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  '&:hover': {
+                    color: '#2563eb',
+                    textDecoration: 'underline'
+                  }
+                }}
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(ROUTES.DASHBOARD);
+                }}
+              >
+                Dashboard
+              </Link>
+              <Link
+                sx={{ 
+                  color: '#3b82f6',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  '&:hover': {
+                    color: '#2563eb',
+                    textDecoration: 'underline'
+                  }
+                }}
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(ROUTES.USERS);
+                }}
+              >
+                Users
+              </Link>
+              <Typography 
+                sx={{ 
+                  color: '#64748b',
+                  fontSize: '0.875rem',
+                  fontWeight: 500
+                }}
+              >
+                Create User
+              </Typography>
+            </Breadcrumbs>
+
+            {/* Form */}
+            <Paper 
+              elevation={0}
+              sx={{ 
+                p: 4,
+                border: '1px solid #e2e8f0',
+                borderRadius: '12px',
+                bgcolor: '#ffffff',
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              <UserForm
+                onSubmit={handleSubmit}
+                onCancel={handleCancel}
+                isLoading={createUserMutation.isPending}
+                isEditMode={false}
+              />
+            </Paper>
+
+            {/* Error display */}
+            {createUserMutation.error && (
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mt: 2,
+                  borderRadius: '12px',
+                  border: '1px solid #fecaca',
+                  bgcolor: '#fef2f2',
+                }}
+              >
+                {createUserMutation.error instanceof Error 
+                  ? createUserMutation.error.message 
+                  : 'Failed to create user'}
+              </Alert>
+            )}
+          </Box>
         </>
       )}
     </Box>

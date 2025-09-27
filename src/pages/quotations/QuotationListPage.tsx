@@ -18,7 +18,6 @@ import {
   Card,
   CardContent,
   Avatar,
-  Badge,
   TextField,
   InputAdornment,
   ButtonGroup,
@@ -385,42 +384,93 @@ const QuotationListPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
+    <Box sx={{ 
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      bgcolor: '#f8fafc', // Light gray background
+    }}>
       {/* Header Section */}
-      <Paper elevation={0} sx={{ px: 3, py: 2, borderRadius: 0 }}>
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          borderBottom: '1px solid #e2e8f0',
+          px: 3,
+          py: 2,
+          bgcolor: '#ffffff',
+          borderRadius: 0,
+        }}
+      >
         {/* Breadcrumbs */}
         <Breadcrumbs sx={{ mb: 2 }}>
           <Link 
-            color="inherit" 
+            sx={{ 
+              color: '#64748b',
+              textDecoration: 'none',
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 0.5,
+              '&:hover': { color: '#3b82f6' }
+            }}
             href="/dashboard" 
             onClick={(e) => {
               e.preventDefault();
               navigate('/dashboard');
             }}
-            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
           >
             <Dashboard sx={{ fontSize: 16 }} />
             Dashboard
           </Link>
-          <Typography color="text.primary">Quotations</Typography>
+          <Typography sx={{ color: '#1a202c', fontWeight: 500 }}>
+            Quotations
+          </Typography>
         </Breadcrumbs>
 
         {/* Main Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Box>
-            <Typography variant="h4" fontWeight="bold" sx={{ mb: 0.5 }}>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              fontWeight={700}
+              sx={{ 
+                color: '#1a202c',
+                fontSize: '1.875rem',
+                letterSpacing: '-0.025em',
+                mb: 0.5
+              }}
+            >
               Quotation Management
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#64748b',
+                fontSize: '0.875rem'
+              }}
+            >
               Manage and track all quotations across projects
             </Typography>
           </Box>
           
           <Box display="flex" gap={1} alignItems="center">
             <Tooltip title="Refresh Data">
-              <IconButton onClick={refreshQuotations} disabled={loading}>
-                <Refresh />
-              </IconButton>
+              <span>
+                <IconButton 
+                  onClick={refreshQuotations} 
+                  disabled={loading}
+                  sx={{ 
+                    bgcolor: '#f1f5f9',
+                    color: '#475569',
+                    '&:hover': { 
+                      bgcolor: '#e2e8f0',
+                      color: '#334155'
+                    }
+                  }}
+                >
+                  <Refresh />
+                </IconButton>
+              </span>
             </Tooltip>
             
             <Button
@@ -428,6 +478,15 @@ const QuotationListPage: React.FC = () => {
               onClick={() => setFilterOpen(true)}
               variant="outlined"
               size="small"
+              sx={{ 
+                borderColor: '#d1d5db',
+                color: '#374151',
+                borderRadius: '8px',
+                '&:hover': {
+                  borderColor: '#9ca3af',
+                  backgroundColor: '#f9fafb'
+                }
+              }}
             >
               Advanced Filters
             </Button>
@@ -437,6 +496,15 @@ const QuotationListPage: React.FC = () => {
               onClick={handleExport}
               variant="outlined"
               size="small"
+              sx={{ 
+                borderColor: '#d1d5db',
+                color: '#374151',
+                borderRadius: '8px',
+                '&:hover': {
+                  borderColor: '#9ca3af',
+                  backgroundColor: '#f9fafb'
+                }
+              }}
             >
               Export
             </Button>
@@ -447,6 +515,17 @@ const QuotationListPage: React.FC = () => {
                 onClick={() => navigate('/quotations/create')}
                 variant="contained"
                 size="medium"
+                sx={{ 
+                  bgcolor: '#3b82f6',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  borderRadius: '8px',
+                  '&:hover': { 
+                    bgcolor: '#2563eb',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }
+                }}
               >
                 New Quotation
               </Button>
@@ -461,11 +540,29 @@ const QuotationListPage: React.FC = () => {
             value={quickSearch}
             onChange={(e) => setQuickSearch(e.target.value)}
             size="small"
-            sx={{ minWidth: 300 }}
+            sx={{ 
+              minWidth: 300,
+              '& .MuiOutlinedInput-root': {
+                bgcolor: '#ffffff',
+                borderColor: '#d1d5db',
+                borderRadius: '8px',
+                '&:hover': {
+                  borderColor: '#9ca3af',
+                },
+                '&.Mui-focused': {
+                  borderColor: '#3b82f6',
+                  boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+                }
+              },
+              '& .MuiInputBase-input': {
+                color: '#374151',
+                fontSize: '0.875rem',
+              }
+            }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon />
+                  <SearchIcon sx={{ color: '#9ca3af' }} />
                 </InputAdornment>
               ),
               endAdornment: quickSearch && (
@@ -474,6 +571,7 @@ const QuotationListPage: React.FC = () => {
                     aria-label="clear search"
                     onClick={() => setQuickSearch('')}
                     size="small"
+                    sx={{ color: '#9ca3af' }}
                   >
                     <Clear />
                   </IconButton>
@@ -482,7 +580,28 @@ const QuotationListPage: React.FC = () => {
             }}
           />
           
-          <ButtonGroup variant="outlined" size="small">
+          <ButtonGroup 
+            variant="outlined" 
+            size="small"
+            sx={{
+              bgcolor: '#f1f5f9',
+              borderRadius: '8px',
+              '& .MuiButton-root': {
+                border: 'none',
+                color: '#475569',
+                '&.Mui-selected': {
+                  bgcolor: '#e2e8f0',
+                  color: '#334155',
+                  '&:hover': {
+                    bgcolor: '#d1d5db',
+                  }
+                },
+                '&:hover': {
+                  bgcolor: '#e2e8f0',
+                }
+              }
+            }}
+          >
             <Button 
               onClick={() => setViewMode('table')}
               variant={viewMode === 'table' ? 'contained' : 'outlined'}
@@ -510,102 +629,255 @@ const QuotationListPage: React.FC = () => {
       <Box sx={{ px: 3, py: 2 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6} md={2.4}>
-            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'primary.main' }}>
-              <CardContent sx={{ py: 2 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography variant="h4" fontWeight="bold" color="primary">
+            <Card 
+              elevation={0}
+              sx={{ 
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                bgcolor: '#ffffff',
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                overflow: 'hidden'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: '8px',
+                      bgcolor: '#f1f5f9',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mr: 2,
+                    }}
+                  >
+                    <Assignment sx={{ color: '#3b82f6', fontSize: 28 }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography 
+                      variant="h3" 
+                      component="div"
+                      fontWeight={700}
+                      sx={{ color: '#1a202c' }}
+                    >
                       {statistics.total}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#64748b',
+                        fontWeight: 500,
+                        fontSize: '0.875rem'
+                      }}
+                    >
                       Total Quotations
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: 'primary.light' }}>
-                    <Assignment />
-                  </Avatar>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
           
           <Grid item xs={12} sm={6} md={2.4}>
-            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'warning.main' }}>
-              <CardContent sx={{ py: 2 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography variant="h4" fontWeight="bold" color="warning.main">
+            <Card 
+              elevation={0}
+              sx={{ 
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                bgcolor: '#ffffff',
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                overflow: 'hidden'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: '8px',
+                      bgcolor: '#fef3c7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mr: 2,
+                    }}
+                  >
+                    <Schedule sx={{ color: '#d97706', fontSize: 28 }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography 
+                      variant="h3" 
+                      component="div"
+                      fontWeight={700}
+                      sx={{ color: '#1a202c' }}
+                    >
                       {statistics.pending}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#64748b',
+                        fontWeight: 500,
+                        fontSize: '0.875rem'
+                      }}
+                    >
                       Pending Approval
                     </Typography>
                   </Box>
-                  <Badge badgeContent={statistics.pending} color="warning">
-                    <Avatar sx={{ bgcolor: 'warning.light' }}>
-                      <Schedule />
-                    </Avatar>
-                  </Badge>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
           
           <Grid item xs={12} sm={6} md={2.4}>
-            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'success.main' }}>
-              <CardContent sx={{ py: 2 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography variant="h4" fontWeight="bold" color="success.main">
+            <Card 
+              elevation={0}
+              sx={{ 
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                bgcolor: '#ffffff',
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                overflow: 'hidden'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: '8px',
+                      bgcolor: '#dcfce7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mr: 2,
+                    }}
+                  >
+                    <CheckCircle sx={{ color: '#16a34a', fontSize: 28 }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography 
+                      variant="h3" 
+                      component="div"
+                      fontWeight={700}
+                      sx={{ color: '#1a202c' }}
+                    >
                       {statistics.approved}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#64748b',
+                        fontWeight: 500,
+                        fontSize: '0.875rem'
+                      }}
+                    >
                       Approved
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: 'success.light' }}>
-                    <CheckCircle />
-                  </Avatar>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
           
           <Grid item xs={12} sm={6} md={2.4}>
-            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'info.main' }}>
-              <CardContent sx={{ py: 2 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography variant="h4" fontWeight="bold" color="info.main">
+            <Card 
+              elevation={0}
+              sx={{ 
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                bgcolor: '#ffffff',
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                overflow: 'hidden'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: '8px',
+                      bgcolor: '#dbeafe',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mr: 2,
+                    }}
+                  >
+                    <AttachMoney sx={{ color: '#2563eb', fontSize: 28 }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography 
+                      variant="h3" 
+                      component="div"
+                      fontWeight={700}
+                      sx={{ color: '#1a202c' }}
+                    >
                       {formatCurrency(statistics.totalAmount, Currency.SAR)}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#64748b',
+                        fontWeight: 500,
+                        fontSize: '0.875rem'
+                      }}
+                    >
                       Total Value
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: 'info.light' }}>
-                    <AttachMoney />
-                  </Avatar>
                 </Box>
               </CardContent>
             </Card>
           </Grid>
           
           <Grid item xs={12} sm={6} md={2.4}>
-            <Card elevation={1} sx={{ borderLeft: 4, borderLeftColor: 'error.main' }}>
-              <CardContent sx={{ py: 2 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                  <Box>
-                    <Typography variant="h4" fontWeight="bold" color="error.main">
+            <Card 
+              elevation={0}
+              sx={{ 
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                bgcolor: '#ffffff',
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                overflow: 'hidden'
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: '8px',
+                      bgcolor: '#fef2f2',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mr: 2,
+                    }}
+                  >
+                    <TrendingUp sx={{ color: '#dc2626', fontSize: 28 }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography 
+                      variant="h3" 
+                      component="div"
+                      fontWeight={700}
+                      sx={{ color: '#1a202c' }}
+                    >
                       {statistics.exceedsBudget}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: '#64748b',
+                        fontWeight: 500,
+                        fontSize: '0.875rem'
+                      }}
+                    >
                       Over Budget
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: 'error.light' }}>
-                    <TrendingUp />
-                  </Avatar>
                 </Box>
               </CardContent>
             </Card>

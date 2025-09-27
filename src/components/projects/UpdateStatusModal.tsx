@@ -42,17 +42,13 @@ interface UpdateStatusModalProps {
 
 // Status transition rules
 const STATUS_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
-  [ProjectStatus.DRAFT]: [ProjectStatus.PLANNING, ProjectStatus.ACTIVE, ProjectStatus.CANCELLED],
-  [ProjectStatus.PLANNING]: [ProjectStatus.ACTIVE, ProjectStatus.ON_HOLD, ProjectStatus.CANCELLED],
   [ProjectStatus.ACTIVE]: [ProjectStatus.ON_HOLD, ProjectStatus.COMPLETED, ProjectStatus.CANCELLED],
   [ProjectStatus.ON_HOLD]: [ProjectStatus.ACTIVE, ProjectStatus.CANCELLED],
   [ProjectStatus.COMPLETED]: [], // Cannot change from completed
-  [ProjectStatus.CANCELLED]: [ProjectStatus.DRAFT, ProjectStatus.PLANNING] // Can reactivate
+  [ProjectStatus.CANCELLED]: [ProjectStatus.ACTIVE] // Can reactivate
 };
 
 const STATUS_DESCRIPTIONS: Record<ProjectStatus, string> = {
-  [ProjectStatus.DRAFT]: 'Project is in draft state and not yet approved',
-  [ProjectStatus.PLANNING]: 'Project is approved and in planning phase',
   [ProjectStatus.ACTIVE]: 'Project is actively being worked on',
   [ProjectStatus.ON_HOLD]: 'Project is temporarily paused',
   [ProjectStatus.COMPLETED]: 'Project has been completed successfully',

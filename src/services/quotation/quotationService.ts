@@ -6,6 +6,7 @@ import {
   QuotationSummary, 
   CreateQuotationRequest, 
   UpdateQuotationRequest,
+  SubmitQuotationRequest,
   QuotationStatistics
 } from '../../types/quotation/quotation';
 import { QuotationFilters } from '../../types/quotation/filters';
@@ -118,8 +119,8 @@ class QuotationService {
   }
 
   // Submit quotation for approval
-  async submitQuotation(id: number): Promise<Quotation> {
-    const response = await apiClient.post<Quotation>(`${this.baseURL}/${id}/submit`);
+  async submitQuotation(id: number, request?: SubmitQuotationRequest): Promise<Quotation> {
+    const response = await apiClient.post<Quotation>(`${this.baseURL}/${id}/submit`, request || {});
     return this.unwrapResponse<Quotation>(response);
   }
 

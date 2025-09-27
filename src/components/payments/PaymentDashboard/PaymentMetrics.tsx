@@ -63,29 +63,35 @@ const MetricCard: React.FC<MetricCardProps> = ({
   onClick
 }) => {
   const colorMap = {
-    primary: '#1976d2',
-    success: '#2e7d32',
-    warning: '#ed6c02',
-    error: '#d32f2f',
-    info: '#0288d1'
+    primary: '#3b82f6',
+    success: '#16a34a',
+    warning: '#f59e0b',
+    error: '#dc2626',
+    info: '#06b6d4'
   };
 
   return (
     <Card 
+      elevation={0}
       sx={{ 
         height: '100%',
         cursor: onClick ? 'pointer' : 'default',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        bgcolor: '#ffffff',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
         '&:hover': onClick ? {
-          boxShadow: 3,
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
           transform: 'translateY(-2px)',
-          transition: 'all 0.2s ease-in-out'
+          transition: 'all 0.2s ease-in-out',
+          borderColor: '#3b82f6'
         } : {}
       }}
       onClick={onClick}
     >
       <CardContent>
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-          <Avatar sx={{ bgcolor: `${color}.main`, width: 48, height: 48 }}>
+          <Avatar sx={{ bgcolor: colorMap[color], width: 48, height: 48 }}>
             {icon}
           </Avatar>
           {tooltip && (
@@ -97,16 +103,39 @@ const MetricCard: React.FC<MetricCardProps> = ({
           )}
         </Box>
 
-        <Typography variant="h4" fontWeight="bold" color="text.primary" gutterBottom>
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            color: '#1a202c',
+            fontWeight: 700,
+            fontSize: '1.875rem',
+            mb: 1
+          }}
+        >
           {typeof value === 'number' ? (value || 0).toLocaleString() : value}
         </Typography>
 
-        <Typography variant="h6" color="text.secondary" gutterBottom>
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            color: '#64748b',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            mb: subtitle ? 1 : 0
+          }}
+        >
           {title}
         </Typography>
 
         {subtitle && (
-          <Typography variant="body2" color="text.secondary" mb={1}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#64748b',
+              fontSize: '0.75rem',
+              mb: 1
+            }}
+          >
             {subtitle}
           </Typography>
         )}
@@ -115,14 +144,17 @@ const MetricCard: React.FC<MetricCardProps> = ({
         {trend && (
           <Box display="flex" alignItems="center" gap={0.5} mb={1}>
             {trend.direction === 'up' ? (
-              <TrendingUp color="success" fontSize="small" />
+              <TrendingUp sx={{ color: '#16a34a', fontSize: 16 }} />
             ) : (
-              <TrendingDown color="error" fontSize="small" />
+              <TrendingDown sx={{ color: '#dc2626', fontSize: 16 }} />
             )}
             <Typography 
               variant="caption" 
-              color={trend.direction === 'up' ? 'success.main' : 'error.main'}
-              fontWeight="medium"
+              sx={{ 
+                color: trend.direction === 'up' ? '#16a34a' : '#dc2626',
+                fontWeight: 500,
+                fontSize: '0.75rem'
+              }}
             >
               {trend.percentage.toFixed(1)}% {trend.period}
             </Typography>
@@ -133,10 +165,22 @@ const MetricCard: React.FC<MetricCardProps> = ({
         {progress && (
           <Box mt={2}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
-              <Typography variant="caption" color="text.secondary">
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#64748b',
+                  fontSize: '0.75rem'
+                }}
+              >
                 {progress.label || 'Progress'}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: '#64748b',
+                  fontSize: '0.75rem'
+                }}
+              >
                 {((progress.current / progress.target) * 100).toFixed(1)}%
               </Typography>
             </Box>
@@ -146,13 +190,21 @@ const MetricCard: React.FC<MetricCardProps> = ({
               sx={{
                 height: 6,
                 borderRadius: 3,
-                backgroundColor: 'grey.200',
+                bgcolor: '#f1f5f9',
                 '& .MuiLinearProgress-bar': {
-                  backgroundColor: colorMap[color]
+                  bgcolor: colorMap[color],
+                  borderRadius: 3
                 }
               }}
             />
-            <Typography variant="caption" color="text.secondary" mt={0.5}>
+            <Typography 
+              variant="caption" 
+              sx={{ 
+                color: '#64748b',
+                fontSize: '0.75rem',
+                mt: 0.5
+              }}
+            >
               {(progress.current || 0).toLocaleString()} of {(progress.target || 0).toLocaleString()}
             </Typography>
           </Box>
@@ -170,19 +222,27 @@ const PaymentMetrics: React.FC<PaymentMetricsProps> = ({
   if (isLoading) {
     return (
       <Box className={className}>
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           {[1, 2, 3, 4, 5, 6].map((index) => (
             <Grid item xs={12} sm={6} md={4} lg={2} key={index}>
-              <Card>
+              <Card 
+                elevation={0}
+                sx={{
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  bgcolor: '#ffffff',
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                }}
+              >
                 <CardContent>
                   <Box display="flex" alignItems="center" mb={2}>
-                    <Avatar sx={{ bgcolor: 'grey.300', width: 48, height: 48 }}>
-                      <Schedule />
+                    <Avatar sx={{ bgcolor: '#f1f5f9', width: 48, height: 48 }}>
+                      <Schedule sx={{ color: '#9ca3af' }} />
                     </Avatar>
                   </Box>
-                  <LinearProgress sx={{ mb: 2 }} />
-                  <LinearProgress sx={{ mb: 1, width: '60%' }} />
-                  <LinearProgress sx={{ width: '40%' }} />
+                  <LinearProgress sx={{ mb: 2, bgcolor: '#f1f5f9' }} />
+                  <LinearProgress sx={{ mb: 1, width: '60%', bgcolor: '#f1f5f9' }} />
+                  <LinearProgress sx={{ width: '40%', bgcolor: '#f1f5f9' }} />
                 </CardContent>
               </Card>
             </Grid>
@@ -304,7 +364,15 @@ const PaymentMetrics: React.FC<PaymentMetricsProps> = ({
       {/* Bank Breakdown */}
       {statistics.paymentsByBank && Object.keys(statistics.paymentsByBank).length > 0 && (
         <Box mt={4}>
-          <Typography variant="h6" gutterBottom>
+          <Typography 
+            variant="h6" 
+            gutterBottom
+            sx={{ 
+              color: '#1a202c',
+              fontWeight: 600,
+              fontSize: '1.125rem'
+            }}
+          >
             Payment Distribution by Bank
           </Typography>
           <Grid container spacing={2}>
@@ -315,17 +383,34 @@ const PaymentMetrics: React.FC<PaymentMetricsProps> = ({
 
               return (
                 <Grid item xs={12} sm={6} md={4} key={bankCode}>
-                  <Card variant="outlined" sx={{ p: 2 }}>
+                  <Card 
+                    elevation={0}
+                    sx={{ 
+                      p: 2,
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      bgcolor: '#ffffff',
+                      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                    }}
+                  >
                     <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                      <Typography variant="subtitle2" fontWeight="medium">
+                      <Typography 
+                        variant="subtitle2" 
+                        sx={{ 
+                          color: '#374151',
+                          fontWeight: 500
+                        }}
+                      >
                         {bankName}
                       </Typography>
                       <Chip 
                         label={count} 
                         size="small" 
                         sx={{ 
-                          backgroundColor: bank?.primaryColor || 'primary.main',
-                          color: 'white'
+                          bgcolor: bank?.primaryColor || '#3b82f6',
+                          color: '#ffffff',
+                          fontWeight: 500,
+                          border: 'none'
                         }}
                       />
                     </Box>
@@ -335,13 +420,21 @@ const PaymentMetrics: React.FC<PaymentMetricsProps> = ({
                       sx={{
                         height: 8,
                         borderRadius: 4,
-                        backgroundColor: 'grey.200',
+                        bgcolor: '#f1f5f9',
                         '& .MuiLinearProgress-bar': {
-                          backgroundColor: bank?.primaryColor || 'primary.main'
+                          bgcolor: bank?.primaryColor || '#3b82f6',
+                          borderRadius: 4
                         }
                       }}
                     />
-                    <Typography variant="caption" color="text.secondary" mt={0.5}>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: '#64748b',
+                        fontSize: '0.75rem',
+                        mt: 0.5
+                      }}
+                    >
                       {percentage.toFixed(1)}% of total payments
                     </Typography>
                   </Card>

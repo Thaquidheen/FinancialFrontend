@@ -16,12 +16,8 @@ import {
   AccordionSummary,
   AccordionDetails,
   Slider,
-  FormGroup,
-  FormControlLabel,
   Checkbox,
-  Autocomplete,
-  IconButton,
-  Tooltip
+  Autocomplete
 } from '@mui/material';
 import {
   ExpandMore,
@@ -36,10 +32,10 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { PaymentSearchParams, PaymentStatus } from '../../../types/payment.types';
+import { PaymentSearchParams } from '../../../types/payment.types';
 import { SaudiBankDefinition } from '../../../types/saudiBanking.types';
 import { PAYMENT_FILTER_OPTIONS } from '../../../constants/payments/paymentConstants';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 
 interface PaymentQueueFiltersProps {
   filters: PaymentSearchParams;
@@ -72,7 +68,7 @@ const PaymentQueueFilters: React.FC<PaymentQueueFiltersProps> = ({
     onFiltersChange({ [key]: value });
   };
 
-  const handleAmountRangeChange = (event: Event, newValue: number | number[]) => {
+  const handleAmountRangeChange = (_event: Event, newValue: number | number[]) => {
     const range = newValue as [number, number];
     setAmountRange(range);
     onFiltersChange({
@@ -231,7 +227,7 @@ const PaymentQueueFilters: React.FC<PaymentQueueFiltersProps> = ({
                 value={availableBanks.filter(bank => 
                   filters.bankName?.includes(bank.code) || filters.bankName?.includes(bank.name)
                 )}
-                onChange={(event, newValue) => {
+                onChange={(_event, newValue) => {
                   handleFilterChange('bankName', newValue.map(bank => bank.code));
                 }}
                 renderInput={(params) => (
@@ -463,7 +459,7 @@ const PaymentQueueFilters: React.FC<PaymentQueueFiltersProps> = ({
             })}
             {filters.amountRange && (
               <Chip
-                label={`Amount: ${saudiBankService.formatSAR(filters.amountRange.min)} - ${saudiBankService.formatSAR(filters.amountRange.max)}`}
+                label={`Amount: ${saudiBankService.formatSAR(filters.amountRange.min ?? 0)} - ${saudiBankService.formatSAR(filters.amountRange.max ?? 100000)}`}
                 onDelete={() => handleFilterChange('amountRange', undefined)}
                 size="small"
               />

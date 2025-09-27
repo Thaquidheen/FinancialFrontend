@@ -38,7 +38,7 @@ import {
   Language
 } from '@mui/icons-material';
 import { SaudiBankDefinition } from '../../../types/saudiBanking.types';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 
 interface BankSelectorProps {
   banks: SaudiBankDefinition[];

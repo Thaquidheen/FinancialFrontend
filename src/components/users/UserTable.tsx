@@ -28,8 +28,6 @@ import {
   MoreVert,
   Edit,
   Delete,
-  PersonAdd,
-  PersonRemove,
   Visibility,
   Lock,
   LockOpen,
@@ -73,7 +71,6 @@ interface UserTableProps {
   onUserActivate: (user: User) => void;
   onUserDeactivate: (user: User) => void;
   onRoleAssign: (user: User) => void;
-  onBulkAction?: (action: string, userIds: string[]) => void;
 }
 
 const UserTable: React.FC<UserTableProps> = ({
@@ -89,7 +86,6 @@ const UserTable: React.FC<UserTableProps> = ({
   onUserActivate,
   onUserDeactivate,
   onRoleAssign,
-  onBulkAction,
 }) => {
   const [selected, setSelected] = useState<string[]>([]);
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{ element: HTMLElement; userId: string } | null>(null);
@@ -232,20 +228,6 @@ const UserTable: React.FC<UserTableProps> = ({
           </Typography>
         )}
 
-        {selected.length > 0 && onBulkAction && (
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Tooltip title="Activate Selected">
-              <IconButton onClick={() => onBulkAction('activate', selected)}>
-                <PersonAdd />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Deactivate Selected">
-              <IconButton onClick={() => onBulkAction('deactivate', selected)}>
-                <PersonRemove />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        )}
       </Toolbar>
 
       <TableContainer>

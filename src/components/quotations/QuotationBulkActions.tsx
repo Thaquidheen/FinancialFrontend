@@ -259,7 +259,7 @@ const QuotationBulkActions: React.FC<QuotationBulkActionsProps> = ({
         case 'submit':
           // Submit quotations one by one
           for (const id of quotationIds) {
-            await quotationService.submitQuotation(id);
+            await quotationService.submitQuotation(id, {});
           }
           break;
         default:

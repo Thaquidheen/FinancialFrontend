@@ -43,7 +43,7 @@ import {
   FileDownload
 } from '@mui/icons-material';
 import { PaymentSummaryResponse } from '../../../types/payment.types';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 import { SAUDI_BANK_EXCEL_FORMATS } from '../../../types/saudiBanking.types';
 
 interface BankFilePreviewProps {

@@ -48,7 +48,7 @@ import {
 import { PaymentBatch, PaymentBatchStatus } from '../../../types/payment.types';
 import { PAYMENT_BATCH_STATUS_LABELS } from '../../../constants/payments/paymentConstants';
 import { usePaymentBatches } from '../../../hooks/payments/usePaymentBatches';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 
 interface BatchActionsProps {
   batch: PaymentBatch;

@@ -1,5 +1,6 @@
 // components/approvals/ApprovalQueue/ApprovalQueue.tsx
 import React, { useState, useCallback } from 'react';
+import approvalService from '../../../services/approvalService';
 import {
   Box,
   Paper,
@@ -87,6 +88,7 @@ const ApprovalQueue: React.FC<ApprovalQueueProps> = ({
   const handleQuickApprove = useCallback(async (approval: ApprovalItem) => {
     try {
       console.log('Quick approve:', approval);
+      await approvalService.quickApprove(approval.quotationId);
       await refreshApprovals();
       onApprovalProcessed?.(approval);
     } catch (error) {
@@ -97,6 +99,7 @@ const ApprovalQueue: React.FC<ApprovalQueueProps> = ({
   const handleQuickReject = useCallback(async (approval: ApprovalItem, reason: string, comments?: string) => {
     try {
       console.log('Quick reject:', approval, reason, comments);
+      await approvalService.quickReject(approval.quotationId, reason);
       await refreshApprovals();
       onApprovalProcessed?.(approval);
     } catch (error) {

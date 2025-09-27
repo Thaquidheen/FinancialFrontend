@@ -1,13 +1,13 @@
-// src/pages/payments/PaymentDashboardPage.tsx
+// src/pages/payments/PaymentQueuePage.tsx
 
 import React from 'react';
 import { Box } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
-import PaymentDashboard from '../../components/payments/PaymentDashboard/PaymentDashboard';
+import PaymentQueue from '../../components/payments/PaymentQueue/PaymentQueue';
 import { useAuth } from '../../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 
-const PaymentDashboardPage: React.FC = () => {
+const PaymentQueuePage: React.FC = () => {
   const { user, hasPermission } = useAuth();
 
   // Check if user has payment management permissions
@@ -24,8 +24,8 @@ const PaymentDashboardPage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Payment Processing Dashboard - ERP System</title>
-        <meta name="description" content="Manage and process payments for approved quotations" />
+        <title>Payment Queue - ERP System</title>
+        <meta name="description" content="Manage payments ready for processing" />
       </Helmet>
       
       <Box sx={{ 
@@ -33,11 +33,13 @@ const PaymentDashboardPage: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         bgcolor: '#f8fafc', // Light gray background
+        p: 3
       }}>
-        <PaymentDashboard />
+        <PaymentQueue />
       </Box>
     </>
   );
 };
 
-export default PaymentDashboardPage;
+export default PaymentQueuePage;
+

@@ -11,6 +11,7 @@ import DashboardPage from '@pages/dashboard/DashboardPage';
 import UserListPage from '@pages/users/UserListPage';
 import CreateUserPage from '@pages/users/CreateUserPage';
 import EditUserPage from '@pages/users/EditUserPage';
+import UserDetailsPage from '@pages/users/UserDetailsPage';
 import ProjectListPage from '@pages/projects/ProjectListPage';
 import { CreateProjectPage } from '@pages/projects/CreateProjectPage';
 import { ProjectDetailsPage } from '@pages/projects/ProjectDetailsPage';
@@ -19,6 +20,7 @@ import CreateQuotationPage from '@pages/quotations/CreateQuotationPage';
 import ApprovalQueuePage from '@pages/approvals/ApprovalQueuePage';
 import ApprovalDashboardPage from '@pages/approvals/ApprovalDashboardPage';
 import PaymentDashboardPage from '@pages/payments/PaymentDashboardPage';
+import PaymentQueuePage from '@pages/payments/PaymentQueuePage';
 import { lightTheme } from '@themes/theme';
 import { ROUTES } from '@constants/app';
 import { USER_ROLES } from './types/auth';
@@ -83,7 +85,7 @@ function App() {
                           path={ROUTES.USER_DETAIL}
                           element={
                             <ProtectedRoute requiredRoles={[USER_ROLES.SUPER_ADMIN]}>
-                              <PlaceholderPage title="User Details" />
+                              <UserDetailsPage />
                             </ProtectedRoute>
                           }
                         />
@@ -222,7 +224,20 @@ function App() {
                                 USER_ROLES.ACCOUNT_MANAGER,
                               ]}
                             >
-                              <PlaceholderPage title="Payment Processing" />
+                              <PaymentQueuePage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/payments/queue"
+                          element={
+                            <ProtectedRoute
+                              requiredRoles={[
+                                USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
+                              ]}
+                            >
+                              <PaymentQueuePage />
                             </ProtectedRoute>
                           }
                         />

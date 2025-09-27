@@ -21,12 +21,22 @@ import {
   Snackbar,
   IconButton,
   Tooltip,
+  Stack,
+  Grid,
+  Collapse,
+  Divider,
+  Paper,
+  InputAdornment,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Search as SearchIcon,
   GetApp as ExportIcon,
   Refresh as RefreshIcon,
+  FilterList as FilterListIcon,
+  Clear as ClearIcon,
+  ExpandLess,
+  ExpandMore,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -36,7 +46,6 @@ import {
   useDeleteUser,
   useActivateUser,
   useDeactivateUser,
-  useBulkUserOperation,
   useExportUsers,
   useRefreshUsers,
 } from '../../hooks/useUser';
@@ -51,11 +60,10 @@ const UserListPage: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   
-  // FIX: Use 'createdDate' instead of 'createdAt' to match backend entity
   const [searchParams, setSearchParams] = useState<UserSearchParams>({
     page: 0,
     size: 10,
-    sortBy: 'createdDate', // ✅ Fixed: Changed from 'createdAt' to 'createdDate'
+    sortBy: 'createdDate',
     sortDirection: 'desc',
   });
   
@@ -67,7 +75,6 @@ const UserListPage: React.FC = () => {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  // Removed unused selectedUser state
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     title: string;
@@ -89,7 +96,6 @@ const UserListPage: React.FC = () => {
   const deleteUserMutation = useDeleteUser();
   const activateUserMutation = useActivateUser();
   const deactivateUserMutation = useDeactivateUser();
-  const bulkOperationMutation = useBulkUserOperation();
   const exportUsersMutation = useExportUsers();
   const { refreshAll } = useRefreshUsers();
 
@@ -102,7 +108,7 @@ const UserListPage: React.FC = () => {
     setSearchParams(prev => ({
       ...prev,
       search: searchQuery,
-      page: 0, // Reset to first page
+      page: 0,
     }));
   };
 
@@ -119,7 +125,9 @@ const UserListPage: React.FC = () => {
     setFilters(newFilters);
     setSearchParams(prev => ({
       ...prev,
-      ...newFilters,
+      roles: newFilters.roles,
+      departments: newFilters.departments,
+      isActive: newFilters.status === 'all' ? undefined : newFilters.status === 'active',
       page: 0,
     }));
   };
@@ -202,28 +210,6 @@ const UserListPage: React.FC = () => {
     // Roles management route not defined; implement when backend/UI ready
   };
 
-  const handleBulkAction = (action: string, userIds: string[]) => {
-    bulkOperationMutation.mutate({ 
-      userIds, 
-      operation: action as 'activate' | 'deactivate' 
-    }, {
-      onSuccess: () => {
-        setSnackbar({
-          open: true,
-          message: `Bulk ${action} completed successfully`,
-          severity: 'success',
-        });
-      },
-      onError: () => {
-        setSnackbar({
-          open: true,
-          message: `Failed to ${action} selected users`,
-          severity: 'error',
-        });
-      },
-    });
-  };
-
   const handleExport = () => {
     exportUsersMutation.mutate(searchParams, {
       onSuccess: (blob: Blob) => {
@@ -257,191 +243,443 @@ const UserListPage: React.FC = () => {
                         currentUser?.roles.includes(USER_ROLES.ACCOUNT_MANAGER);
 
   return (
-    <Box sx={{ p: 3 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          User Management
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Tooltip title="Refresh">
-            <IconButton onClick={() => refreshAll()}>
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
-          {canExportUsers && (
-            <Button
-              variant="outlined"
-              startIcon={<ExportIcon />}
-              onClick={handleExport}
-              disabled={exportUsersMutation.isLoading}
-            >
-              Export
-            </Button>
-          )}
-          {canCreateUser && (
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate(ROUTES.USER_CREATE)}
-            >
-              Add User
-            </Button>
-          )}
-        </Box>
-      </Box>
-
-      {/* Statistics Cards */}
-      {userStats && (
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 2, mb: 3 }}>
-          <MetricsCard
-            title="Total Users"
-            value={userStats.totalUsers}
-            color="primary"
-            icon={AddIcon}
-          />
-          <MetricsCard
-            title="Active Users"
-            value={userStats.activeUsers}
-            color="success"
-            icon={AddIcon}
-          />
-          <MetricsCard
-            title="Pending Approvals"
-            value={userStats.pendingUsers}
-            color="warning"
-            icon={AddIcon}
-          />
-          <MetricsCard
-            title="This Month"
-            value={userStats.newUsersThisMonth}
-            color="info"
-            icon={AddIcon}
-          />
-        </Box>
-      )}
-
-      {/* Search and Filters */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
-            <TextField
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              sx={{ flex: 1 }}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />,
+    <Box sx={{ 
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      bgcolor: '#f8fafc', // Light gray background
+    }}>
+      {/* Header Section */}
+      <Paper 
+        elevation={0} 
+        sx={{ 
+          borderBottom: '1px solid #e2e8f0',
+          px: 3,
+          py: 2,
+          bgcolor: '#ffffff',
+          borderRadius: 0,
+        }}
+      >
+        <Stack 
+          direction="row" 
+          justifyContent="space-between" 
+          alignItems="center"
+        >
+          <Box>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              fontWeight={700}
+              sx={{ 
+                color: '#1a202c',
+                fontSize: '1.875rem',
+                letterSpacing: '-0.025em'
               }}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSearch();
-                }
+            >
+              User Management
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                mt: 0.5,
+                color: '#64748b',
+                fontSize: '0.875rem'
               }}
-            />
-            <Button variant="contained" onClick={handleSearch}>
-              Search
-            </Button>
-            <Button variant="outlined" onClick={handleClearSearch}>
-              Clear
-            </Button>
-            <Button variant="text" onClick={() => setShowFilters(!showFilters)}>
-              {showFilters ? 'Hide' : 'Show'} Filters
-            </Button>
+            >
+              Manage users, roles, and permissions
+            </Typography>
           </Box>
 
-          {/* Filters */}
-          {showFilters && (
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2 }}>
-              <FormControl size="small">
-                <InputLabel>Roles</InputLabel>
-                <Select
-                  multiple
-                  value={filters.roles}
-                  onChange={(e) => handleFilterChange({ ...filters, roles: e.target.value as string[] })}
-                  input={<OutlinedInput label="Roles" />}
-                  renderValue={(selected) => (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {selected.map((value) => (
-                        <Chip key={value} label={value} size="small" />
-                      ))}
-                    </Box>
-                  )}
-                >
-                  {roles.map((role) => (
-                    <MenuItem key={role.id} value={role.name}>
-                      {role.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+          <Stack direction="row" spacing={1}>
+            <Tooltip title="Refresh Data">
+              <IconButton 
+                onClick={() => refreshAll()}
+                disabled={isLoading}
+                sx={{ 
+                  bgcolor: '#f1f5f9',
+                  color: '#475569',
+                  '&:hover': { 
+                    bgcolor: '#e2e8f0',
+                    color: '#334155'
+                  }
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+            
+            {canExportUsers && (
+              <Button
+                variant="outlined"
+                startIcon={<ExportIcon />}
+                onClick={handleExport}
+                disabled={exportUsersMutation.isLoading}
+                sx={{ 
+                  minWidth: 100,
+                  borderColor: '#d1d5db',
+                  color: '#374151',
+                  '&:hover': {
+                    borderColor: '#9ca3af',
+                    backgroundColor: '#f9fafb'
+                  }
+                }}
+              >
+                Export
+              </Button>
+            )}
+            
+            {canCreateUser && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => navigate(ROUTES.USER_CREATE)}
+                sx={{ 
+                  minWidth: 120,
+                  bgcolor: '#3b82f6',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  '&:hover': { 
+                    bgcolor: '#2563eb',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }
+                }}
+              >
+                Add User
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+      </Paper>
 
-              {/* Departments filter removed (no backend support) */}
-
-              <FormControl size="small">
-                <InputLabel>Status</InputLabel>
-                <Select
-                  value={filters.status}
-                  label="Status"
-                  onChange={(e) => handleFilterChange({ ...filters, status: e.target.value as 'all' | 'active' | 'inactive' })}
-                >
-                  <MenuItem value="all">All</MenuItem>
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="inactive">Inactive</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
+      {/* Main Content Area */}
+      <Box sx={{ flex: 1, overflow: 'hidden', p: 3 }}>
+        <Stack spacing={3} sx={{ height: '100%' }}>
+          {/* Statistics Cards */}
+          {userStats && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6} md={3}>
+                <MetricsCard
+                  title="Total Users"
+                  value={userStats.totalUsers}
+                  color="primary"
+                  icon={AddIcon}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <MetricsCard
+                  title="Active Users"
+                  value={userStats.activeUsers}
+                  color="success"
+                  icon={AddIcon}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <MetricsCard
+                  title="Pending Approvals"
+                  value={userStats.pendingUsers}
+                  color="warning"
+                  icon={AddIcon}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6} md={3}>
+                <MetricsCard
+                  title="This Month"
+                  value={userStats.newUsersThisMonth}
+                  color="info"
+                  icon={AddIcon}
+                />
+              </Grid>
+            </Grid>
           )}
-        </CardContent>
-      </Card>
 
-      {/* Error Display */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {(error as any).message || 'Failed to load users'}
-        </Alert>
-      )}
+          {/* Search and Filters Card */}
+          <Card 
+            elevation={0}
+            sx={{
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              bgcolor: '#ffffff',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <CardContent sx={{ pb: showFilters ? 2 : 1, p: 3 }}>
+              {/* Search Row */}
+              <Stack 
+                direction={{ xs: 'column', md: 'row' }} 
+                spacing={2} 
+                alignItems={{ md: 'center' }}
+                sx={{ mb: showFilters ? 2 : 0 }}
+              >
+                <TextField
+                  placeholder="Search by name, email, or username..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  sx={{ 
+                    flex: 1,
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: '#ffffff',
+                      borderColor: '#d1d5db',
+                      borderRadius: '8px',
+                      '&:hover': {
+                        borderColor: '#9ca3af',
+                      },
+                      '&.Mui-focused': {
+                        borderColor: '#3b82f6',
+                        boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+                      }
+                    },
+                    '& .MuiInputBase-input': {
+                      color: '#374151',
+                      fontSize: '0.875rem',
+                    }
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: '#9ca3af' }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchQuery && (
+                      <InputAdornment position="end">
+                        <IconButton
+                          size="small"
+                          onClick={handleClearSearch}
+                          edge="end"
+                          sx={{ color: '#9ca3af' }}
+                        >
+                          <ClearIcon />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearch();
+                    }
+                  }}
+                />
+                
+                <Stack direction="row" spacing={1}>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleSearch}
+                    disabled={!searchQuery.trim()}
+                    sx={{ 
+                      minWidth: 100,
+                      bgcolor: '#3b82f6',
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      '&:hover': { 
+                        bgcolor: '#2563eb',
+                      },
+                      '&:disabled': {
+                        bgcolor: '#e5e7eb',
+                        color: '#9ca3af'
+                      }
+                    }}
+                  >
+                    Search
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    startIcon={<FilterListIcon />}
+                    endIcon={showFilters ? <ExpandLess /> : <ExpandMore />}
+                    onClick={() => setShowFilters(!showFilters)}
+                    sx={{ 
+                      minWidth: 100,
+                      borderColor: '#d1d5db',
+                      color: '#374151',
+                      borderRadius: '8px',
+                      '&:hover': {
+                        borderColor: '#9ca3af',
+                        backgroundColor: '#f9fafb'
+                      }
+                    }}
+                  >
+                    Filters
+                  </Button>
+                </Stack>
+              </Stack>
 
-      {/* Users Table */}
-      <UserTable
-        users={usersData?.content || []}
-        totalCount={usersData?.totalElements || 0}
-        isLoading={isLoading}
-        error={error}
-        searchParams={searchParams}
-        onSearchParamsChange={handleSearchParamsChange}
-        onUserEdit={handleUserEdit}
-        onUserView={handleUserView}
-        onUserDelete={handleUserDelete}
-        onUserActivate={handleUserActivate}
-        onUserDeactivate={handleUserDeactivate}
-        onRoleAssign={handleRoleAssign}
-        onBulkAction={handleBulkAction}
-      />
+              {/* Filters Section */}
+              <Collapse in={showFilters}>
+                <Divider sx={{ mb: 2 }} />
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6} md={4}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Roles</InputLabel>
+                      <Select
+                        multiple
+                        value={filters.roles}
+                        onChange={(e) => handleFilterChange({ 
+                          ...filters, 
+                          roles: e.target.value as string[] 
+                        })}
+                        input={<OutlinedInput label="Roles" />}
+                        renderValue={(selected) => (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((value) => (
+                              <Chip 
+                                key={value} 
+                                label={value.replace('_', ' ')} 
+                                size="small"
+                                variant="outlined"
+                              />
+                            ))}
+                          </Box>
+                        )}
+                      >
+                        {roles.map((role) => (
+                          <MenuItem key={role.id} value={role.name}>
+                            {role.displayName || role.name.replace('_', ' ')}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={4}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Status</InputLabel>
+                      <Select
+                        value={filters.status}
+                        label="Status"
+                        onChange={(e) => handleFilterChange({ 
+                          ...filters, 
+                          status: e.target.value as 'all' | 'active' | 'inactive' 
+                        })}
+                      >
+                        <MenuItem value="all">All Status</MenuItem>
+                        <MenuItem value="active">Active Only</MenuItem>
+                        <MenuItem value="inactive">Inactive Only</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} sm={6} md={4}>
+                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => {
+                          setFilters({
+                            roles: [],
+                            departments: [],
+                            status: 'all',
+                            managers: [],
+                          });
+                          handleFilterChange({
+                            roles: [],
+                            departments: [],
+                            status: 'all',
+                            managers: [],
+                          });
+                        }}
+                      >
+                        Clear Filters
+                      </Button>
+                    </Stack>
+                  </Grid>
+                </Grid>
+              </Collapse>
+            </CardContent>
+          </Card>
+
+          {/* Error Display */}
+          {error && (
+            <Alert 
+              severity="error" 
+              variant="filled"
+              sx={{ borderRadius: 2 }}
+            >
+              {(error as any).message || 'Failed to load users'}
+            </Alert>
+          )}
+
+          {/* Users Table Container */}
+          <Card 
+            elevation={0}
+            sx={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column',
+              overflow: 'hidden',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              bgcolor: '#ffffff',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            <UserTable
+              users={usersData?.content || []}
+              totalCount={usersData?.totalElements || 0}
+              isLoading={isLoading}
+              error={error}
+              searchParams={searchParams}
+              onSearchParamsChange={handleSearchParamsChange}
+              onUserEdit={handleUserEdit}
+              onUserView={handleUserView}
+              onUserDelete={handleUserDelete}
+              onUserActivate={handleUserActivate}
+              onUserDeactivate={handleUserDeactivate}
+              onRoleAssign={handleRoleAssign}
+            />
+          </Card>
+        </Stack>
+      </Box>
 
       {/* Confirmation Dialog */}
       {confirmDialog && (
-        <Dialog open={confirmDialog.open} onClose={() => setConfirmDialog(null)}>
-          <DialogTitle>{confirmDialog.title}</DialogTitle>
+        <Dialog 
+          open={confirmDialog.open} 
+          onClose={() => setConfirmDialog(null)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle sx={{ pb: 1 }}>
+            <Typography variant="h6" component="div">
+              {confirmDialog.title}
+            </Typography>
+          </DialogTitle>
           <DialogContent>
-            <Typography>{confirmDialog.message}</Typography>
+            <Typography color="text.secondary">
+              {confirmDialog.message}
+            </Typography>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setConfirmDialog(null)}>Cancel</Button>
-            <Button onClick={confirmDialog.action} color="error" variant="contained">
-              Confirm
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button 
+              onClick={() => setConfirmDialog(null)}
+              variant="outlined"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={confirmDialog.action} 
+              color="error" 
+              variant="contained"
+              sx={{ minWidth: 100 }}
+            >
+              Delete
             </Button>
           </DialogActions>
         </Dialog>
       )}
 
-      {/* Snackbar */}
+      {/* Snackbar Notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
         onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert severity={snackbar.severity}>
+        <Alert 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ borderRadius: 2 }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

@@ -9,8 +9,8 @@ import {
   BankFileRequest,
   BankFileResponse 
 } from '../../types/payment.types';
-import { paymentService } from '../../services/api/paymentService';
-import { saudiBankService } from '../../services/api/saudiBankService';
+import { paymentService } from '../../services/paymentService';
+import { saudiBankService } from '../../services/saudiBankService';
 import { useNotification } from '../../contexts/NotificationContext';
 
 export interface UsePaymentQueueProps {

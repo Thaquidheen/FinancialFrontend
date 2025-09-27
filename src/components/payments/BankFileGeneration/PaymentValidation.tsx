@@ -42,7 +42,7 @@ import {
   Info
 } from '@mui/icons-material';
 import { PaymentSummaryResponse } from '../../../types/payment.types';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 import { PAYMENT_VALIDATION_RULES } from '../../../constants/payments/paymentConstants';
 
 interface ValidationResult {

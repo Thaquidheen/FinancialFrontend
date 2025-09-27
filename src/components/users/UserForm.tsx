@@ -308,10 +308,18 @@ const UserForm: React.FC<UserFormProps> = ({
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {/* Basic Information */}
           <Box>
-            <Typography variant="h6" gutterBottom>
+            <Typography 
+              variant="h6" 
+              gutterBottom
+              sx={{ 
+                color: '#1a202c',
+                fontWeight: 600,
+                fontSize: '1.125rem'
+              }}
+            >
               Basic Information
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2, borderColor: '#e2e8f0' }} />
           </Box>
 
           {/* Basic Information Grid */}
@@ -331,6 +339,28 @@ const UserForm: React.FC<UserFormProps> = ({
                   error={!!errors.username}
                   helperText={getErrorMessage(errors.username)}
                   disabled={isEditMode} // Username cannot be changed
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: '#ffffff',
+                      borderColor: '#d1d5db',
+                      borderRadius: '8px',
+                      '&:hover': {
+                        borderColor: '#9ca3af',
+                      },
+                      '&.Mui-focused': {
+                        borderColor: '#3b82f6',
+                        boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+                      }
+                    },
+                    '& .MuiInputBase-input': {
+                      color: '#374151',
+                      fontSize: '0.875rem',
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: '#64748b',
+                      fontSize: '0.875rem',
+                    }
+                  }}
                 />
               )}
             />
@@ -448,10 +478,19 @@ const UserForm: React.FC<UserFormProps> = ({
 
           {/* Saudi-specific Information */}
           <Box>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              sx={{ 
+                mt: 2,
+                color: '#1a202c',
+                fontWeight: 600,
+                fontSize: '1.125rem'
+              }}
+            >
               Saudi-specific Information
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2, borderColor: '#e2e8f0' }} />
           </Box>
 
           <Grid container spacing={2}>
@@ -512,10 +551,19 @@ const UserForm: React.FC<UserFormProps> = ({
 
           {/* Employment Information */}
           <Box>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              sx={{ 
+                mt: 2,
+                color: '#1a202c',
+                fontWeight: 600,
+                fontSize: '1.125rem'
+              }}
+            >
               Employment Information
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2, borderColor: '#e2e8f0' }} />
           </Box>
 
           <Grid container spacing={2}>
@@ -596,10 +644,19 @@ const UserForm: React.FC<UserFormProps> = ({
 
           {/* Role Assignment */}
           <Box>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              sx={{ 
+                mt: 2,
+                color: '#1a202c',
+                fontWeight: 600,
+                fontSize: '1.125rem'
+              }}
+            >
               Role Assignment
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2, borderColor: '#e2e8f0' }} />
           </Box>
 
           <Box>
@@ -653,10 +710,19 @@ const UserForm: React.FC<UserFormProps> = ({
 
           {/* Bank Details */}
           <Box>
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+            <Typography 
+              variant="h6" 
+              gutterBottom 
+              sx={{ 
+                mt: 2,
+                color: '#1a202c',
+                fontWeight: 600,
+                fontSize: '1.125rem'
+              }}
+            >
               Bank Details
             </Typography>
-            <Divider sx={{ mb: 2 }} />
+            <Divider sx={{ mb: 2, borderColor: '#e2e8f0' }} />
           </Box>
 
           <Grid container spacing={2}>
@@ -754,6 +820,20 @@ const UserForm: React.FC<UserFormProps> = ({
                 variant="outlined"
                 onClick={onCancel}
                 disabled={isSubmitting}
+                sx={{
+                  borderColor: '#d1d5db',
+                  color: '#374151',
+                  borderRadius: '8px',
+                  fontWeight: 500,
+                  '&:hover': {
+                    borderColor: '#9ca3af',
+                    backgroundColor: '#f9fafb',
+                  },
+                  '&:disabled': {
+                    borderColor: '#e5e7eb',
+                    color: '#9ca3af',
+                  }
+                }}
               >
                 Cancel
               </Button>
@@ -762,6 +842,20 @@ const UserForm: React.FC<UserFormProps> = ({
                 variant="contained"
                 disabled={isSubmitting || isLoading}
                 startIcon={isSubmitting || isLoading ? <CircularProgress size={20} /> : undefined}
+                sx={{
+                  bgcolor: '#3b82f6',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  borderRadius: '8px',
+                  '&:hover': {
+                    bgcolor: '#2563eb',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                  },
+                  '&:disabled': {
+                    bgcolor: '#e5e7eb',
+                    color: '#9ca3af',
+                  }
+                }}
               >
                 {isEditMode ? 'Update User' : 'Create User'}
               </Button>
@@ -771,7 +865,15 @@ const UserForm: React.FC<UserFormProps> = ({
 
         {/* Validation Summary - Fixed condition */}
         {hasValidationErrors() && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mt: 2,
+              borderRadius: '12px',
+              border: '1px solid #fecaca',
+              bgcolor: '#fef2f2',
+            }}
+          >
             Please fix the validation errors above before submitting.
           </Alert>
         )}

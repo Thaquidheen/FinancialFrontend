@@ -92,7 +92,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   const updateProject = useUpdateProject();
   
   // Get project managers for assignment
-  const { data: usersData, isLoading: usersLoading } = useUsers({
+  const { data: usersData, isLoading: usersLoading, error: usersError } = useUsers({
     roles: [USER_ROLES.PROJECT_MANAGER],
     active: true,
     size: 100
@@ -169,22 +169,75 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 
   const selectedManager = managers.find((m: any) => m.id === parseInt(formik.values.managerId));
 
+  // Reusable TextField styling
+  const textFieldSx = {
+    '& .MuiOutlinedInput-root': {
+      bgcolor: '#ffffff',
+      borderRadius: '8px',
+      '&:hover': {
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: '#9ca3af',
+        },
+      },
+      '&.Mui-focused': {
+        '& .MuiOutlinedInput-notchedOutline': {
+          borderColor: '#3b82f6',
+          boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)',
+        },
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: '#374151',
+    },
+    '& .MuiInputBase-input': {
+      color: '#1a202c',
+    },
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Card>
+      <Card 
+        elevation={0}
+        sx={{
+          border: 'none',
+          borderRadius: 0,
+          bgcolor: 'transparent',
+        }}
+      >
         <CardHeader
+          sx={{
+            bgcolor: '#f8fafc',
+            borderBottom: '1px solid #e2e8f0',
+            px: 3,
+            py: 2,
+          }}
           title={
-            <Typography variant="h6" component="h2">
-              {mode === 'create' ? 'Create New Project' : 'Edit Project'}
+            <Typography 
+              variant="h6" 
+              component="h2"
+              sx={{ 
+                color: '#1a202c',
+                fontWeight: 600,
+                fontSize: '1.125rem'
+              }}
+            >
+              {mode === 'create' ? 'Project Details' : 'Edit Project'}
             </Typography>
           }
           subheader={
-            mode === 'edit' && project ? `Project ID: ${project.id}` : undefined
+            mode === 'edit' && project ? (
+              <Typography 
+                variant="body2" 
+                sx={{ color: '#64748b', mt: 0.5 }}
+              >
+                Project ID: {project.id}
+              </Typography>
+            ) : undefined
           }
         />
         
         <form onSubmit={formik.handleSubmit}>
-          <CardContent>
+          <CardContent sx={{ p: 3 }}>
             {submitError && (
               <Alert severity="error" sx={{ mb: 3 }}>
                 {submitError}
@@ -210,6 +263,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   error={formik.touched.name && Boolean(formik.errors.name)}
                   helperText={formik.touched.name && formik.errors.name}
                   required
+                  sx={textFieldSx}
                 />
               </Grid>
 
@@ -224,6 +278,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   error={formik.touched.location && Boolean(formik.errors.location)}
                   helperText={formik.touched.location && formik.errors.location}
                   placeholder="e.g., Riyadh, Jeddah"
+                  sx={textFieldSx}
                 />
               </Grid>
 
@@ -240,6 +295,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   multiline
                   rows={3}
                   placeholder="Project description, objectives, and scope"
+                  sx={textFieldSx}
                 />
               </Grid>
 
@@ -265,10 +321,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   error={formik.touched.allocatedBudget && Boolean(formik.errors.allocatedBudget)}
                   helperText={formik.touched.allocatedBudget && formik.errors.allocatedBudget}
                   required
+                  sx={textFieldSx}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <BudgetIcon color="action" />
+                        <BudgetIcon sx={{ color: '#9ca3af' }} />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -370,8 +427,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                       error={formik.touched.managerId && Boolean(formik.errors.managerId)}
                       helperText={
                         formik.touched.managerId && formik.errors.managerId ||
+                        usersError ? `Error loading managers: ${usersError.message}` :
+                        managers.length === 0 && !usersLoading ? 'No project managers found' :
                         'Optional: You can assign a project manager now or later'
                       }
+                      sx={textFieldSx}
                       InputProps={{
                         ...params.InputProps,
                         endAdornment: (
@@ -392,13 +452,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                           {option.fullName}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {option.email} • {option.department}
+                          {option.email} • {option.department || 'No department'}
                         </Typography>
                       </Box>
                     </Box>
                     );
                   }}
-                  noOptionsText="No project managers available"
+                  noOptionsText={usersError ? "Error loading project managers" : "No project managers available"}
                 />
               </Grid>
 
@@ -414,12 +474,29 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             </Grid>
           </CardContent>
 
-          <CardActions sx={{ justifyContent: 'flex-end', px: 3, pb: 3 }}>
+          <CardActions 
+            sx={{ 
+              justifyContent: 'flex-end', 
+              px: 3, 
+              pb: 3,
+              bgcolor: '#f8fafc',
+              borderTop: '1px solid #e2e8f0',
+            }}
+          >
             <Button
               type="button"
               onClick={onCancel}
               disabled={isLoading}
               startIcon={<CancelIcon />}
+              sx={{
+                borderColor: '#d1d5db',
+                color: '#374151',
+                borderRadius: '8px',
+                '&:hover': {
+                  borderColor: '#9ca3af',
+                  backgroundColor: '#f9fafb'
+                }
+              }}
             >
               Cancel
             </Button>
@@ -428,6 +505,20 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               variant="contained"
               disabled={isLoading}
               startIcon={isLoading ? <CircularProgress size={16} /> : <SaveIcon />}
+              sx={{
+                bgcolor: '#3b82f6',
+                color: '#ffffff',
+                fontWeight: 600,
+                borderRadius: '8px',
+                ml: 1,
+                '&:hover': { 
+                  bgcolor: '#2563eb',
+                },
+                '&:disabled': {
+                  bgcolor: '#e5e7eb',
+                  color: '#9ca3af'
+                }
+              }}
             >
               {isLoading 
                 ? `${mode === 'create' ? 'Creating' : 'Updating'}...`

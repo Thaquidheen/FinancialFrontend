@@ -35,6 +35,73 @@ export class PaymentService {
   }
 
   /**
+   * Create payments from approved quotations
+   */
+  async createPaymentsFromQuotations(quotationIds: string[]): Promise<PaymentSummaryResponse[]> {
+    const response = await apiClient.post<PaymentSummaryResponse[]>(
+      `${this.basePath}/create`,
+      quotationIds,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    return response.data ?? [];
+  }
+
+  /**
+   * Get approved quotations ready for payment creation
+   */
+  async getApprovedQuotationsReadyForPayment(params?: PaymentSearchParams): Promise<{
+    content: any[]; // QuotationSummaryResponse[]
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+  }> {
+    const queryParams = {
+      page: params?.page || 0,
+      size: params?.size || 20,
+      sortBy: params?.sortBy || 'approvedDate',
+      sortDir: params?.sortDirection || 'desc',
+      ...this.buildFiltersQuery(params)
+    };
+
+    const response = await apiClient.get<any>(
+      `${this.basePath}/approved-quotations`,
+      { params: queryParams }
+    );
+
+    return response.data ?? {
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      size: 20,
+      number: 0
+    };
+  }
+
+  /**
+   * Confirm payment batch sent to bank
+   */
+  async confirmSentToBank(batchId: string, bankReference: string): Promise<{
+    message: string;
+    batchId: string;
+  }> {
+    const response = await apiClient.post<any>(
+      `${this.basePath}/confirm-sent-to-bank/${batchId}`,
+      { bankReference }
+    );
+
+    return response.data ?? {
+      message: 'Batch confirmed as sent to bank',
+      batchId
+    };
+  }
+
+  /**
    * Get payments ready for processing (payment queue)
    */
   async getPaymentsReadyForProcessing(params?: PaymentSearchParams): Promise<{

@@ -60,7 +60,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   );
 
   const canAssign = user?.roles?.some(role => 
-    [USER_ROLES.SUPER_ADMIN, USER_ROLES.ACCOUNT_MANAGER].includes(role as any)
+    [USER_ROLES.SUPER_ADMIN].includes(role as any)
+  );
+
+  const canUpdateBudget = user?.roles?.some(role => 
+    [USER_ROLES.SUPER_ADMIN].includes(role as any)
   );
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -147,17 +151,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </Box>
 
           <Typography variant="body2" color="text.secondary" gutterBottom>
-            {formatCurrency(project.allocatedBudget, project.currency)}
+            {formatCurrency(project.allocatedBudget || 0, project.currency)}
           </Typography>
 
           <LinearProgress
             variant="determinate"
-            value={Math.min(project.budgetUtilization, 100)}
-            color={getBudgetUtilizationColor(project.budgetUtilization)}
+            value={Math.min(project.budgetUtilization || 0, 100)}
+            color={getBudgetUtilizationColor(project.budgetUtilization || 0)}
             sx={{ height: 6, borderRadius: 3 }}
           />
           <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-            {project.budgetUtilization.toFixed(1)}% utilized
+            {(project.budgetUtilization || 0).toFixed(1)}% utilized
           </Typography>
         </CardContent>
       </Card>
@@ -166,47 +170,92 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   return (
     <Card 
+      elevation={0}
       sx={{ 
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
         cursor: onView ? 'pointer' : 'default',
-        '&:hover': onView ? { elevation: 4 } : {},
-        position: 'relative'
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        bgcolor: '#ffffff',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        position: 'relative',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': onView ? { 
+          boxShadow: '0 4px 12px 0 rgba(0, 0, 0, 0.15)',
+          transform: 'translateY(-2px)',
+          borderColor: '#3b82f6'
+        } : {},
       }}
       onClick={handleCardClick}
     >
       {/* Status and alerts indicators */}
-      <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 1 }}>
+      <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 1 }}>
         {project.isOverBudget && (
           <Tooltip title="Over Budget">
-            <WarningIcon color="error" fontSize="small" />
+            <Box
+              sx={{
+                bgcolor: '#fef2f2',
+                borderRadius: '50%',
+                p: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <WarningIcon sx={{ color: '#dc2626', fontSize: 16 }} />
+            </Box>
           </Tooltip>
         )}
         {project.isOverdue && (
           <Tooltip title="Overdue">
-            <WarningIcon color="warning" fontSize="small" sx={{ ml: 0.5 }} />
+            <Box
+              sx={{
+                bgcolor: '#fef3c7',
+                borderRadius: '50%',
+                p: 0.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                ml: project.isOverBudget ? 0.5 : 0,
+              }}
+            >
+              <CalendarIcon sx={{ color: '#d97706', fontSize: 16 }} />
+            </Box>
           </Tooltip>
         )}
       </Box>
 
-      <CardContent sx={{ flex: 1, pb: 1 }}>
+      <CardContent sx={{ flex: 1, p: 3, '&:last-child': { pb: 3 } }}>
         {/* Project Header */}
         <Box mb={2}>
-          <Typography variant="h6" component="h3" gutterBottom noWrap>
+          <Typography 
+            variant="h6" 
+            component="h3" 
+            sx={{ 
+              color: '#1a202c',
+              fontWeight: 600,
+              fontSize: '1.125rem',
+              mb: 1,
+              lineHeight: 1.3,
+            }}
+          >
             {project.name}
           </Typography>
           
           {project.description && (
             <Typography 
               variant="body2" 
-              color="text.secondary" 
               sx={{ 
+                color: '#64748b',
+                fontSize: '0.875rem',
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical',
                 overflow: 'hidden',
-                mb: 1
+                lineHeight: 1.4,
+                mb: 1,
               }}
             >
               {project.description}
@@ -215,8 +264,18 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
           <Chip
             label={PROJECT_STATUS_LABELS[project.status]}
-            color={PROJECT_STATUS_COLORS[project.status]}
             size="small"
+            sx={{ 
+              mb: 1,
+              bgcolor: '#f1f5f9',
+              color: '#374151',
+              fontWeight: 500,
+              fontSize: '0.75rem',
+              height: 24,
+              '& .MuiChip-label': {
+                px: 1.5,
+              }
+            }}
           />
         </Box>
 
@@ -224,8 +283,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         <Box mb={2}>
           {project.location && (
             <Box display="flex" alignItems="center" gap={1} mb={1}>
-              <LocationIcon fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
+              <LocationIcon sx={{ fontSize: 16, color: '#9ca3af' }} />
+              <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
                 {project.location}
               </Typography>
             </Box>
@@ -233,15 +292,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
           {project.managerName ? (
             <Box display="flex" alignItems="center" gap={1} mb={1}>
-              <PersonIcon fontSize="small" color="action" />
-              <Typography variant="body2" color="text.secondary">
+              <PersonIcon sx={{ fontSize: 16, color: '#9ca3af' }} />
+              <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
                 {project.managerName}
               </Typography>
             </Box>
           ) : (
             <Box display="flex" alignItems="center" gap={1} mb={1}>
-              <PersonIcon fontSize="small" color="disabled" />
-              <Typography variant="body2" color="text.disabled">
+              <PersonIcon sx={{ fontSize: 16, color: '#d1d5db' }} />
+              <Typography variant="body2" sx={{ color: '#9ca3af', fontSize: '0.875rem' }}>
                 Unassigned
               </Typography>
             </Box>
@@ -249,14 +308,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
           {project.endDate && daysInfo && (
             <Box display="flex" alignItems="center" gap={1} mb={1}>
-              <CalendarIcon fontSize="small" color="action" />
+              <CalendarIcon sx={{ fontSize: 16, color: '#9ca3af' }} />
               <Typography 
                 variant="body2" 
-                color={
-                  daysInfo.status === 'overdue' ? 'error.main' :
-                  daysInfo.status === 'urgent' ? 'warning.main' :
-                  'text.secondary'
-                }
+                sx={{
+                  fontSize: '0.875rem',
+                  color: daysInfo.status === 'overdue' ? '#dc2626' :
+                         daysInfo.status === 'urgent' ? '#d97706' :
+                         '#64748b'
+                }}
               >
                 {daysInfo.status === 'overdue' 
                   ? `${daysInfo.value} days overdue`
@@ -267,8 +327,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           )}
 
           <Box display="flex" alignItems="center" gap={1}>
-            <CalendarIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">
+            <CalendarIcon sx={{ fontSize: 16, color: '#9ca3af' }} />
+            <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
               Created {format(new Date(project.createdDate), 'MMM dd, yyyy')}
             </Typography>
           </Box>
@@ -277,44 +337,58 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         {/* Budget Information */}
         <Box>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: '#64748b', fontSize: '0.875rem' }}>
               Budget Utilization
             </Typography>
             <Typography 
               variant="body2" 
-              fontWeight="medium"
-              color={project.budgetUtilization > 100 ? 'error.main' : 'text.primary'}
+              sx={{
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                color: (project.budgetUtilization || 0) > 100 ? '#dc2626' : '#1a202c'
+              }}
             >
-              {project.budgetUtilization.toFixed(1)}%
+              {(project.budgetUtilization || 0).toFixed(1)}%
             </Typography>
           </Box>
 
           <LinearProgress
             variant="determinate"
-            value={Math.min(project.budgetUtilization, 100)}
-            color={getBudgetUtilizationColor(project.budgetUtilization)}
-            sx={{ height: 8, borderRadius: 4, mb: 1 }}
+            value={Math.min(project.budgetUtilization || 0, 100)}
+            sx={{ 
+              height: 6, 
+              borderRadius: 3, 
+              mb: 1,
+              bgcolor: '#f1f5f9',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 3,
+                bgcolor: (project.budgetUtilization || 0) > 100 ? '#dc2626' : '#3b82f6'
+              }
+            }}
           />
 
           <Box display="flex" justifyContent="space-between">
             <Box>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.75rem' }}>
                 Allocated
               </Typography>
-              <Typography variant="body2" fontWeight="medium">
-                {formatCurrency(project.allocatedBudget, project.currency)}
+              <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a202c', fontSize: '0.875rem' }}>
+                {formatCurrency(project.allocatedBudget || 0, project.currency)}
               </Typography>
             </Box>
             <Box textAlign="right">
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: '#9ca3af', fontSize: '0.75rem' }}>
                 Used
               </Typography>
               <Typography 
                 variant="body2" 
-                fontWeight="medium"
-                color={project.usedBudget > project.allocatedBudget ? 'error.main' : 'text.primary'}
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  color: (project.usedBudget || 0) > (project.allocatedBudget || 0) ? '#dc2626' : '#1a202c'
+                }}
               >
-                {formatCurrency(project.usedBudget, project.currency)}
+                {formatCurrency(project.usedBudget || 0, project.currency)}
               </Typography>
             </Box>
           </Box>
@@ -326,7 +400,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             {project.isOverBudget && (
               <Alert severity="error" sx={{ mb: 1 }}>
                 <Typography variant="caption">
-                  Project is over budget by {formatCurrency(project.usedBudget - project.allocatedBudget, project.currency)}
+                  Project is over budget by {formatCurrency((project.usedBudget || 0) - (project.allocatedBudget || 0), project.currency)}
                 </Typography>
               </Alert>
             )}
@@ -341,7 +415,15 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         )}
       </CardContent>
 
-      <CardActions sx={{ pt: 0, px: 2, pb: 2 }}>
+      <CardActions 
+        sx={{ 
+          pt: 0, 
+          px: 3, 
+          pb: 3,
+          bgcolor: '#f8fafc',
+          borderTop: '1px solid #e2e8f0',
+        }}
+      >
         <Box display="flex" justifyContent="space-between" width="100%">
           <Box display="flex" gap={1}>
             <Tooltip title="View Details">
@@ -350,6 +432,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (onView) onView(project);
+                }}
+                sx={{
+                  color: '#64748b',
+                  '&:hover': {
+                    bgcolor: '#e2e8f0',
+                    color: '#374151',
+                  }
                 }}
               >
                 <ViewIcon fontSize="small" />
@@ -364,6 +453,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                     e.stopPropagation();
                     if (onEdit) onEdit(project);
                   }}
+                  sx={{
+                    color: '#64748b',
+                    '&:hover': {
+                      bgcolor: '#e2e8f0',
+                      color: '#374151',
+                    }
+                  }}
                 >
                   <EditIcon fontSize="small" />
                 </IconButton>
@@ -371,7 +467,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             )}
           </Box>
 
-          <IconButton size="small" onClick={handleMenuOpen}>
+          <IconButton 
+            size="small" 
+            onClick={handleMenuOpen}
+            sx={{
+              color: '#64748b',
+              '&:hover': {
+                bgcolor: '#e2e8f0',
+                color: '#374151',
+              }
+            }}
+          >
             <MoreVertIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -412,7 +518,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           </MenuItem>
         )}
 
-        {canEdit && (
+        {canUpdateBudget && (
           <MenuItem onClick={() => {
             if (onUpdateBudget) onUpdateBudget(project);
             handleMenuClose();

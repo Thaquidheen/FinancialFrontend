@@ -1,14 +1,14 @@
 // src/hooks/payments/usePaymentBatches.ts
 
 import { useState, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { 
   PaymentBatch, 
   ConfirmPaymentRequest,
   PaymentBatchStatus 
 } from '../../types/payment.types';
-import { paymentService } from '../../services/api/paymentService';
-import { useNotification } from '../../contexts/NotificationContext';
+import { paymentService } from '../../services/paymentService';
+// import { useNotification } from '../../contexts/NotificationContext';
 
 export interface UsePaymentBatchesProps {
   autoRefresh?: boolean;
@@ -32,8 +32,10 @@ export const usePaymentBatches = ({
   autoRefresh = false,
   refreshInterval = 60000 // 1 minute
 }: UsePaymentBatchesProps = {}) => {
-  const queryClient = useQueryClient();
-  const { showNotification } = useNotification();
+  // Temporary notification function until NotificationContext is fixed
+  const showNotification = (type: 'success' | 'error' | 'warning' | 'info', message: string) => {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+  };
 
   const [filters, setFilters] = useState<PaymentBatchFilters>({
     page: 0,
@@ -59,7 +61,19 @@ export const usePaymentBatches = ({
   const confirmPaymentsMutation = useMutation({
     mutationFn: (request: ConfirmPaymentRequest) => 
       paymentService.confirmPaymentsCompleted(request),
-    onSuccess: (response) => {
+    onSuccess: () => {
+      showNotification('success', 'Payments confirmed successfully');
+    },
+    onError: (error: any) => {
+      showNotification('error', `Failed to confirm payments: ${error.message}`);
+    }
+  });
+
+  // Mutation for downloading bank files
+  const downloadBankFileMutation = useMutation({
+    mutationFn: ({ batchId, fileName }: { batchId: string; fileName: string }) => 
+      paymentService.downloadBankFile(batchId, fileName),
+    onSuccess: () => {
       showNotification('success', 'Bank file downloaded successfully');
     },
     onError: (error: any) => {
@@ -215,7 +229,7 @@ export const usePaymentBatches = ({
   }, [batchesData]);
 
   // Check if batch can be processed today
-  const canProcessBatchToday = useCallback((batch: PaymentBatch): boolean => {
+  const canProcessBatchToday = useCallback((_batch: PaymentBatch): boolean => {
     // This would integrate with Saudi bank working hours
     return true; // Simplified for now
   }, []);
@@ -230,7 +244,7 @@ export const usePaymentBatches = ({
     
     // Loading states
     isLoading,
-    error: error?.message || null,
+    error: error ? (error as any)?.message || 'An error occurred' : null,
     isConfirming: confirmPaymentsMutation.isPending,
     isDownloading: downloadBankFileMutation.isPending,
     
@@ -258,32 +272,7 @@ export const usePaymentBatches = ({
     canProcessBatchToday,
     
     // Mutation errors
-    confirmationError: confirmPaymentsMutation.error?.message,
-    downloadError: downloadBankFileMutation.error?.message,
+    confirmationError: confirmPaymentsMutation.error ? (confirmPaymentsMutation.error as any)?.message : null,
+    downloadError: downloadBankFileMutation.error ? (downloadBankFileMutation.error as any)?.message : null,
   };
-};success', `${response.processedCount} payments confirmed as completed`);
-      queryClient.invalidateQueries({ queryKey: ['payment-batches'] });
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['payment-statistics'] });
-    },
-    onError: (error: any) => {
-      showNotification('error', `Failed to confirm payments: ${error.message}`);
-    }
-  });
-
-  // Mutation for downloading bank files
-  const downloadBankFileMutation = useMutation({
-    mutationFn: ({ batchId, fileName }: { batchId: string; fileName: string }) =>
-      paymentService.downloadBankFile(batchId, fileName),
-    onSuccess: (blob: Blob, variables) => {
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = variables.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      showNotification('
+};

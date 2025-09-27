@@ -16,9 +16,7 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  Paper,
   IconButton,
-  Tooltip,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -26,7 +24,6 @@ import {
   Alert,
   LinearProgress,
   Avatar,
-  Divider,
   FormControl,
   InputLabel,
   Select,
@@ -40,23 +37,18 @@ import {
   CheckCircle,
   Schedule,
   Error,
-  Warning,
   Refresh,
   FilterList,
   Search,
-  AccountBalance,
-  AttachMoney,
   Description,
   History,
   PlayArrow,
-  Pause,
-  Stop,
   CloudUpload
 } from '@mui/icons-material';
 import { PaymentBatch, PaymentBatchStatus } from '../../../types/payment.types';
 import { PAYMENT_BATCH_STATUS_LABELS, PAYMENT_BATCH_STATUS_COLORS } from '../../../constants/payments/paymentConstants';
 import { usePaymentBatches } from '../../../hooks/payments/usePaymentBatches';
-import { saudiBankService } from '../../../services/api/saudiBankService';
+import { saudiBankService } from '../../../services/saudiBankService';
 import BatchStatusTracker from './BatchStatusTracker';
 import BatchDetails from './BatchDetails';
 
@@ -76,7 +68,6 @@ const BatchManagement: React.FC<BatchManagementProps> = ({ className }) => {
   const {
     batches,
     totalElements,
-    totalPages,
     currentPage,
     pageSize,
     isLoading,
@@ -88,8 +79,6 @@ const BatchManagement: React.FC<BatchManagementProps> = ({ className }) => {
     getBatchStatistics,
     getDownloadableBatches,
     getConfirmableBatches,
-    filterByStatus,
-    filterByBank,
     refetch
   } = usePaymentBatches({ autoRefresh: true });
 
@@ -178,7 +167,7 @@ const BatchManagement: React.FC<BatchManagementProps> = ({ className }) => {
         <Button
           variant="outlined"
           startIcon={<Refresh />}
-          onClick={refetch}
+          onClick={() => refetch()}
           disabled={isLoading}
         >
           Refresh
@@ -518,7 +507,7 @@ const BatchManagement: React.FC<BatchManagementProps> = ({ className }) => {
               count={totalElements}
               rowsPerPage={pageSize}
               page={currentPage}
-              onPageChange={(event, newPage) => changePage(newPage)}
+              onPageChange={(_, newPage) => changePage(newPage)}
               onRowsPerPageChange={(event) => {
                 changePageSize(parseInt(event.target.value, 10));
               }}
