@@ -11,7 +11,6 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Collapse,
   IconButton,
   LinearProgress,
   Chip,
@@ -33,17 +32,13 @@ import {
   Error,
   Warning,
   ExpandMore,
-  ExpandLess,
   Refresh,
   Person,
   AccountBalance,
-  AttachMoney,
-  Assignment,
   Info
 } from '@mui/icons-material';
 import { PaymentSummaryResponse } from '../../../types/payment.types';
 import { saudiBankService } from '../../../services/saudiBankService';
-import { PAYMENT_VALIDATION_RULES } from '../../../constants/payments/paymentConstants';
 
 interface ValidationResult {
   paymentId: string;
@@ -52,7 +47,7 @@ interface ValidationResult {
   warnings: string[];
   suggestions: string[];
   validatedFields: {
-    employeeName: boolean;
+    payeeName: boolean;
     amount: boolean;
     bankDetails: boolean;
     nationalId: boolean;
@@ -84,7 +79,6 @@ const PaymentValidation: React.FC<PaymentValidationProps> = ({
   const [validationResults, setValidationResults] = useState<Map<string, ValidationResult>>(new Map());
   const [isValidating, setIsValidating] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>(['summary']);
-  const [showDetails, setShowDetails] = useState(false);
 
   const bank = saudiBankService.getBankByCode(bankCode);
 
@@ -103,7 +97,7 @@ const PaymentValidation: React.FC<PaymentValidationProps> = ({
 
     payments.forEach(payment => {
       const result = validateSinglePayment(payment);
-      results.set(payment.id, result);
+      results.set(payment.id.toString(), result);
     });
 
     setValidationResults(results);
@@ -116,19 +110,19 @@ const PaymentValidation: React.FC<PaymentValidationProps> = ({
     const warnings: string[] = [];
     const suggestions: string[] = [];
     const validatedFields = {
-      employeeName: true,
+      payeeName: true,
       amount: true,
       bankDetails: true,
       nationalId: true
     };
 
     // Employee Name Validation
-    if (!payment.employeeName || payment.employeeName.trim().length < 2) {
-      errors.push('Employee name is required and must be at least 2 characters');
-      validatedFields.employeeName = false;
-    } else if (payment.employeeName.length > 100) {
-      errors.push('Employee name cannot exceed 100 characters');
-      validatedFields.employeeName = false;
+    if (!payment.payeeName || payment.payeeName.trim().length < 2) {
+      errors.push('Payee name is required and must be at least 2 characters');
+      validatedFields.payeeName = false;
+    } else if (payment.payeeName.length > 100) {
+      errors.push('Payee name cannot exceed 100 characters');
+      validatedFields.payeeName = false;
     }
 
     // Amount Validation
@@ -180,7 +174,7 @@ const PaymentValidation: React.FC<PaymentValidationProps> = ({
     }
 
     return {
-      paymentId: payment.id,
+      paymentId: payment.id.toString(),
       isValid: errors.length === 0,
       errors,
       warnings,
@@ -408,7 +402,7 @@ const PaymentValidation: React.FC<PaymentValidationProps> = ({
               </TableHead>
               <TableBody>
                 {payments.map((payment) => {
-                  const result = validationResults.get(payment.id);
+                  const result = validationResults.get(payment.id.toString());
                   if (!result) return null;
 
                   return (
@@ -426,7 +420,7 @@ const PaymentValidation: React.FC<PaymentValidationProps> = ({
                           <Person fontSize="small" color="action" />
                           <Box>
                             <Typography variant="body2" fontWeight="medium">
-                              {payment.employeeName}
+                              {payment.payeeName}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               ID: {payment.quotationId}
@@ -619,7 +613,7 @@ const PaymentValidation: React.FC<PaymentValidationProps> = ({
                   Max Bulk Payments
                 </Typography>
                 <Typography variant="body2" fontWeight="medium">
-                  {bank.maxBulkPayments.toLocaleString()}
+                  {bank.maxBulkPayments?.toLocaleString() || 'Unlimited'}
                 </Typography>
               </Box>
 
@@ -633,7 +627,7 @@ const PaymentValidation: React.FC<PaymentValidationProps> = ({
               </Box>
             </Box>
 
-            {payments.length > bank.maxBulkPayments && (
+            {bank.maxBulkPayments && payments.length > bank.maxBulkPayments && (
               <Alert severity="warning" sx={{ mt: 2 }}>
                 <Typography variant="body2">
                   Your batch ({payments.length} payments) exceeds the bank limit of {bank.maxBulkPayments} payments. 

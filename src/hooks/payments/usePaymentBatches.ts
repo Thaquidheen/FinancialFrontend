@@ -1,7 +1,7 @@
 // src/hooks/payments/usePaymentBatches.ts
 
 import { useState, useCallback } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   PaymentBatch, 
   ConfirmPaymentRequest,
@@ -32,6 +32,8 @@ export const usePaymentBatches = ({
   autoRefresh = false,
   refreshInterval = 60000 // 1 minute
 }: UsePaymentBatchesProps = {}) => {
+  const queryClient = useQueryClient();
+  
   // Temporary notification function until NotificationContext is fixed
   const showNotification = (type: 'success' | 'error' | 'warning' | 'info', message: string) => {
     console.log(`[${type.toUpperCase()}] ${message}`);
@@ -52,7 +54,10 @@ export const usePaymentBatches = ({
     refetch
   } = useQuery({
     queryKey: ['payment-batches', filters],
-    queryFn: () => paymentService.getPaymentBatches(filters),
+    queryFn: () => paymentService.getPaymentBatches({
+      ...filters,
+      includePayments: true // Always include payments for batch actions
+    }),
     refetchInterval: autoRefresh ? refreshInterval : false,
     staleTime: 60000, // Consider data stale after 1 minute
   });
@@ -73,11 +78,83 @@ export const usePaymentBatches = ({
   const downloadBankFileMutation = useMutation({
     mutationFn: ({ batchId, fileName }: { batchId: string; fileName: string }) => 
       paymentService.downloadBankFile(batchId, fileName),
-    onSuccess: () => {
+    onSuccess: (blob: Blob, { fileName }) => {
+      // Create download link and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
       showNotification('success', 'Bank file downloaded successfully');
     },
     onError: (error: any) => {
       showNotification('error', `Failed to download file: ${error.message}`);
+    }
+  });
+
+  // Mutation for marking batch as sent to bank
+  const markBatchSentToBankMutation = useMutation({
+    mutationFn: (batchId: string) => paymentService.markBatchSentToBank(batchId),
+    onSuccess: () => {
+      showNotification('success', 'Batch marked as sent to bank');
+      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+    },
+    onError: (error: any) => {
+      showNotification('error', `Failed to mark batch as sent to bank: ${error.message}`);
+    }
+  });
+
+  // Mutation for marking batch as processing
+  const markBatchProcessingMutation = useMutation({
+    mutationFn: (batchId: string) => paymentService.markBatchProcessing(batchId),
+    onSuccess: () => {
+      showNotification('success', 'Batch marked as processing');
+      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+    },
+    onError: (error: any) => {
+      showNotification('error', `Failed to mark batch as processing: ${error.message}`);
+    }
+  });
+
+  // Mutation for marking batch as completed
+  const markBatchCompletedMutation = useMutation({
+    mutationFn: ({ batchId, notes }: { batchId: string; notes?: string }) => 
+      paymentService.markBatchCompleted(batchId, notes),
+    onSuccess: () => {
+      showNotification('success', 'Batch marked as completed');
+      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+    },
+    onError: (error: any) => {
+      showNotification('error', `Failed to mark batch as completed: ${error.message}`);
+    }
+  });
+
+  // Mutation for retrying batch
+  const retryBatchMutation = useMutation({
+    mutationFn: (batchId: string) => paymentService.retryBatch(batchId),
+    onSuccess: () => {
+      showNotification('success', 'Batch reset for retry');
+      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+    },
+    onError: (error: any) => {
+      showNotification('error', `Failed to retry batch: ${error.message}`);
+    }
+  });
+
+  // Mutation for updating batch status
+  const updateBatchStatusMutation = useMutation({
+    mutationFn: ({ batchId, status }: { batchId: string; status: string }) => 
+      paymentService.updateBatchStatus(batchId, status),
+    onSuccess: () => {
+      showNotification('success', 'Batch status updated');
+      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+    },
+    onError: (error: any) => {
+      showNotification('error', `Failed to update batch status: ${error.message}`);
     }
   });
 
@@ -108,6 +185,13 @@ export const usePaymentBatches = ({
     confirmationReference?: string,
     comments?: string
   ) => {
+    // Check if batch has payments array
+    if (!batch.payments || !Array.isArray(batch.payments)) {
+      console.error('Batch does not have payments array:', batch);
+      showNotification('error', 'Cannot complete batch: No payments found');
+      return;
+    }
+
     const request: ConfirmPaymentRequest = {
       paymentIds: batch.payments.map(p => p.id),
       batchId: batch.id,
@@ -118,9 +202,34 @@ export const usePaymentBatches = ({
     confirmPaymentsMutation.mutate(request);
   }, [confirmPaymentsMutation]);
 
+  // Mark batch as sent to bank
+  const markBatchSentToBank = useCallback(async (batchId: string) => {
+    markBatchSentToBankMutation.mutate(batchId);
+  }, []);
+
+  // Mark batch as processing
+  const markBatchProcessing = useCallback(async (batchId: string) => {
+    markBatchProcessingMutation.mutate(batchId);
+  }, []);
+
+  // Mark batch as completed
+  const markBatchCompleted = useCallback(async (batchId: string, notes?: string) => {
+    markBatchCompletedMutation.mutate({ batchId, notes });
+  }, []);
+
+  // Retry batch
+  const retryBatch = useCallback(async (batchId: string) => {
+    retryBatchMutation.mutate(batchId);
+  }, []);
+
+  // Update batch status
+  const updateBatchStatus = useCallback(async (batchId: string, status: string) => {
+    updateBatchStatusMutation.mutate({ batchId, status });
+  }, []);
+
   // Confirm individual payments
   const confirmPayments = useCallback(async (
-    paymentIds: string[],
+    paymentIds: number[],
     batchId?: string,
     confirmationReference?: string,
     comments?: string
@@ -262,6 +371,11 @@ export const usePaymentBatches = ({
     confirmBatchCompleted,
     confirmPayments,
     downloadBankFile,
+    markBatchSentToBank,
+    markBatchProcessing,
+    markBatchCompleted,
+    retryBatch,
+    updateBatchStatus,
     refetch,
     
     // Utilities

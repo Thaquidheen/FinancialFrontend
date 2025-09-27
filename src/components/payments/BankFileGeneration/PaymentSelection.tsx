@@ -35,8 +35,8 @@ import { saudiBankService } from '../../../services/saudiBankService';
 
 interface PaymentSelectionProps {
   payments: PaymentSummaryResponse[];
-  selectedPayments: string[];
-  onSelectionChange: (paymentIds: string[]) => void;
+  selectedPayments: number[];
+  onSelectionChange: (paymentIds: number[]) => void;
   isLoading?: boolean;
   className?: string;
 }

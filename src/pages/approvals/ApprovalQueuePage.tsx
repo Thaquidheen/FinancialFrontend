@@ -360,12 +360,13 @@ const ApprovalQueuePage: React.FC = () => {
       
       <Box display="flex" gap={1}>
         <Tooltip title="Refresh">
-          <IconButton 
-            onClick={refreshApprovals} 
-            disabled={loading}
-            sx={{ 
-              bgcolor: '#f1f5f9',
-              color: '#475569',
+          <span>
+            <IconButton 
+              onClick={refreshApprovals} 
+              disabled={loading}
+              sx={{ 
+                bgcolor: '#f1f5f9',
+                color: '#475569',
               '&:hover': { 
                 bgcolor: '#e2e8f0',
                 color: '#334155'
@@ -378,6 +379,7 @@ const ApprovalQueuePage: React.FC = () => {
           >
             <RefreshIcon />
           </IconButton>
+          </span>
         </Tooltip>
 
         <Tooltip title="Toggle Filters">
@@ -413,24 +415,26 @@ const ApprovalQueuePage: React.FC = () => {
         </Tooltip>
 
         <Tooltip title="Export to CSV">
-          <IconButton 
-            onClick={handleExport} 
-            disabled={approvals.length === 0}
-            sx={{ 
-              bgcolor: '#f1f5f9',
-              color: '#475569',
-              '&:hover': { 
-                bgcolor: '#e2e8f0',
-                color: '#334155'
-              },
-              '&:disabled': {
-                bgcolor: '#f8fafc',
-                color: '#9ca3af'
-              }
-            }}
-          >
-            <DownloadIcon />
-          </IconButton>
+          <span>
+            <IconButton 
+              onClick={handleExport} 
+              disabled={approvals.length === 0}
+              sx={{ 
+                bgcolor: '#f1f5f9',
+                color: '#475569',
+                '&:hover': { 
+                  bgcolor: '#e2e8f0',
+                  color: '#334155'
+                },
+                '&:disabled': {
+                  bgcolor: '#f8fafc',
+                  color: '#9ca3af'
+                }
+              }}
+            >
+              <DownloadIcon />
+            </IconButton>
+          </span>
         </Tooltip>
 
         {selectedCount > 0 && (

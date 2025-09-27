@@ -49,8 +49,8 @@ interface Column {
 const columns: Column[] = [
   { id: 'select', label: '', minWidth: 50, align: 'center', sortable: false },
   { 
-    id: 'employeeName', 
-    label: 'Employee', 
+    id: 'payeeName', 
+    label: 'Payee', 
     minWidth: 180, 
     sortable: true 
   },
@@ -81,7 +81,7 @@ const columns: Column[] = [
     sortable: true 
   },
   { 
-    id: 'createdAt', 
+    id: 'createdDate', 
     label: 'Date', 
     minWidth: 120, 
     sortable: true,
@@ -97,8 +97,8 @@ const columns: Column[] = [
 
 interface PaymentQueueTableProps {
   payments: PaymentSummaryResponse[];
-  selectedPayments: string[];
-  onSelectPayment: (paymentId: string) => void;
+  selectedPayments: number[];
+  onSelectPayment: (paymentId: number) => void;
   onSelectAll: () => void;
   onClearSelection: () => void;
   onPageChange: (page: number) => void;
@@ -111,8 +111,8 @@ interface PaymentQueueTableProps {
   sortBy?: string;
   sortDirection?: 'asc' | 'desc';
   isLoading?: boolean;
-  onViewPayment?: (paymentId: string) => void;
-  onEditPayment?: (paymentId: string) => void;
+  onViewPayment?: (paymentId: number) => void;
+  onEditPayment?: (paymentId: number) => void;
 }
 
 const PaymentQueueTable: React.FC<PaymentQueueTableProps> = ({
@@ -134,7 +134,7 @@ const PaymentQueueTable: React.FC<PaymentQueueTableProps> = ({
   onEditPayment
 }) => {
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedPaymentForMenu, setSelectedPaymentForMenu] = useState<string | null>(null);
+  const [selectedPaymentForMenu, setSelectedPaymentForMenu] = useState<number | null>(null);
 
   const handleSort = (columnId: string) => {
     const isAsc = sortBy === columnId && sortDirection === 'asc';
@@ -149,12 +149,12 @@ const PaymentQueueTable: React.FC<PaymentQueueTableProps> = ({
     }
   };
 
-  const handlePaymentSelect = (paymentId: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePaymentSelect = (paymentId: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
     event.stopPropagation();
     onSelectPayment(paymentId);
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, paymentId: string) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, paymentId: number) => {
     event.stopPropagation();
     setMenuAnchorEl(event.currentTarget);
     setSelectedPaymentForMenu(paymentId);
@@ -245,7 +245,7 @@ const PaymentQueueTable: React.FC<PaymentQueueTableProps> = ({
   const getRowValidationStatus = (payment: PaymentSummaryResponse) => {
     const issues = [];
     if (!payment.bankName) issues.push('Missing bank information');
-    if (!payment.employeeName) issues.push('Missing employee name');
+    if (!payment.payeeName) issues.push('Missing payee name');
     
     return {
       hasIssues: issues.length > 0,
@@ -344,11 +344,11 @@ const PaymentQueueTable: React.FC<PaymentQueueTableProps> = ({
                     <TableCell>
                       <Box display="flex" alignItems="center" gap={2}>
                         <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
-                          {payment.employeeName.charAt(0).toUpperCase()}
+                          {payment.payeeName.charAt(0).toUpperCase()}
                         </Avatar>
                         <Box>
                           <Typography variant="body2" fontWeight="medium">
-                            {payment.employeeName}
+                            {payment.payeeName}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             ID: {payment.quotationId}
@@ -421,7 +421,7 @@ const PaymentQueueTable: React.FC<PaymentQueueTableProps> = ({
                     {/* Date */}
                     <TableCell>
                       <Typography variant="body2">
-                        {new Date(payment.createdAt).toLocaleDateString('en-US', {
+                        {new Date(payment.createdDate).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           hour: '2-digit',

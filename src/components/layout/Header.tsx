@@ -24,6 +24,7 @@ import {
 import { useAuth } from '@contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@constants/app';
+import NotificationBellMUI from '@components/notifications/NotificationBell/NotificationBellMUI';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -35,7 +36,6 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [profileMenuAnchor, setProfileMenuAnchor] = useState<null | HTMLElement>(null);
-  const [notificationCount] = useState(5); // Mock notification count
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setProfileMenuAnchor(event.currentTarget);
@@ -151,28 +151,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, sidebarOpen, isMobile }) =
         </Tooltip>
 
         {/* Notifications */}
-        <Tooltip title="Notifications">
-          <IconButton 
-            color="inherit" 
-            size="large"
-            sx={{ 
-              color: '#a0aec0',
-              '&:hover': {
-                backgroundColor: '#2d3748',
-                color: '#ffffff',
-              }
-            }}
-          >
-            <Badge
-              badgeContent={notificationCount}
-              color="error"
-              overlap="circular"
-              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-           >
-              <NotificationsIcon />
-            </Badge>
-          </IconButton>
-        </Tooltip>
+        <NotificationBellMUI />
 
         {/* User Profile */}
         <Box sx={{ ml: { xs: 0.5, md: 1 } }}>

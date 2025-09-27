@@ -210,100 +210,100 @@ const ProjectListPage: React.FC = () => {
           borderRadius: 0,
         }}
       >
-            <Stack 
-              direction={{ xs: 'column', md: 'row' }} 
-              justifyContent="space-between" 
-              alignItems={{ xs: 'flex-start', md: 'center' }}
-              spacing={2}
+        <Stack 
+          direction={{ xs: 'column', md: 'row' }} 
+          justifyContent="space-between" 
+          alignItems={{ xs: 'flex-start', md: 'center' }}
+          spacing={2}
+        >
+          <Box>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              fontWeight={700}
+              sx={{ 
+                color: '#1a202c',
+                fontSize: '1.875rem',
+                letterSpacing: '-0.025em'
+              }}
             >
-              <Box>
-                <Typography 
-                  variant="h4" 
-                  component="h1" 
-                  fontWeight={700}
+              Projects
+            </Typography>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                mt: 0.5,
+                color: '#64748b',
+                fontSize: '0.875rem'
+              }}
+            >
+              Manage and monitor project progress and budgets
+            </Typography>
+          </Box>
+          
+          <Stack direction="row" spacing={1}>
+            <Tooltip title="Refresh Data">
+              <span>
+                <IconButton 
+                  onClick={handleRefresh}
+                  disabled={isLoading}
                   sx={{ 
-                    color: '#1a202c',
-                    fontSize: '1.875rem',
-                    letterSpacing: '-0.025em'
+                    bgcolor: '#f1f5f9',
+                    color: '#475569',
+                    '&:hover': { 
+                      bgcolor: '#e2e8f0',
+                      color: '#334155'
+                    }
                   }}
                 >
-                  Projects
-                </Typography>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
-                    mt: 0.5,
-                    color: '#64748b',
-                    fontSize: '0.875rem'
-                  }}
-                >
-                  Manage and monitor project progress and budgets
-                </Typography>
-              </Box>
-              
-              <Stack direction="row" spacing={1}>
-                <Tooltip title="Refresh Data">
-                  <span>
-                    <IconButton 
-                      onClick={handleRefresh}
-                      disabled={isLoading}
-                      sx={{ 
-                        bgcolor: '#f1f5f9',
-                        color: '#475569',
-                        '&:hover': { 
-                          bgcolor: '#e2e8f0',
-                          color: '#334155'
-                        }
-                      }}
-                    >
-                      <RefreshIcon />
-                    </IconButton>
-                  </span>
-                </Tooltip>
+                  <RefreshIcon />
+                </IconButton>
+              </span>
+            </Tooltip>
 
-                {canExport && (
-                  <Button
-                    variant="outlined"
-                    startIcon={<DownloadIcon />}
-                    onClick={handleExport}
-                    sx={{ 
-                      minWidth: 120,
-                      borderColor: '#d1d5db',
-                      color: '#374151',
-                      '&:hover': {
-                        borderColor: '#9ca3af',
-                        backgroundColor: '#f9fafb'
-                      }
-                    }}
-                  >
-                    Export
-                  </Button>
-                )}
-                
-                {canCreate && (
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleCreateProject}
-                    size="large"
-                    sx={{ 
-                      minWidth: 140,
-                      bgcolor: '#3b82f6',
-                      color: '#ffffff',
-                      fontWeight: 600,
-                      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                      '&:hover': { 
-                        bgcolor: '#2563eb',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                      }
-                    }}
-                  >
-                    New Project
-                  </Button>
-                )}
-              </Stack>
-            </Stack>
-          </Paper>
+            {canExport && (
+              <Button
+                variant="outlined"
+                startIcon={<DownloadIcon />}
+                onClick={handleExport}
+                sx={{ 
+                  minWidth: 120,
+                  borderColor: '#d1d5db',
+                  color: '#374151',
+                  '&:hover': {
+                    borderColor: '#9ca3af',
+                    backgroundColor: '#f9fafb'
+                  }
+                }}
+              >
+                Export
+              </Button>
+            )}
+            
+            {canCreate && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateProject}
+                size="large"
+                sx={{ 
+                  minWidth: 140,
+                  bgcolor: '#3b82f6',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                  '&:hover': { 
+                    bgcolor: '#2563eb',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }
+                }}
+              >
+                New Project
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+      </Paper>
 
       {/* Main Content Area */}
       <Box sx={{ flex: 1, overflow: 'hidden', p: 3 }}>
@@ -475,15 +475,15 @@ const ProjectListPage: React.FC = () => {
                   >
                     Filters
                   </Button>
-                  {activeFiltersCount > 0 ? (
+                  {activeFiltersCount > 0 && (
                     <Chip label={activeFiltersCount} color="primary" size="small" />
-                  ) : null}
+                  )}
 
                   {/* View Mode Toggle */}
                   <ToggleButtonGroup
                     value={viewMode}
                     exclusive
-                    onChange={(_, value) => value && setViewMode(value)}
+                    onChange={(_, value) => value && setViewMode(value as 'grid' | 'list')}
                     size="small"
                   >
                     <ToggleButton value="grid">
@@ -505,7 +505,7 @@ const ProjectListPage: React.FC = () => {
                     <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                       Project Status
                     </Typography>
-                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
                       <Chip
                         label="All Projects"
                         variant={!filters.status ? 'filled' : 'outlined'}
@@ -605,7 +605,7 @@ const ProjectListPage: React.FC = () => {
           {/* Active Filters Display */}
           {activeFiltersCount > 0 && (
             <Box sx={{ mb: 2 }}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ gap: 1 }}>
                 <Typography variant="body2" color="text.secondary" fontWeight={500}>
                   Active filters:
                 </Typography>
@@ -676,7 +676,7 @@ const ProjectListPage: React.FC = () => {
                 filters={filters}
               />
             ) : (
-              <Box sx={{ p: 0 }}>
+              <Box sx={{ p: 3 }}>
                 {isLoading ? (
                   <Grid container spacing={3}>
                     {Array.from({ length: 8 }).map((_, index) => (
@@ -756,7 +756,6 @@ const ProjectListPage: React.FC = () => {
               <AddIcon />
             </Fab>
           )}
-
 
           {/* Action Modals */}
           {actionProject && (

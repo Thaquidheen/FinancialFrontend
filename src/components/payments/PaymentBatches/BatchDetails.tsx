@@ -26,7 +26,6 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Tooltip,
   Alert,
   TextField,
   Collapse,
@@ -45,8 +44,6 @@ import {
   ExpandMore,
   ExpandLess,
   CloudUpload,
-  Warning,
-  Error,
   History
 } from '@mui/icons-material';
 import { PaymentBatch, PaymentBatchStatus } from '../../../types/payment.types';
@@ -106,8 +103,8 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({
   const getProcessingDuration = () => {
     if (!batch.processedAt) return null;
     
-    const start = new Date(batch.createdAt);
-    const end = new Date(batch.processedAt);
+    const start = new Date(batch.createdDate);
+    const end = new Date(batch.processedAt || batch.lastModifiedDate);
     const diffMs = end.getTime() - start.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -358,13 +355,13 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({
                             Max Bulk Payments
                           </Typography>
                           <Typography variant="h6">
-                            {bank.maxBulkPayments.toLocaleString()}
+                            {bank.maxBulkPayments?.toLocaleString() || 'Unlimited'}
                           </Typography>
                         </Box>
                       </Grid>
                     </Grid>
 
-                    {batch.paymentCount > bank.maxBulkPayments && (
+                    {bank.maxBulkPayments && batch.paymentCount > bank.maxBulkPayments && (
                       <Alert severity="warning" sx={{ mt: 2 }}>
                         This batch exceeds the bank's maximum bulk payment limit of {bank.maxBulkPayments}.
                       </Alert>

@@ -92,7 +92,7 @@ class PaymentExportService {
     return payments.map(payment => {
       const baseData = {
         'Payment ID': payment.id,
-        'Employee Name': payment.employeeName,
+        'Employee Name': payment.payeeName,
         'Employee ID': payment.id,
         'Department': '',
         'Amount': this.formatCurrency(payment.amount, options.currencyFormat),
@@ -103,8 +103,8 @@ class PaymentExportService {
         'IBAN': '',
         'Project Name': payment.projectName || '',
         'Quotation ID': payment.quotationId,
-        'Created Date': this.formatDate(payment.createdAt, options.dateFormat),
-        'Payment Date': payment.processedAt ? this.formatDate(payment.processedAt, options.dateFormat) : '',
+        'Created Date': this.formatDate(payment.createdDate, options.dateFormat),
+        'Payment Date': payment.paymentDate ? this.formatDate(payment.paymentDate, options.dateFormat) : '',
         'Bank Reference': '',
         'Batch ID': ''
       };

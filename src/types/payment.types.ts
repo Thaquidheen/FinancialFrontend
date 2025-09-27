@@ -1,10 +1,10 @@
 // src/types/payment.types.ts
 
 export interface Payment {
-    id: string;
-    quotationId: string;
+    id: number;
+    quotationId: number;
     employeeId: string;
-    employeeName: string;
+    payeeName: string;
     employeeFullName: string;
     amount: number;
     currency: 'SAR';
@@ -39,15 +39,19 @@ export interface Payment {
   }
   
   export interface PaymentSummaryResponse {
-    id: string;
-    quotationId: string;
-    employeeName: string;
+    id: number;
+    quotationId: number;
+    payeeName: string;
     amount: number;
     status: PaymentStatus;
     bankName?: string;
     projectName?: string;
-    createdAt: string;
-    processedAt?: string;
+    accountNumber?: string;
+    currency?: string;
+    createdDate: string;
+    paymentDate?: string;
+    failureReason?: string;
+    retryCount?: number;
   }
   
   export interface PaymentBatch {
@@ -56,14 +60,27 @@ export interface Payment {
     bankName: string;
     paymentCount: number;
     totalAmount: number;
+    currency: string;
     status: PaymentBatchStatus;
-    createdBy: string;
-    createdAt: string;
+    createdBy: number;
+    lastModifiedBy: number;
+    createdDate: string;
+    lastModifiedDate: string;
+    active: boolean;
     processedAt?: string;
     completedAt?: string;
     fileName?: string;
     fileUrl?: string;
     payments: Payment[];
+    creator?: {
+      id: number;
+      username: string;
+      email: string;
+      fullName: string;
+      phoneNumber: string;
+      department: string;
+      position: string;
+    };
   }
   
   export enum PaymentBatchStatus {
@@ -76,7 +93,7 @@ export interface Payment {
   }
   
   export interface BankFileRequest {
-    paymentIds: string[];
+    paymentIds: number[];
     bankName: string;
     comments?: string;
   }
@@ -91,7 +108,7 @@ export interface Payment {
   }
   
   export interface ConfirmPaymentRequest {
-    paymentIds: string[];
+    paymentIds: number[];
     batchId?: string;
     confirmationReference?: string;
     comments?: string;
@@ -116,7 +133,7 @@ export interface Payment {
   export interface PaymentFilters {
     status?: PaymentStatus[];
     bankName?: string[];
-    employeeName?: string;
+    payeeName?: string;
     projectId?: string[];
     projectName?: string;
     amountRange?: {

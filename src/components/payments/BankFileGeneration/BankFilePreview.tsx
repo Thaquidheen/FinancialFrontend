@@ -16,7 +16,6 @@ import {
   Chip,
   TextField,
   Alert,
-  Divider,
   Button,
   IconButton,
   Tooltip,
@@ -29,7 +28,6 @@ import {
 } from '@mui/material';
 import {
   Visibility,
-  GetApp,
   Description,
   CheckCircle,
   Warning,
@@ -90,7 +88,6 @@ const BankFilePreview: React.FC<BankFilePreviewProps> = ({
 
     const fileName = saudiBankService.generateFileName(
       bankCode, 
-      new Date(), 
       `BATCH${Date.now().toString().slice(-4)}`
     );
 
@@ -114,10 +111,10 @@ const BankFilePreview: React.FC<BankFilePreviewProps> = ({
             row.push(payment.amount);
             break;
           case 'employeeName':
-            row.push(payment.employeeName);
+            row.push(payment.payeeName);
             break;
           case 'description':
-            row.push(comments || `Payment for ${payment.employeeName}`);
+            row.push(comments || `Payment for ${payment.payeeName}`);
             break;
           case 'nationalId':
             // In a real implementation, this would come from employee data
@@ -282,7 +279,7 @@ const BankFilePreview: React.FC<BankFilePreviewProps> = ({
                   <ListItem disablePadding>
                     <ListItemText
                       primary="Max Bulk Payments"
-                      secondary={bank.maxBulkPayments.toLocaleString()}
+                      secondary={bank.maxBulkPayments?.toLocaleString() || 'Unlimited'}
                     />
                   </ListItem>
                   <ListItem disablePadding>

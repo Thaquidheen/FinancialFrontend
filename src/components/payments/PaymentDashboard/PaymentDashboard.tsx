@@ -85,9 +85,24 @@ const PaymentDashboard: React.FC<PaymentDashboardProps> = ({ className }) => {
     );
   }
 
-  const statistics: PaymentStatistics | undefined = dashboardData?.statistics;
+  const statistics: PaymentStatistics | undefined = dashboardData?.statistics || {
+    pendingPayments: 0,
+    processingPayments: 0,
+    completedPayments: 0,
+    totalPendingAmount: 0,
+    totalProcessingAmount: 0,
+    totalCompletedAmount: 0,
+    paymentsByBank: {},
+    paymentsByStatus: {} as any,
+    monthlyTrends: []
+  };
   const quickActions: QuickAction[] = dashboardData?.quickActions || [];
   const alerts: PaymentAlert[] = dashboardData?.alerts || [];
+
+  // Debug logging
+  console.log('Dashboard Data:', dashboardData);
+  console.log('Statistics:', statistics);
+  console.log('Quick Actions:', quickActions);
 
   return (
     <Box className={className} sx={{ 

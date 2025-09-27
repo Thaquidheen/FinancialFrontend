@@ -86,6 +86,11 @@ const BatchActions: React.FC<BatchActionsProps> = ({
   const {
     downloadBankFile,
     confirmBatchCompleted,
+    markBatchSentToBank,
+    markBatchProcessing,
+    markBatchCompleted,
+    retryBatch,
+    updateBatchStatus,
     isDownloading,
     downloadError,
     isConfirming,
@@ -182,24 +187,20 @@ const BatchActions: React.FC<BatchActionsProps> = ({
       switch (dialogState.type) {
         case 'confirm':
           if (dialogState.title.includes('Sent to Bank')) {
-            // Update status to SENT_TO_BANK
-            console.log('Marking as sent to bank');
+            await markBatchSentToBank(batch.id);
           } else if (dialogState.title.includes('Processing')) {
-            // Update status to PROCESSING
-            console.log('Marking as processing');
+            await markBatchProcessing(batch.id);
           } else if (dialogState.title.includes('Retry')) {
-            // Reset batch for retry
-            console.log('Retrying batch');
+            await retryBatch(batch.id);
           }
           break;
           
         case 'notes':
-          await confirmBatchCompleted(batch, undefined, actionNotes);
+          await markBatchCompleted(batch.id, actionNotes);
           break;
           
         case 'status':
-          // Manual status update
-          console.log('Updating status to:', newStatus);
+          await updateBatchStatus(batch.id, newStatus);
           break;
       }
       

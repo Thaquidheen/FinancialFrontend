@@ -94,7 +94,7 @@ const PaymentQueueFilters: React.FC<PaymentQueueFiltersProps> = ({
       search: '',
       status: [],
       bankName: [],
-      employeeName: '',
+      payeeName: '',
       projectId: [],
       amountRange: undefined,
       dateRange: undefined,
@@ -108,7 +108,7 @@ const PaymentQueueFilters: React.FC<PaymentQueueFiltersProps> = ({
     if (filters.search) count++;
     if (filters.status?.length) count++;
     if (filters.bankName?.length) count++;
-    if (filters.employeeName) count++;
+    if (filters.payeeName) count++;
     if (filters.projectId?.length) count++;
     if (filters.amountRange) count++;
     if (filters.dateRange?.startDate || filters.dateRange?.endDate) count++;
@@ -178,10 +178,10 @@ const PaymentQueueFilters: React.FC<PaymentQueueFiltersProps> = ({
             <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                label="Employee Name"
-                placeholder="Filter by specific employee..."
-                value={filters.employeeName || ''}
-                onChange={(e) => handleFilterChange('employeeName', e.target.value)}
+                label="Payee Name"
+                placeholder="Filter by specific payee..."
+                value={filters.payeeName || ''}
+                onChange={(e) => handleFilterChange('payeeName', e.target.value)}
                 InputProps={{
                   startAdornment: <Person sx={{ mr: 1, color: 'action.active' }} />
                 }}

@@ -43,7 +43,7 @@ interface BankFileWizardProps {
   open: boolean;
   onClose: () => void;
   onComplete: (result: { batchId: string; fileName: string; fileUrl: string }) => void;
-  preselectedPayments?: string[];
+  preselectedPayments?: number[];
   className?: string;
 }
 
@@ -63,7 +63,7 @@ const BankFileWizard: React.FC<BankFileWizardProps> = ({
   className
 }) => {
   const [activeStep, setActiveStep] = useState(0);
-  const [selectedPayments, setSelectedPayments] = useState<string[]>(preselectedPayments);
+  const [selectedPayments, setSelectedPayments] = useState<number[]>(preselectedPayments);
   const [selectedBank, setSelectedBank] = useState<string>('');
   const [validationResults, setValidationResults] = useState<Map<string, any>>(new Map());
   const [comments, setComments] = useState<string>('');
@@ -87,7 +87,7 @@ const BankFileWizard: React.FC<BankFileWizardProps> = ({
     }
   }, [preselectedPayments]);
 
-  const handlePaymentSelection = (paymentIds: string[]) => {
+  const handlePaymentSelection = (paymentIds: number[]) => {
     setSelectedPayments(paymentIds);
   };
 
@@ -111,7 +111,7 @@ const BankFileWizard: React.FC<BankFileWizardProps> = ({
       // Simulate file generation result
       const result = {
         batchId: `batch-${Date.now()}`,
-        fileName: saudiBankService.generateFileName(selectedBank, new Date(), 'WIZ001'),
+        fileName: saudiBankService.generateFileName(selectedBank, 'WIZ001'),
         fileUrl: '#' // This would be the actual download URL
       };
 
@@ -529,7 +529,7 @@ const BankSelector: React.FC<BankSelectorProps> = ({
                     </ListItemIcon>
                     <ListItemText
                       primary="Max Bulk Payments"
-                      secondary={bank.maxBulkPayments.toLocaleString()}
+                      secondary={bank.maxBulkPayments?.toLocaleString() || 'Unlimited'}
                     />
                   </ListItem>
                 </List>

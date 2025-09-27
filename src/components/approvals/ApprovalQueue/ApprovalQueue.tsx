@@ -190,15 +190,19 @@ const ApprovalQueue: React.FC<ApprovalQueueProps> = ({
           </Tooltip>
 
           <Tooltip title="Refresh">
-            <IconButton onClick={refreshApprovals} disabled={loading}>
-              <RefreshIcon />
-            </IconButton>
+            <span>
+              <IconButton onClick={refreshApprovals} disabled={loading}>
+                <RefreshIcon />
+              </IconButton>
+            </span>
           </Tooltip>
 
           <Tooltip title="Export">
-            <IconButton onClick={() => handleExport()} disabled={isExporting}>
-              <ExportIcon />
-            </IconButton>
+            <span>
+              <IconButton onClick={() => handleExport()} disabled={isExporting}>
+                <ExportIcon />
+              </IconButton>
+            </span>
           </Tooltip>
 
           <Tooltip title={viewMode === 'table' ? 'Card View' : 'Table View'}>

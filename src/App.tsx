@@ -21,9 +21,12 @@ import ApprovalQueuePage from '@pages/approvals/ApprovalQueuePage';
 import ApprovalDashboardPage from '@pages/approvals/ApprovalDashboardPage';
 import PaymentDashboardPage from '@pages/payments/PaymentDashboardPage';
 import PaymentQueuePage from '@pages/payments/PaymentQueuePage';
+import PaymentBatchesPage from '@pages/payments/PaymentBatchesPage';
 import { lightTheme } from '@themes/theme';
 import { ROUTES } from '@constants/app';
 import { USER_ROLES } from './types/auth';
+import { NotificationProvider } from './contexts/NotificationContext';
+import { NotificationsPage, NotificationSettingsPage } from './pages/notifications';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -49,6 +52,11 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={lightTheme}>
           <CssBaseline />
+          <NotificationProvider 
+            autoConnect={true}
+            pollingEnabled={true}
+            enableBrowserNotifications={true}
+          >
           <Router>
             <Routes>
               {/* Public Routes */}
@@ -241,6 +249,32 @@ function App() {
                             </ProtectedRoute>
                           }
                         />
+                        <Route
+                          path={ROUTES.PAYMENT_BATCHES}
+                          element={
+                            <ProtectedRoute
+                              requiredRoles={[
+                                USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
+                              ]}
+                            >
+                              <PaymentBatchesPage />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/payments/history"
+                          element={
+                            <ProtectedRoute
+                              requiredRoles={[
+                                USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
+                              ]}
+                            >
+                              <PaymentBatchesPage />
+                            </ProtectedRoute>
+                          }
+                        />
 
                         {/* Reports */}
                         <Route
@@ -262,7 +296,8 @@ function App() {
                         <Route path={ROUTES.DOCUMENTS} element={<PlaceholderPage title="Documents" />} />
 
                         {/* Notifications */}
-                        <Route path={ROUTES.NOTIFICATIONS} element={<PlaceholderPage title="Notifications" />} />
+                        <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
+                        <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
 
                         {/* Profile & Settings */}
                         <Route path={ROUTES.PROFILE} element={<PlaceholderPage title="Profile" />} />
@@ -287,6 +322,7 @@ function App() {
               />
             </Routes>
           </Router>
+          </NotificationProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </HelmetProvider>

@@ -5,20 +5,23 @@ export interface SaudiBankDefinition {
     name: string;
     arabicName: string;
     shortName: string;
+    swiftCode?: string;
     logoUrl?: string;
-    primaryColor: string;
-    secondaryColor: string;
-    ibanPrefix: string;
-    accountNumberFormats: AccountNumberFormat[];
+    primaryColor?: string;
+    secondaryColor?: string;
+    ibanPrefix?: string;
+    accountNumberFormats?: AccountNumberFormat[];
     supportsBulkPayments: boolean;
-    maxBulkPayments: number;
-    fileFormats: SupportedFileFormat[];
-    processingTime: string;
-    cutoffTime: string;
-    workingDays: string[];
-    website: string;
+    maxBulkPayments?: number;
+    maxFileSize?: number;
+    fileFormats?: SupportedFileFormat[];
+    processingTime?: string;
+    cutoffTime?: string;
+    workingDays?: string[];
+    website?: string;
     supportEmail?: string;
     supportPhone?: string;
+    requiredFields: string[];
   }
   
   export interface AccountNumberFormat {

@@ -67,6 +67,14 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
     refreshInterval: 30000
   });
 
+  // Debug logging
+  console.log('PaymentQueue Component - payments:', payments);
+  console.log('PaymentQueue Component - totalElements:', totalElements);
+  console.log('PaymentQueue Component - isLoading:', isLoading);
+  console.log('PaymentQueue Component - error:', error);
+  console.log('PaymentQueue Component - selectedPayments:', selectedPayments);
+  console.log('PaymentQueue Component - selectedPayments.length:', selectedPayments.length);
+
   const availableBanks = getAvailableBanks();
   const selectionStats = getSelectionStats();
   const validationResult = validateSelection();
@@ -140,11 +148,20 @@ const PaymentQueue: React.FC<PaymentQueueProps> = ({ className }) => {
           >
             Filters
           </Button>
+          {/* Debug: Button should always be visible */}
           <Button
             variant="contained"
             startIcon={<FileDownload />}
             onClick={handleGenerateFiles}
             disabled={selectedPayments.length === 0 || isGeneratingFile}
+            sx={{ 
+              minWidth: '200px',
+              backgroundColor: selectedPayments.length === 0 ? 'grey.300' : 'primary.main',
+              '&:hover': {
+                backgroundColor: selectedPayments.length === 0 ? 'grey.300' : 'primary.dark',
+              }
+            }}
+            data-testid="generate-bank-files-button"
           >
             Generate Bank Files ({selectedPayments.length})
           </Button>

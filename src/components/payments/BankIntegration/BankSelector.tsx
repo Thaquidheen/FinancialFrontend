@@ -18,12 +18,11 @@ import {
   ListItemIcon,
   ListItemText,
   Collapse,
-  FormControlLabel,
   Checkbox,
   Radio,
   RadioGroup,
   FormControl,
-  FormLabel
+  FormControlLabel
 } from '@mui/material';
 import {
   AccountBalance,
@@ -217,7 +216,7 @@ const BankSelector: React.FC<BankSelectorProps> = ({
           <Box display="flex" gap={2} mb={2} flexWrap="wrap">
             <Chip
               icon={<Payment />}
-              label={`Max: ${bank.maxBulkPayments.toLocaleString()}`}
+              label={`Max: ${bank.maxBulkPayments?.toLocaleString() || 'Unlimited'}`}
               size="small"
               variant="outlined"
             />
@@ -298,7 +297,7 @@ const BankSelector: React.FC<BankSelectorProps> = ({
                       </ListItemIcon>
                       <ListItemText
                         primary="File Formats"
-                        secondary={bank.fileFormats.map(f => f.extension).join(', ')}
+                        secondary={bank.fileFormats?.map(f => f.extension).join(', ') || 'TXT, CSV'}
                       />
                     </ListItem>
                   </List>
@@ -316,8 +315,8 @@ const BankSelector: React.FC<BankSelectorProps> = ({
                       key={day}
                       label={day.substring(0, 3)}
                       size="small"
-                      color={bank.workingDays.includes(day) ? 'primary' : 'default'}
-                      variant={bank.workingDays.includes(day) ? 'filled' : 'outlined'}
+                      color={bank.workingDays?.includes(day) ? 'primary' : 'default'}
+                      variant={bank.workingDays?.includes(day) ? 'filled' : 'outlined'}
                     />
                   ))}
                 </Box>

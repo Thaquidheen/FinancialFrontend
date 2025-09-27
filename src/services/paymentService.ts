@@ -102,6 +102,97 @@ export class PaymentService {
   }
 
   /**
+   * Mark batch as sent to bank
+   */
+  async markBatchSentToBank(batchId: string): Promise<{
+    message: string;
+    batchId: string;
+  }> {
+    const response = await apiClient.post<any>(
+      `${this.basePath}/batches/${batchId}/mark-sent-to-bank`
+    );
+
+    return response.data ?? {
+      message: 'Batch marked as sent to bank',
+      batchId
+    };
+  }
+
+  /**
+   * Mark batch as processing
+   */
+  async markBatchProcessing(batchId: string): Promise<{
+    message: string;
+    batchId: string;
+  }> {
+    const response = await apiClient.post<any>(
+      `${this.basePath}/batches/${batchId}/mark-processing`
+    );
+
+    return response.data ?? {
+      message: 'Batch marked as processing',
+      batchId
+    };
+  }
+
+  /**
+   * Mark batch as completed
+   */
+  async markBatchCompleted(batchId: string, notes?: string): Promise<{
+    message: string;
+    batchId: string;
+  }> {
+    const response = await apiClient.post<any>(
+      `${this.basePath}/batches/${batchId}/mark-completed`,
+      null,
+      { params: notes ? { notes } : {} }
+    );
+
+    return response.data ?? {
+      message: 'Batch marked as completed',
+      batchId
+    };
+  }
+
+  /**
+   * Retry failed batch
+   */
+  async retryBatch(batchId: string): Promise<{
+    message: string;
+    batchId: string;
+  }> {
+    const response = await apiClient.post<any>(
+      `${this.basePath}/batches/${batchId}/retry`
+    );
+
+    return response.data ?? {
+      message: 'Batch reset for retry',
+      batchId
+    };
+  }
+
+  /**
+   * Update batch status
+   */
+  async updateBatchStatus(batchId: string, status: string): Promise<{
+    message: string;
+    batchId: string;
+    status: string;
+  }> {
+    const response = await apiClient.put<any>(
+      `${this.basePath}/batches/${batchId}/status`,
+      null,
+      { params: { status } }
+    );
+
+    return response.data ?? {
+      message: 'Batch status updated',
+      batchId,
+      status
+    };
+  }
+
+  /**
    * Get payments ready for processing (payment queue)
    */
   async getPaymentsReadyForProcessing(params?: PaymentSearchParams): Promise<{
@@ -124,12 +215,15 @@ export class PaymentService {
       { params: queryParams }
     );
 
-    return response.data ?? {
-      content: [],
-      totalElements: 0,
-      totalPages: 0,
-      size: 20,
-      number: 0
+    // Handle direct response format (not wrapped in ApiResponse)
+    const data = response.data || response;
+    
+    return {
+      content: data.content || [],
+      totalElements: data.totalElements || 0,
+      totalPages: data.totalPages || 0,
+      size: data.size || 20,
+      number: data.number || 0
     };
   }
 
@@ -163,7 +257,7 @@ export class PaymentService {
   async downloadBankFile(batchId: string, _fileName: string): Promise<Blob> {
     const raw = apiClient.getRawClient();
     const response = await raw.get(
-      `${this.basePath}/batches/${batchId}/download`,
+      `${this.basePath}/download-bank-file/${batchId}`,
       {
         responseType: 'blob',
         headers: {
@@ -260,6 +354,7 @@ export class PaymentService {
     size?: number;
     sortBy?: string;
     sortDir?: string;
+    includePayments?: boolean;
   }): Promise<{
     content: PaymentBatch[];
     totalElements: number;
@@ -271,7 +366,8 @@ export class PaymentService {
       page: params?.page || 0,
       size: params?.size || 20,
       sortBy: params?.sortBy || 'createdDate',
-      sortDir: params?.sortDir || 'desc'
+      sortDir: params?.sortDir || 'desc',
+      includePayments: params?.includePayments || false
     };
 
     const response = await apiClient.get<any>(
@@ -279,7 +375,35 @@ export class PaymentService {
       { params: queryParams }
     );
 
-    return response.data;
+    // Handle both wrapped and direct response formats
+    if (response.data && typeof response.data === 'object' && 'content' in response.data) {
+      // If response has data property (wrapped format)
+      return response.data as {
+        content: PaymentBatch[];
+        totalElements: number;
+        totalPages: number;
+        size: number;
+        number: number;
+      };
+    } else if (response && typeof response === 'object' && 'content' in response) {
+      // If response is direct (unwrapped format)
+      return response as {
+        content: PaymentBatch[];
+        totalElements: number;
+        totalPages: number;
+        size: number;
+        number: number;
+      };
+    } else {
+      // Fallback - return empty result
+      return {
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+        size: 20,
+        number: 0
+      };
+    }
   }
 
   /**
@@ -403,7 +527,7 @@ export class PaymentService {
   /**
    * Validate payment data before processing
    */
-  async validatePayments(paymentIds: string[]): Promise<{
+  async validatePayments(paymentIds: number[]): Promise<{
     valid: string[];
     invalid: { paymentId: string; errors: string[] }[];
   }> {

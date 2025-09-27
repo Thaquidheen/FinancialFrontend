@@ -86,6 +86,7 @@ export const NAVIGATION_ITEMS = {
     { path: ROUTES.QUOTATIONS, label: 'Quotations', icon: 'RequestQuote' },
     { path: ROUTES.APPROVALS, label: 'Approvals', icon: 'Approval' },
     { path: ROUTES.PAYMENTS, label: 'Payments', icon: 'Payment' },
+    { path: ROUTES.PAYMENT_BATCHES, label: 'Bank Files', icon: 'FileDownload' },
     { path: ROUTES.REPORTS, label: 'Reports', icon: 'Assessment' },
     { path: ROUTES.DOCUMENTS, label: 'Documents', icon: 'Folder' },
     { path: ROUTES.SETTINGS, label: 'Settings', icon: 'Settings' },
@@ -102,6 +103,7 @@ export const NAVIGATION_ITEMS = {
     { path: ROUTES.QUOTATIONS, label: 'Quotations', icon: 'RequestQuote' },
     { path: ROUTES.APPROVALS, label: 'Approvals', icon: 'Approval' },
     { path: ROUTES.PAYMENTS, label: 'Payments', icon: 'Payment' },
+    { path: ROUTES.PAYMENT_BATCHES, label: 'Bank Files', icon: 'FileDownload' },
     { path: ROUTES.REPORTS, label: 'Financial Reports', icon: 'Assessment' },
   ],
   EMPLOYEE: [
