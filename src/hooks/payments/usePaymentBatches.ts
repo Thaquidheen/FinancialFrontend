@@ -56,7 +56,7 @@ export const usePaymentBatches = ({
     queryKey: ['payment-batches', filters],
     queryFn: () => paymentService.getPaymentBatches({
       ...filters,
-      includePayments: true // Always include payments for batch actions
+      includePayments: false // Always include payments for batch actions
     }),
     refetchInterval: autoRefresh ? refreshInterval : false,
     staleTime: 60000, // Consider data stale after 1 minute
@@ -101,7 +101,7 @@ export const usePaymentBatches = ({
     mutationFn: (batchId: string) => paymentService.markBatchSentToBank(batchId),
     onSuccess: () => {
       showNotification('success', 'Batch marked as sent to bank');
-      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-batches'] });
     },
     onError: (error: any) => {
       showNotification('error', `Failed to mark batch as sent to bank: ${error.message}`);
@@ -113,7 +113,7 @@ export const usePaymentBatches = ({
     mutationFn: (batchId: string) => paymentService.markBatchProcessing(batchId),
     onSuccess: () => {
       showNotification('success', 'Batch marked as processing');
-      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-batches'] });
     },
     onError: (error: any) => {
       showNotification('error', `Failed to mark batch as processing: ${error.message}`);
@@ -126,7 +126,7 @@ export const usePaymentBatches = ({
       paymentService.markBatchCompleted(batchId, notes),
     onSuccess: () => {
       showNotification('success', 'Batch marked as completed');
-      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-batches'] });
     },
     onError: (error: any) => {
       showNotification('error', `Failed to mark batch as completed: ${error.message}`);
@@ -138,7 +138,7 @@ export const usePaymentBatches = ({
     mutationFn: (batchId: string) => paymentService.retryBatch(batchId),
     onSuccess: () => {
       showNotification('success', 'Batch reset for retry');
-      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-batches'] });
     },
     onError: (error: any) => {
       showNotification('error', `Failed to retry batch: ${error.message}`);
@@ -151,7 +151,7 @@ export const usePaymentBatches = ({
       paymentService.updateBatchStatus(batchId, status),
     onSuccess: () => {
       showNotification('success', 'Batch status updated');
-      queryClient.invalidateQueries({ queryKey: ['paymentBatches'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-batches'] });
     },
     onError: (error: any) => {
       showNotification('error', `Failed to update batch status: ${error.message}`);
@@ -179,28 +179,54 @@ export const usePaymentBatches = ({
     updateFilters({ sortBy, sortDir, page: 0 });
   }, [updateFilters]);
 
-  // Confirm batch as completed
+  // Confirm batch as completed - uses the correct API that updates quotation status
   const confirmBatchCompleted = useCallback(async (
     batch: PaymentBatch,
     confirmationReference?: string,
     comments?: string
   ) => {
-    // Check if batch has payments array
-    if (!batch.payments || !Array.isArray(batch.payments)) {
-      console.error('Batch does not have payments array:', batch);
-      showNotification('error', 'Cannot complete batch: No payments found');
-      return;
+    try {
+      // If batch doesn't have payments array, fetch it separately
+      if (!batch.payments || !Array.isArray(batch.payments)) {
+        console.log('Fetching payments for batch:', batch.id);
+        
+        // Fetch payments for this specific batch
+        const batchWithPayments = await paymentService.getPaymentBatches({
+          page: 0,
+          size: 1,
+          includePayments: true
+        });
+        
+        const batchData = batchWithPayments.content.find(b => b.id === batch.id);
+        if (!batchData || !batchData.payments || !Array.isArray(batchData.payments)) {
+          showNotification('error', 'Cannot complete batch: No payments found');
+          return;
+        }
+        
+        const request: ConfirmPaymentRequest = {
+          paymentIds: batchData.payments.map(p => p.id),
+          batchId: batch.id,
+          confirmationReference,
+          comments
+        };
+        
+        confirmPaymentsMutation.mutate(request);
+      } else {
+        // Use existing payments array
+        const request: ConfirmPaymentRequest = {
+          paymentIds: batch.payments.map(p => p.id),
+          batchId: batch.id,
+          confirmationReference,
+          comments
+        };
+        
+        confirmPaymentsMutation.mutate(request);
+      }
+    } catch (error) {
+      console.error('Error fetching payments for batch:', error);
+      showNotification('error', 'Failed to fetch batch payments');
     }
-
-    const request: ConfirmPaymentRequest = {
-      paymentIds: batch.payments.map(p => p.id),
-      batchId: batch.id,
-      confirmationReference,
-      comments
-    };
-
-    confirmPaymentsMutation.mutate(request);
-  }, [confirmPaymentsMutation]);
+  }, [confirmPaymentsMutation, showNotification]);
 
   // Mark batch as sent to bank
   const markBatchSentToBank = useCallback(async (batchId: string) => {
@@ -212,7 +238,8 @@ export const usePaymentBatches = ({
     markBatchProcessingMutation.mutate(batchId);
   }, []);
 
-  // Mark batch as completed
+  // Mark batch as completed (only updates batch status, NOT quotation status)
+  // Use confirmBatchCompleted instead for proper quotation status update
   const markBatchCompleted = useCallback(async (batchId: string, notes?: string) => {
     markBatchCompletedMutation.mutate({ batchId, notes });
   }, []);
