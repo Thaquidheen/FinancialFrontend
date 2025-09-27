@@ -90,35 +90,41 @@ export enum QuotationStatus {
   
   export interface Quotation {
     id: number;
+    projectId: number;
+    projectName: string;
+    createdBy: string;
+    createdByUsername: string;
     description: string;
     totalAmount: number;
     currency: Currency;
     status: QuotationStatus;
-    createdDate: string;
-    updatedDate: string;
+    submissionNotes?: string;
     submittedDate?: string;
     approvedDate?: string;
-    rejectedDate?: string;
-    dueDate?: string;
-    project: Project;
-    createdBy: User;
-    approvedBy?: User;
-    rejectedBy?: User;
+    approvedBy?: string;
     rejectionReason?: string;
-    approvalComments?: string;
+    createdDate: string;
+    active: boolean;
     items: LineItem[];
-    documents: QuotationDocument[];
-    itemCount: number;
-    exceedsBudget: boolean;
-    budgetUtilization: number;
-    urgentApproval: boolean;
+    documents?: QuotationDocument[];
+    
+    // Budget information
+    projectBudget?: number;
+    remainingBudget?: number;
+    budgetImpact?: number;
+    exceedsBudget?: boolean;
+    
+    // Computed properties (added by frontend)
+    itemCount?: number;
+    budgetUtilization?: number;
+    urgentApproval?: boolean;
     approvalDays?: number;
-    version: number;
-    isEditable: boolean;
-    canApprove: boolean;
-    canReject: boolean;
-    canSubmit: boolean;
-    canDelete: boolean;
+    version?: number;
+    isEditable?: boolean;
+    canApprove?: boolean;
+    canReject?: boolean;
+    canSubmit?: boolean;
+    canDelete?: boolean;
   }
   
   export interface QuotationSummary {

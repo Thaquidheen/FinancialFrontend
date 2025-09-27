@@ -17,6 +17,7 @@ import { CreateProjectPage } from '@pages/projects/CreateProjectPage';
 import { ProjectDetailsPage } from '@pages/projects/ProjectDetailsPage';
 import QuotationListPage from '@pages/quotations/QuotationListPage';
 import CreateQuotationPage from '@pages/quotations/CreateQuotationPage';
+import QuotationDetailsPage from '@pages/quotations/QuotationDetailsPage';
 import ApprovalQueuePage from '@pages/approvals/ApprovalQueuePage';
 import ApprovalDashboardPage from '@pages/approvals/ApprovalDashboardPage';
 import PaymentDashboardPage from '@pages/payments/PaymentDashboardPage';
@@ -27,6 +28,7 @@ import { ROUTES } from '@constants/app';
 import { USER_ROLES } from './types/auth';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { NotificationsPage, NotificationSettingsPage } from './pages/notifications';
+import { DocumentsPage } from './pages/documents';
 
 // Create React Query client
 const queryClient = new QueryClient({
@@ -178,7 +180,20 @@ function App() {
                             </ProtectedRoute>
                           } 
                         />
-                        <Route path={ROUTES.QUOTATION_DETAIL} element={<PlaceholderPage title="Quotation Details" />} />
+                        <Route 
+                          path={ROUTES.QUOTATION_DETAIL} 
+                          element={
+                            <ProtectedRoute
+                              requiredRoles={[
+                                USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
+                                USER_ROLES.PROJECT_MANAGER,
+                              ]}
+                            >
+                              <QuotationDetailsPage />
+                            </ProtectedRoute>
+                          } 
+                        />
 
                         {/* Approvals - Account Manager */}
                         <Route
@@ -293,7 +308,21 @@ function App() {
                         />
 
                         {/* Documents */}
-                        <Route path={ROUTES.DOCUMENTS} element={<PlaceholderPage title="Documents" />} />
+                        <Route 
+                          path={ROUTES.DOCUMENTS} 
+                          element={
+                            <ProtectedRoute
+                              requiredRoles={[
+                                USER_ROLES.SUPER_ADMIN,
+                                USER_ROLES.ACCOUNT_MANAGER,
+                                USER_ROLES.PROJECT_MANAGER,
+                                USER_ROLES.EMPLOYEE,
+                              ]}
+                            >
+                              <DocumentsPage />
+                            </ProtectedRoute>
+                          } 
+                        />
 
                         {/* Notifications */}
                         <Route path={ROUTES.NOTIFICATIONS} element={<NotificationsPage />} />
