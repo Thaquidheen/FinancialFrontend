@@ -145,7 +145,7 @@ const BatchManagement: React.FC<BatchManagementProps> = ({ className }) => {
     const searchMatch = searchTerm === '' || 
       batch.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       batch.bankName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      batch.createdBy.toLowerCase().includes(searchTerm.toLowerCase());
+      batch.createdBy.toString().toLowerCase().includes(searchTerm.toLowerCase());
     
     return statusMatch && bankMatch && searchMatch;
   });
@@ -466,7 +466,7 @@ const BatchManagement: React.FC<BatchManagementProps> = ({ className }) => {
                       <TableCell>
                         <Box>
                           <Typography variant="body2">
-                            {new Date(batch.createdAt).toLocaleDateString()}
+                            {new Date(batch.createdDate).toLocaleDateString()}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             by {batch.createdBy}

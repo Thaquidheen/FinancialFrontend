@@ -387,7 +387,7 @@ export class PaymentService {
       };
     } else if (response && typeof response === 'object' && 'content' in response) {
       // If response is direct (unwrapped format)
-      return response as {
+      return response as unknown as {
         content: PaymentBatch[];
         totalElements: number;
         totalPages: number;
@@ -457,11 +457,11 @@ export class PaymentService {
     );
 
     return response.data ?? {
-      id: '',
-      quotationId: '',
+      id: 0,
+      quotationId: 0,
       employeeId: '',
-      employeeName: '',
       employeeFullName: '',
+      payeeName: '',
       amount: 0,
       currency: 'SAR',
       status: 'READY_FOR_PAYMENT' as any,
@@ -604,8 +604,8 @@ export class PaymentService {
       query.bankName = params.bankName.join(',');
     }
 
-    if (params.employeeName) {
-      query.employeeName = params.employeeName;
+    if (params.payeeName) {
+      query.payeeName = params.payeeName;
     }
 
     if (params.projectId?.length) {

@@ -56,7 +56,7 @@ export const usePaymentBatches = ({
     queryKey: ['payment-batches', filters],
     queryFn: () => paymentService.getPaymentBatches({
       ...filters,
-      includePayments: false // Always include payments for batch actions
+      includePayments: true // Always include payments for batch actions
     }),
     refetchInterval: autoRefresh ? refreshInterval : false,
     staleTime: 60000, // Consider data stale after 1 minute
@@ -64,12 +64,18 @@ export const usePaymentBatches = ({
 
   // Mutation for confirming payments as completed
   const confirmPaymentsMutation = useMutation({
-    mutationFn: (request: ConfirmPaymentRequest) => 
-      paymentService.confirmPaymentsCompleted(request),
-    onSuccess: () => {
+    mutationFn: (request: ConfirmPaymentRequest) => {
+      console.log('confirmPaymentsMutation: Calling API with request:', request);
+      return paymentService.confirmPaymentsCompleted(request);
+    },
+    onSuccess: (data) => {
+      console.log('confirmPaymentsMutation: Success response:', data);
       showNotification('success', 'Payments confirmed successfully');
+      // Invalidate and refetch payment batches to update the UI
+      queryClient.invalidateQueries({ queryKey: ['payment-batches'] });
     },
     onError: (error: any) => {
+      console.error('confirmPaymentsMutation: Error:', error);
       showNotification('error', `Failed to confirm payments: ${error.message}`);
     }
   });
@@ -186,45 +192,22 @@ export const usePaymentBatches = ({
     comments?: string
   ) => {
     try {
-      // If batch doesn't have payments array, fetch it separately
-      if (!batch.payments || !Array.isArray(batch.payments)) {
-        console.log('Fetching payments for batch:', batch.id);
-        
-        // Fetch payments for this specific batch
-        const batchWithPayments = await paymentService.getPaymentBatches({
-          page: 0,
-          size: 1,
-          includePayments: true
-        });
-        
-        const batchData = batchWithPayments.content.find(b => b.id === batch.id);
-        if (!batchData || !batchData.payments || !Array.isArray(batchData.payments)) {
-          showNotification('error', 'Cannot complete batch: No payments found');
-          return;
-        }
-        
-        const request: ConfirmPaymentRequest = {
-          paymentIds: batchData.payments.map(p => p.id),
-          batchId: batch.id,
-          confirmationReference,
-          comments
-        };
-        
-        confirmPaymentsMutation.mutate(request);
-      } else {
-        // Use existing payments array
-        const request: ConfirmPaymentRequest = {
-          paymentIds: batch.payments.map(p => p.id),
-          batchId: batch.id,
-          confirmationReference,
-          comments
-        };
-        
-        confirmPaymentsMutation.mutate(request);
-      }
+      console.log('Confirming batch as completed:', batch.id);
+      
+      // For now, use a simplified approach - let the backend find the payments
+      // We'll pass an empty paymentIds array and let the backend handle it
+      const request: ConfirmPaymentRequest = {
+        paymentIds: [], // Empty array - backend will find payments for this batch
+        batchId: batch.id,
+        confirmationReference,
+        comments
+      };
+      
+      console.log('Sending confirm request:', request);
+      confirmPaymentsMutation.mutate(request);
     } catch (error) {
-      console.error('Error fetching payments for batch:', error);
-      showNotification('error', 'Failed to fetch batch payments');
+      console.error('Error in confirmBatchCompleted:', error);
+      showNotification('error', 'Failed to complete batch: ' + (error as Error).message);
     }
   }, [confirmPaymentsMutation, showNotification]);
 

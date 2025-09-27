@@ -170,7 +170,7 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({
                       <ListItemText
                         primary="Bank"
                         secondary={
-                          <Box display="flex" alignItems="center" gap={1}>
+                          <Box display="flex" alignItems="center" gap={1} component="span">
                             {bank && (
                               <Avatar
                                 sx={{
@@ -205,7 +205,7 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({
                       </ListItemIcon>
                       <ListItemText
                         primary="Created"
-                        secondary={formatDate(batch.createdAt)}
+                        secondary={formatDate(batch.createdDate)}
                       />
                     </ListItem>
 
@@ -407,10 +407,10 @@ const BatchDetails: React.FC<BatchDetailsProps> = ({
                                 <TableCell>
                                   <Box display="flex" alignItems="center" gap={1}>
                                     <Avatar sx={{ width: 24, height: 24, fontSize: '0.7rem' }}>
-                                      {payment.employeeName?.charAt(0)}
+                                      {payment.employeeFullName?.charAt(0)}
                                     </Avatar>
                                     <Typography variant="body2">
-                                      {payment.employeeName}
+                                      {payment.employeeFullName}
                                     </Typography>
                                   </Box>
                                 </TableCell>

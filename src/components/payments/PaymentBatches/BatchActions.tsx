@@ -196,7 +196,7 @@ const BatchActions: React.FC<BatchActionsProps> = ({
           break;
           
         case 'notes':
-          await markBatchCompleted(batch.id, actionNotes);
+          await confirmBatchCompleted(batch, undefined, actionNotes);
           break;
           
         case 'status':
